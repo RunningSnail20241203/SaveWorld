@@ -1,0 +1,283 @@
+using UnityEngine;
+using TestWebGL.Game.Grid;
+using TestWebGL.Game.Player;
+
+namespace TestWebGL.Game.Core
+{
+    /// <summary>
+    /// 游戏全局管理器
+    /// 初始化和协调所有游戏系统
+    /// 使用单例模式
+    /// </summary>
+    public class GameManager : MonoBehaviour
+    {
+        private static GameManager s_instance;
+
+        public static GameManager Instance
+        {
+            get
+            {
+                if (s_instance == null)
+                {
+                    var go = new GameObject("GameManager");
+                    s_instance = go.AddComponent<GameManager>();
+                    DontDestroyOnLoad(go);
+                }
+                return s_instance;
+            }
+        }
+
+        // 各个系统的管理器
+        private GridManager _gridManager;
+        private PlayerManager _playerManager;
+        private PlayerData _playerData;
+
+        // 游戏状态
+        private GameState _gameState = GameState.Initializing;
+
+        // 事件
+        public delegate void GameStateChangedHandler(GameState newState);
+        public event GameStateChangedHandler OnGameStateChanged;
+
+        public enum GameState
+        {
+            Initializing,
+            Loading,
+            Playing,
+            Paused,
+            GameOver,
+        }
+
+        private void Awake()
+        {
+            if (s_instance != null && s_instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            s_instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void Start()
+        {
+            Initialize();
+        }
+
+        /// <summary>
+        /// 初始化所有游戏系统
+        /// </summary>
+        private void Initialize()
+        {
+            Debug.Log("[GameManager] 初始化游戏系统...");
+
+            // 1. 加载或创建玩家数据
+            _playerData = LoadPlayerData();
+            if (_playerData == null)
+            {
+                _playerData = new PlayerData();
+                Debug.Log("[GameManager] 创建新玩家存档");
+            }
+            else
+            {
+                Debug.Log($"[GameManager] 加载玩家存档: {_playerData.playerName} (Lv{_playerData.level})");
+            }
+
+            // 2. 初始化玩家管理器
+            _playerManager = new PlayerManager();
+            _playerManager.Initialize(_playerData);
+            _playerManager.OnLevelChanged += HandlePlayerLevelChanged;
+            _playerManager.OnStaminaChanged += HandlePlayerStaminaChanged;
+            _playerManager.OnExperienceGained += HandleExperienceGained;
+            Debug.Log("[GameManager] 玩家管理器已初始化");
+
+            // 3. 初始化格子系统
+            _gridManager = new GridManager();
+            _gridManager.Initialize();
+            _gridManager.OnCellChanged += HandleGridCellChanged;
+            _gridManager.OnGridUnlocked += HandleGridUnlocked;
+            Debug.Log("[GameManager] 格子系统已初始化");
+
+            // 4. 输出初始化统计
+            var gridStats = _gridManager.GetStatistics();
+            var gridDims = _gridManager.GetDimensions();
+            Debug.Log($"[GameManager] 格子统计: 总={gridStats.totalCellCount}, 锁定={gridStats.lockedCellCount}, " +
+                     $"已填={gridStats.filledCellCount}, 空={gridStats.emptyCellCount}");
+            Debug.Log($"[GameManager] 格子尺寸: {gridDims.rows}×{gridDims.cols}, 每个格子{gridDims.cellSize}px, 间距{gridDims.cellSpacing}px");
+
+            // 变更游戏状态
+            ChangeGameState(GameState.Playing);
+
+            Debug.Log("[GameManager] 游戏系统初始化完成!");
+        }
+
+        /// <summary>
+        /// 变更游戏状态
+        /// </summary>
+        private void ChangeGameState(GameState newState)
+        {
+            if (_gameState != newState)
+            {
+                _gameState = newState;
+                OnGameStateChanged?.Invoke(_gameState);
+                Debug.Log($"[GameManager] 游戏状态: {_gameState}");
+            }
+        }
+
+        /// <summary>
+        /// 加载玩家数据（从本地存储）
+        /// 第一阶段简单实现，后续接入存储系统
+        /// </summary>
+        private PlayerData LoadPlayerData()
+        {
+            // 临时实现：始终返回null，表示新游戏
+            // 后期需要集成PlayerPrefs或其他存储方案
+            return null;
+        }
+
+        /// <summary>
+        /// 保存玩家数据
+        /// </summary>
+        public void SavePlayerData()
+        {
+            if (_playerData != null)
+            {
+                _playerData.lastSaveTime = System.DateTime.Now;
+                // 后期实现具体的存储逻辑
+                Debug.Log("[GameManager] 玩家数据已保存");
+            }
+        }
+
+        // ==================== 获取各系统 ====================
+
+        public GridManager GetGridManager() => _gridManager;
+        public PlayerManager GetPlayerManager() => _playerManager;
+        public PlayerData GetPlayerData() => _playerData;
+
+        public GameState GetGameState() => _gameState;
+
+        // ==================== 事件处理 ====================
+
+        private void HandlePlayerLevelChanged(int newLevel, int oldLevel)
+        {
+            Debug.Log($"[GameManager] 玩家升级！ Lv{oldLevel} → Lv{newLevel}");
+        }
+
+        private void HandlePlayerStaminaChanged(int newStamina, int maxStamina)
+        {
+            Debug.Log($"[GameManager] 体力变化: {newStamina}/{maxStamina}");
+        }
+
+        private void HandleExperienceGained(int amount, string reason)
+        {
+            Debug.Log($"[GameManager] 获得 {amount} 经验值 ({reason})");
+        }
+
+        private void HandleGridCellChanged(int row, int col, Grid.GridCell cell)
+        {
+            Debug.Log($"[GameManager] 格子变化 [{row},{col}]: {cell.GetDisplayName()} ×{cell.ItemCount}");
+        }
+
+        private void HandleGridUnlocked(int row, int col, Grid.GridCell cell)
+        {
+            Debug.Log($"[GameManager] 格子解锁 [{row},{col}]!");
+            // 可以在这里触发解锁动画、音效等
+        }
+
+        // ==================== 测试/调试方法 ====================
+
+        /// <summary>
+        /// 调试：输出格子详细信息
+        /// </summary>
+        public void Debug_PrintGridInfo()
+        {
+            var dims = _gridManager.GetDimensions();
+            Debug.Log($"\n========== 格子信息 ==========");
+            Debug.Log($"尺寸: {dims.rows}×{dims.cols} ({dims.totalCells}格)");
+
+            foreach (var cell in _gridManager.GetAllCells())
+            {
+                if (cell.IsLocked)
+                {
+                    Debug.Log($"[{cell.row},{cell.column}] 🔒 {cell.GetDisplayName()} Lv{cell.LockedItemLevel}");
+                }
+                else if (cell.HasItem)
+                {
+                    Debug.Log($"[{cell.row},{cell.column}] ✓ {cell.GetDisplayName()} ×{cell.ItemCount}");
+                }
+                else
+                {
+                    Debug.Log($"[{cell.row},{cell.column}] □ 空");
+                }
+            }
+
+            var stats = _gridManager.GetStatistics();
+            Debug.Log($"\n统计: 锁定={stats.lockedCellCount}, 已填={stats.filledCellCount}, 空={stats.emptyCellCount}");
+        }
+
+        /// <summary>
+        /// 调试：输出玩家信息
+        /// </summary>
+        public void Debug_PrintPlayerInfo()
+        {
+            var stats = _playerManager.GetStatistics();
+            Debug.Log($"\n========== 玩家信息 ==========");
+            Debug.Log($"等级: {stats.level}");
+            Debug.Log($"经验: {stats.experience}");
+            Debug.Log($"体力: {stats.currentStamina}/{stats.maxStamina}");
+            Debug.Log($"收集物品: {stats.collectedItemCount}");
+            Debug.Log($"游戏时长: {stats.playTime.Hours}h {stats.playTime.Minutes}m");
+        }
+
+        /// <summary>
+        /// 调试：消耗体力
+        /// </summary>
+        public void Debug_UseStamina(int amount = 1)
+        {
+            if (_playerManager.TryUseStamina(amount))
+            {
+                Debug.Log($"[DEBUG] 消耗 {amount} 体力");
+            }
+            else
+            {
+                Debug.Log($"[DEBUG] 体力不足!");
+            }
+        }
+
+        /// <summary>
+        /// 调试：获得经验
+        /// </summary>
+        public void Debug_GainExperience(int amount)
+        {
+            _playerManager.GainExperience(amount, "DEBUG");
+            Debug.Log($"[DEBUG] 获得 {amount} 经验");
+        }
+
+        /// <summary>
+        /// 调试：在格子中放置物品
+        /// </summary>
+        public void Debug_PlaceItem(int row, int col, Items.ItemType itemType, int count = 1)
+        {
+            if (_gridManager.TryPlaceItem(row, col, itemType, count))
+            {
+                Debug.Log($"[DEBUG] 在格子[{row},{col}]放置了 {Items.ItemConfig.GetItemName(itemType)} ×{count}");
+            }
+            else
+            {
+                Debug.Log($"[DEBUG] 放置失败!");
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // 清理事件订阅
+            if (_playerManager != null)
+            {
+                _playerManager.OnLevelChanged -= HandlePlayerLevelChanged;
+                _playerManager.OnStaminaChanged -= HandlePlayerStaminaChanged;
+                _playerManager.OnExperienceGained -= HandleExperienceGained;
+            }
+        }
+    }
+}
