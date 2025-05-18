@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.code-philosophy.hybridclr": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
     "com.jiangyin.gameframework": "file:G:/GitRepo/UnityGameFramework2",
     "com.unity.ide.rider": "3.0.36",
     "com.unity.ide.vscode": "1.2.5",
