@@ -8,9 +8,9 @@
       "hash": "7a0032934b438ad20a4a691f8093ce1865824c42"
     },
     "com.jiangyin.gameframework": {
-      "version": "file:G:/GitRepo/UnityGameFramework2",
+      "version": "git@github.com:RunningSnail20241203/UnityGameFramework.git",
       "depth": 0,
-      "source": "local",
+      "source": "git",
       "dependencies": {
         "com.unity.modules.androidjni": "1.0.0",
         "com.unity.modules.animation": "1.0.0",
@@ -19,7 +19,8 @@
         "com.unity.modules.imgui": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0",
         "com.unity.modules.unitywebrequest": "1.0.0"
-      }
+      },
+      "hash": "27fe3602f25d33a1bd22934c5645ceb340157f00"
     },
     "com.unity.ext.nunit": {
       "version": "1.0.6",
