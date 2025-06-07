@@ -163,7 +163,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.RunningSnail.SaveWorld
-    Standalone: com.DefaultCompany.2DProject
+    Standalone: com.RunningSnail.SaveWorld
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -700,6 +700,7 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Android: 1
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
   managedStrippingLevel:
