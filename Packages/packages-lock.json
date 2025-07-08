@@ -8,7 +8,7 @@
       "hash": "7a0032934b438ad20a4a691f8093ce1865824c42"
     },
     "com.jiangyin.gameframework": {
-      "version": "git@github.com:RunningSnail20241203/UnityGameFramework.git",
+      "version": "https://github.com/RunningSnail20241203/UnityGameFramework.git",
       "depth": 0,
       "source": "git",
       "dependencies": {

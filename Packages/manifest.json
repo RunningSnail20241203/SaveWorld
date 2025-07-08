@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.code-philosophy.hybridclr": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
-    "com.jiangyin.gameframework": "git@github.com:RunningSnail20241203/UnityGameFramework.git",
+    "com.jiangyin.gameframework": "https://github.com/RunningSnail20241203/UnityGameFramework.git",
     "com.unity.ide.rider": "3.0.36",
     "com.unity.ide.vscode": "1.2.5",
     "com.unity.textmeshpro": "3.0.9",
