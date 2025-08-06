@@ -8,7 +8,7 @@
       "hash": "7a0032934b438ad20a4a691f8093ce1865824c42"
     },
     "com.jiangyin.gameframework": {
-      "version": "https://github.com/RunningSnail20241203/UnityGameFramework.git",
+      "version": "https://github.com/RunningSnail20241203/UnityGameFramework.git#add-procedure-asmbly",
       "depth": 0,
       "source": "git",
       "dependencies": {
@@ -20,7 +20,7 @@
         "com.unity.modules.jsonserialize": "1.0.0",
         "com.unity.modules.unitywebrequest": "1.0.0"
       },
-      "hash": "27fe3602f25d33a1bd22934c5645ceb340157f00"
+      "hash": "8314eba034da8b0f7c78c14d7c6a215deee88053"
     },
     "com.unity.addressables": {
       "version": "1.22.3",
