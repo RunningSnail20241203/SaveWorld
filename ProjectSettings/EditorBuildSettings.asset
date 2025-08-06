@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Launcher.unity
+    path: Assets/HybridLauncher/HybridLauncher.unity
     guid: 90d1e2e72b5279a4591369450fa9ae14
   m_configObjects: {}
