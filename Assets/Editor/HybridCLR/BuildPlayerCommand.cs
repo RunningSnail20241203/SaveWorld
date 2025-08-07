@@ -1,85 +1,94 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using HybridCLR.Editor;
 using HybridCLR.Editor.Commands;
 using HybridCLR.Editor.Installer;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+using HybridCLR.Editor.Settings;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
-namespace HybridCLR.Editor
+namespace Editor.HybridCLR
 {
-    public class BuildPlayerCommand
+    public static class BuildPlayerCommand
     {
-        public static void CopyAssets(string outputDir)
+        private static readonly List<string> ExcludeHotUpdateAssemblies = new() // 不需要热更的Assembly
         {
-            Directory.CreateDirectory(outputDir);
+            "HybridLauncher",
+        };
 
-            foreach(var srcFile in Directory.GetFiles(Application.streamingAssetsPath))
-            {
-                string dstFile = $"{outputDir}/{Path.GetFileName(srcFile)}";
-                File.Copy(srcFile, dstFile, true);
-            }
-        }
-
-        public static void InstallFromRepo()
+        [MenuItem("Build/FullPackage/打完整包")]
+        public static void BuildFullPlayer()
         {
-            var ic = new InstallerController();
-            ic.InstallDefaultHybridCLR();
-        }
+            // 尝试安装HybridClr
+            TryInstallHybridClr();
 
-        public static void InstallBuildWin64()
-        {
-            InstallFromRepo();
-            Build_Win64(true);
-        }
+            // 需要热更的Assembly添加到HybridClrSetting中
+            AddHotUpdateAssembliesToHybridClrSetting();
 
-        [MenuItem("Build/Win64")]
-        public static void Build_Win64()
-        {
-            Build_Win64(false);
-        }
-
-        public static void Build_Win64(bool exitWhenCompleted)
-        {
-            BuildTarget target = BuildTarget.StandaloneWindows64;
-            BuildTarget activeTarget = EditorUserBuildSettings.activeBuildTarget;
-            if (activeTarget != BuildTarget.StandaloneWindows64 && activeTarget != BuildTarget.StandaloneWindows)
-            {
-                Debug.LogError("请先切到Win平台再打包");
-                return;
-            }
-            // Get filename.
-            string outputPath = $"{SettingsUtil.ProjectDir}/Release-Win64";
-
-            var buildOptions = BuildOptions.CompressWithLz4;
-
-            string location = $"{outputPath}/HybridCLRTrial.exe";
-
+            return;
+            // 生成所有HybridClr资源
             PrebuildCommand.GenerateAll();
-            Debug.Log("====> Build App");
-            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions()
+
+            var activeTarget = EditorUserBuildSettings.activeBuildTarget;
+
+            // 拷贝dll
+            BuildAssetsCommand.CopyHotUpdateDlls();
+
+            // 打Addressable
+            BuildAssetsCommand.BuildAddressable(activeTarget);
+
+            // 打player
+            var buildPlayerOptions = new BuildPlayerOptions
             {
-                scenes = new string[] { "Assets/Scenes/main.unity" },
-                locationPathName = location,
-                options = buildOptions,
-                target = target,
-                targetGroup = BuildTargetGroup.Standalone,
+                scenes = EditorBuildSettings.scenes.Select(x => x.path).ToArray(),
+                target = activeTarget,
             };
 
             var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
             {
                 Debug.LogError("打包失败");
-                if (exitWhenCompleted)
-                {
-                    EditorApplication.Exit(1);
-                }
-                return;
             }
+        }
 
-            Debug.Log("====> 复制热更新资源和代码");
-            BuildAssetsCommand.BuildAndCopyABAOTHotUpdateDlls();
-            BashUtil.CopyDir(Application.streamingAssetsPath, $"{outputPath}/HybridCLRTrial_Data/StreamingAssets", true);
+        private static void TryInstallHybridClr()
+        {
+            Debug.Log("尝试安装HybridClr");
+            var ic = new InstallerController();
+            if (!ic.HasInstalledHybridCLR())
+            {
+                ic.InstallDefaultHybridCLR();
+                Debug.Log("安装HybridClr 完毕");
+            }
+            else
+            {
+                Debug.Log("已经 安装HybridClr");
+            }
+        }
+
+        private static void AddHotUpdateAssembliesToHybridClrSetting()
+        {
+            var gs = SettingsUtil.HybridCLRSettings;
+            // 找到所有的AssemblyDefinitionAsset
+            var guids = AssetDatabase.FindAssets("t:AssemblyDefinitionAsset", new[] { "Assets" });
+            Debug.Log($"找到{guids.Length}个AssemblyDefinitionAsset");
+
+            gs.hotUpdateAssemblyDefinitions = guids
+                .Select(AssetDatabase.GUIDToAssetPath) // 转换为路径
+                .Select(AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>) // 加载Asset
+                .Where(assemblyDefinitionAsset => !ExcludeHotUpdateAssemblies.Contains(assemblyDefinitionAsset.name)) // 过滤掉不需要的
+                .ToArray(); // 转换为数组
+            HybridCLRSettings.Save();
+            
+            Debug.Log($"添加{gs.hotUpdateAssemblyDefinitions.Length}个AssemblyDefinitionAsset到HybridClrSetting");
+            var sd = new StringBuilder();
+            foreach (var assemblyDefinitionAsset in gs.hotUpdateAssemblyDefinitions)
+            {
+                sd.AppendLine(assemblyDefinitionAsset.name);
+            }
+            Debug.Log($"添加的AssemblyDefinitionAsset:\n{sd}");
         }
     }
 }
