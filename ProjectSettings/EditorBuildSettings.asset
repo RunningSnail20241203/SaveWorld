@@ -8,4 +8,5 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/HybridLauncher/HybridLauncher.unity
     guid: 90d1e2e72b5279a4591369450fa9ae14
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 5ddb735d412a2cf43a0dd3c7c08ea7d6, type: 2}

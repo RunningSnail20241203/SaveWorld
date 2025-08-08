@@ -2,12 +2,11 @@ using HybridCLR;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 
-public class LoadDll : MonoBehaviour
+public class HybridLauncher : MonoBehaviour
 {
     private void Start()
     {
