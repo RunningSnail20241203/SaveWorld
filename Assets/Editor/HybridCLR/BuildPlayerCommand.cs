@@ -27,9 +27,9 @@ namespace Editor.HybridCLR
             // 需要热更的Assembly添加到HybridClrSetting中
             AddHotUpdateAssembliesToHybridClrSetting();
 
-            return;
             // 生成所有HybridClr资源
             PrebuildCommand.GenerateAll();
+            return;
 
             var activeTarget = EditorUserBuildSettings.activeBuildTarget;
 

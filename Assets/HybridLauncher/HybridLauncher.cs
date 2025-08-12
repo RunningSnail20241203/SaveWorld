@@ -17,10 +17,10 @@ public class HybridLauncher : MonoBehaviour
     {
         LoadMetadataForAOTAssemblies();
 
-        const string mainScene = "Main";
-        Addressables.LoadSceneAsync(mainScene).Completed += _ =>
+        const string startScene = "Login";
+        Addressables.LoadSceneAsync(startScene).Completed += _ =>
         {
-            Debug.Log($"LoadSceneAsync :{mainScene} Completed");
+            Debug.Log($"LoadSceneAsync :{startScene} Completed");
         };
     }
 
