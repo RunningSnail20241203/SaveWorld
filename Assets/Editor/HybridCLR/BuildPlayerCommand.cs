@@ -29,12 +29,11 @@ namespace Editor.HybridCLR
 
             // 生成所有HybridClr资源
             PrebuildCommand.GenerateAll();
-            return;
 
             var activeTarget = EditorUserBuildSettings.activeBuildTarget;
 
             // 拷贝dll
-            BuildAssetsCommand.CopyHotUpdateDlls();
+            BuildAssetsCommand.CopyHotUpdateDlls(activeTarget);
 
             // 打Addressable
             BuildAssetsCommand.BuildAddressable(activeTarget);
@@ -44,6 +43,7 @@ namespace Editor.HybridCLR
             {
                 scenes = EditorBuildSettings.scenes.Select(x => x.path).ToArray(),
                 target = activeTarget,
+                locationPathName = $"Build/{activeTarget}/{Application.productName}",
             };
 
             var report = BuildPipeline.BuildPlayer(buildPlayerOptions);

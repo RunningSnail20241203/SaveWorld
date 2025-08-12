@@ -3,49 +3,6 @@
   <assembly fullname="GameFramework">
     <type fullname="GameFramework.Procedure.ProcedureBase" preserve="all" />
   </assembly>
-  <assembly fullname="UnityEngine.CoreModule">
-    <type fullname="UnityEngine.Application" preserve="all" />
-    <type fullname="UnityEngine.Application/LogCallback" preserve="all" />
-    <type fullname="UnityEngine.Component" preserve="all" />
-    <type fullname="UnityEngine.GameObject" preserve="all" />
-    <type fullname="UnityEngine.LogType" preserve="all" />
-    <type fullname="UnityEngine.Mathf" preserve="all" />
-    <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
-    <type fullname="UnityEngine.Object" preserve="all" />
-    <type fullname="UnityEngine.Rect" preserve="all" />
-    <type fullname="UnityEngine.Screen" preserve="all" />
-    <type fullname="UnityEngine.Vector2" preserve="all" />
-  </assembly>
-  <assembly fullname="UnityEngine.IMGUIModule">
-    <type fullname="UnityEngine.GUI" preserve="all" />
-    <type fullname="UnityEngine.GUILayout" preserve="all" />
-    <type fullname="UnityEngine.GUILayoutOption" preserve="all" />
-    <type fullname="UnityEngine.GUISkin" preserve="all" />
-    <type fullname="UnityEngine.GUIStyle" preserve="all" />
-  </assembly>
-  <assembly fullname="UnityGameFramework.Runtime">
-    <type fullname="UnityGameFramework.Runtime.BaseComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.ConfigComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.DataNodeComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.DataTableComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.DebuggerComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.DownloadComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.EntityComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.EventComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.FileSystemComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.FsmComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.GameEntry" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.LocalizationComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.NetworkComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.ObjectPoolComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.ProcedureComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.ResourceComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.SceneComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.SettingComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.SoundComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.UIComponent" preserve="all" />
-    <type fullname="UnityGameFramework.Runtime.WebRequestComponent" preserve="all" />
-  </assembly>
   <assembly fullname="netstandard">
     <type fullname="System.Array" preserve="all" />
     <type fullname="System.Byte" preserve="all" />
@@ -60,8 +17,6 @@
     <type fullname="System.Runtime.CompilerServices.RuntimeCompatibilityAttribute" preserve="all" />
     <type fullname="System.Runtime.CompilerServices.RuntimeHelpers" preserve="all" />
     <type fullname="System.RuntimeFieldHandle" preserve="all" />
-    <type fullname="System.String" preserve="all" />
-    <type fullname="System.StringSplitOptions" preserve="all" />
     <type fullname="System.ValueType" preserve="all" />
   </assembly>
 </linker>
