@@ -586,6 +586,58 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_EntranceProcedureTypeName
+      value: SaveWorld.ProcedureLaunch
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.size
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[0]
+      value: SaveWorld.ProcedureChangeScene
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[1]
+      value: SaveWorld.ProcedureCheckResources
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[2]
+      value: SaveWorld.ProcedureCheckVersion
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[3]
+      value: SaveWorld.ProcedureInitResources
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[4]
+      value: SaveWorld.ProcedureLaunch
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[5]
+      value: SaveWorld.ProcedureMain
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[6]
+      value: SaveWorld.ProcedurePreload
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[7]
+      value: SaveWorld.ProcedureSplash
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[8]
+      value: SaveWorld.ProcedureUpdateResources
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[9]
+      value: SaveWorld.ProcedureUpdateVersion
+      objectReference: {fileID: 0}
+    - target: {fileID: 4486896388028774663, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
+      propertyPath: m_AvailableProcedureTypeNames.Array.data[10]
+      value: SaveWorld.ProcedureVerifyResources
+      objectReference: {fileID: 0}
     - target: {fileID: 4486896388035616917, guid: ed26c7b38f6970f468038c35ed6f829c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
