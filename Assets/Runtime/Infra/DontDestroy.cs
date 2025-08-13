@@ -1,9 +1,12 @@
 using UnityEngine;
 
-public class DontDestroy : MonoBehaviour
+namespace SaveWorld
 {
-    private void Awake()
+    public class DontDestroy : MonoBehaviour
     {
-        DontDestroyOnLoad(gameObject);
+        private void Awake()
+        {
+            DontDestroyOnLoad(gameObject);
+        }
     }
 }
