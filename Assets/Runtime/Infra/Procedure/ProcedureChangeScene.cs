@@ -98,6 +98,7 @@ namespace SaveWorld
             {
                 ChangeState<ProcedureMain>(procedureOwner);
             }*/
+            ChangeState<ProcedureMain>(procedureOwner);
         }
 
         private void OnLoadSceneSuccess(object sender, GameEventArgs e)

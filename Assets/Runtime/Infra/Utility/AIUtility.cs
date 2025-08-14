@@ -121,7 +121,7 @@ namespace SaveWorld
             return (toTransform.position - fromTransform.position).magnitude;
         }
 
-        public static void PerformCollision(TargetableObject entity, Entity other)
+        /*public static void PerformCollision(TargetableObject entity, Entity other)
         {
             if (entity == null || other == null)
             {
@@ -169,7 +169,7 @@ namespace SaveWorld
                 GameEntry.Entity.HideEntity(bullet);
                 return;
             }
-        }
+        }*/
 
         private static int CalcDamageHP(int attack, int defense)
         {

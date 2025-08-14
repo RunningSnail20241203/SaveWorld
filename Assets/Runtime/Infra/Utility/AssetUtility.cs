@@ -13,22 +13,24 @@ namespace SaveWorld
     {
         public static string GetConfigAsset(string assetName, bool fromBytes)
         {
-            return Utility.Text.Format("Assets/GameMain/Configs/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
+            return Utility.Text.Format("Assets/Configs/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
         }
 
         public static string GetDataTableAsset(string assetName, bool fromBytes)
         {
-            return Utility.Text.Format("Assets/GameMain/DataTables/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
+            return Utility.Text.Format("Assets/DataTables/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
         }
 
+        /*
         public static string GetDictionaryAsset(string assetName, bool fromBytes)
         {
             return Utility.Text.Format("Assets/GameMain/Localization/{0}/Dictionaries/{1}.{2}", GameEntry.Localization.Language, assetName, fromBytes ? "bytes" : "xml");
         }
+        */
 
         public static string GetFontAsset(string assetName)
         {
-            return Utility.Text.Format("Assets/GameMain/Fonts/{0}.ttf", assetName);
+            return Utility.Text.Format("Assets/Art/Fonts/{0}.ttf", assetName);
         }
 
         public static string GetSceneAsset(string assetName)

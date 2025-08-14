@@ -98,7 +98,7 @@ namespace SaveWorld
             }
 
             // Preload dictionaries
-            LoadDictionary("Default");
+            // LoadDictionary("Default");
 
             // Preload fonts
             LoadFont("MainFont");
@@ -118,12 +118,14 @@ namespace SaveWorld
             GameEntry.DataTable.LoadDataTable(dataTableName, dataTableAssetName, this);
         }
 
+        /*
         private void LoadDictionary(string dictionaryName)
         {
             string dictionaryAssetName = AssetUtility.GetDictionaryAsset(dictionaryName, false);
             m_LoadedFlag.Add(dictionaryAssetName, false);
             GameEntry.Localization.ReadData(dictionaryAssetName, this);
         }
+        */
 
         private void LoadFont(string fontName)
         {

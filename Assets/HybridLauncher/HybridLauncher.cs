@@ -17,7 +17,7 @@ public class HybridLauncher : MonoBehaviour
     {
         LoadMetadataForAOTAssemblies();
 
-        const string startScene = "Login";
+        const string startScene = "Scenes/Login.unity";
         Addressables.LoadSceneAsync(startScene).Completed += _ =>
         {
             Debug.Log($"LoadSceneAsync :{startScene} Completed");
