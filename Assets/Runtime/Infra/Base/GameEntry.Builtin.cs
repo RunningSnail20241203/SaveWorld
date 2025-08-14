@@ -108,7 +108,7 @@ namespace SaveWorld
         /// <summary>
         /// 获取本地化组件。
         /// </summary>
-        public static LocalizationComponent Localization
+        public static MyLocalizationComponent Localization
         {
             get;
             private set;
@@ -207,7 +207,7 @@ namespace SaveWorld
             Event = UnityGameFramework.Runtime.GameEntry.GetComponent<EventComponent>();
             FileSystem = UnityGameFramework.Runtime.GameEntry.GetComponent<FileSystemComponent>();
             Fsm = UnityGameFramework.Runtime.GameEntry.GetComponent<FsmComponent>();
-            Localization = UnityGameFramework.Runtime.GameEntry.GetComponent<LocalizationComponent>();
+            // Localization = UnityGameFramework.Runtime.GameEntry.GetComponent<LocalizationComponent>();
             Network = UnityGameFramework.Runtime.GameEntry.GetComponent<NetworkComponent>();
             ObjectPool = UnityGameFramework.Runtime.GameEntry.GetComponent<ObjectPoolComponent>();
             Procedure = UnityGameFramework.Runtime.GameEntry.GetComponent<ProcedureComponent>();

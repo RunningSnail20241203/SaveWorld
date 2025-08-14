@@ -23,6 +23,7 @@ namespace SaveWorld
         private static void InitCustomComponents()
         {
             BuiltinData = UnityGameFramework.Runtime.GameEntry.GetComponent<BuiltinDataComponent>();
+            Localization = UnityGameFramework.Runtime.GameEntry.GetComponent<MyLocalizationComponent>();
         }
     }
 }

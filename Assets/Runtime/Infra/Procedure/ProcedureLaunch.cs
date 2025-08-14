@@ -16,10 +16,7 @@ namespace SaveWorld
     {
         public override bool UseNativeDialog
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
@@ -53,35 +50,16 @@ namespace SaveWorld
 
         private void InitLanguageSettings()
         {
+            var language = GameEntry.Localization.Language;
             if (GameEntry.Base.EditorResourceMode && GameEntry.Base.EditorLanguage != Language.Unspecified)
             {
                 // 编辑器资源模式直接使用 Inspector 上设置的语言
-                return;
+                language = GameEntry.Base.EditorLanguage;
             }
-
-            Language language = GameEntry.Localization.Language;
-            if (GameEntry.Setting.HasSetting(Constant.Setting.Language))
+            else if (GameEntry.Setting.HasSetting(Constant.Setting.Language))
             {
-                try
-                {
-                    string languageString = GameEntry.Setting.GetString(Constant.Setting.Language);
-                    language = (Language)Enum.Parse(typeof(Language), languageString);
-                }
-                catch
-                {
-                }
-            }
-
-            if (language != Language.English
-                && language != Language.ChineseSimplified
-                && language != Language.ChineseTraditional
-                && language != Language.Korean)
-            {
-                // 若是暂不支持的语言，则使用英语
-                language = Language.English;
-
-                GameEntry.Setting.SetString(Constant.Setting.Language, language.ToString());
-                GameEntry.Setting.Save();
+                var languageString = GameEntry.Setting.GetString(Constant.Setting.Language);
+                Enum.TryParse(languageString, out language);
             }
 
             GameEntry.Localization.Language = language;

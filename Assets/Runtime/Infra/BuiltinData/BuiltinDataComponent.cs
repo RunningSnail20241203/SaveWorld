@@ -56,7 +56,7 @@ namespace SaveWorld
             }
         }
 
-        public void InitDefaultDictionary()
+        /*public void InitDefaultDictionary()
         {
             if (m_DefaultDictionaryTextAsset == null || string.IsNullOrEmpty(m_DefaultDictionaryTextAsset.text))
             {
@@ -69,6 +69,6 @@ namespace SaveWorld
                 Log.Warning("Parse default dictionary failure.");
                 return;
             }
-        }
+        }*/
     }
 }
