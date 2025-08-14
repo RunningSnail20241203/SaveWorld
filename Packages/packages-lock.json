@@ -68,6 +68,23 @@
       },
       "url": "https://packages.unity.cn"
     },
+    "com.unity.localization": {
+      "version": "1.5.3",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.addressables": "1.22.2",
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      },
+      "url": "https://packages.unity.cn"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.cn"
+    },
     "com.unity.scriptablebuildpipeline": {
       "version": "1.21.25",
       "depth": 1,
