@@ -91,14 +91,14 @@ namespace SaveWorld
             // Preload configs
             LoadConfig("DefaultConfig");
 
-            // Preload data tables
+            /*// Preload data tables
             foreach (string dataTableName in DataTableNames)
             {
                 LoadDataTable(dataTableName);
-            }
+            }*/
 
-            // Preload dictionaries
-            // LoadDictionary("Default");
+            /*// Preload dictionaries
+            LoadDictionary("Default");*/
 
             // Preload fonts
             LoadFont("MainFont");
@@ -111,12 +111,12 @@ namespace SaveWorld
             GameEntry.Config.ReadData(configAssetName, this);
         }
 
-        private void LoadDataTable(string dataTableName)
+        /*private void LoadDataTable(string dataTableName)
         {
             string dataTableAssetName = AssetUtility.GetDataTableAsset(dataTableName, false);
             m_LoadedFlag.Add(dataTableAssetName, false);
             GameEntry.DataTable.LoadDataTable(dataTableName, dataTableAssetName, this);
-        }
+        }*/
 
         /*
         private void LoadDictionary(string dictionaryName)
