@@ -35,7 +35,7 @@ namespace SaveWorld
 
         public static string GetSceneAsset(string assetName)
         {
-            return Utility.Text.Format("Assets/GameMain/Scenes/{0}.unity", assetName);
+            return Utility.Text.Format("Scenes/{0}.unity", assetName);
         }
 
         public static string GetMusicAsset(string assetName)

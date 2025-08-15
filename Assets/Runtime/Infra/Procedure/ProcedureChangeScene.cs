@@ -14,19 +14,10 @@ namespace SaveWorld
 {
     public class ProcedureChangeScene : ProcedureBase
     {
-        private const int MenuSceneId = 1;
+        private bool m_IsChangeSceneComplete;
+        private int m_BackgroundMusicId;
 
-        private bool m_ChangeToMenu = false;
-        private bool m_IsChangeSceneComplete = false;
-        private int m_BackgroundMusicId = 0;
-
-        public override bool UseNativeDialog
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool UseNativeDialog => false;
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -57,13 +48,13 @@ namespace SaveWorld
             // 还原游戏速度
             GameEntry.Base.ResetNormalGameSpeed();
 
-            int sceneId = procedureOwner.GetData<VarInt32>("NextSceneId");
-            m_ChangeToMenu = sceneId == MenuSceneId;
-            IDataTable<DRScene> dtScene = GameEntry.DataTable.GetDataTable<DRScene>();
-            DRScene drScene = dtScene.GetDataRow(sceneId);
+            // 获取下一个场景
+            var sceneName = procedureOwner.GetData<VarString>(Constant.String.NextSceneName);
+            var dtScene = GameEntry.DataTable.GetDataTable<DRScene>();
+            var drScene = dtScene.GetDataRow(x=>x.AssetName == sceneName);
             if (drScene == null)
             {
-                Log.Warning("Can not load scene '{0}' from data table.", sceneId.ToString());
+                Log.Error("Can not load scene '{0}' from data table DRScene.", sceneName);
                 return;
             }
 
