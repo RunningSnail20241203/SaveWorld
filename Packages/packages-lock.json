@@ -8,9 +8,9 @@
       "hash": "7a0032934b438ad20a4a691f8093ce1865824c42"
     },
     "com.jiangyin.gameframework": {
-      "version": "https://github.com/RunningSnail20241203/UnityGameFramework.git#add-procedure-asmbly",
+      "version": "file:D:/Program Files/git-fork/CombinedGF-Unity",
       "depth": 0,
-      "source": "git",
+      "source": "local",
       "dependencies": {
         "com.unity.modules.androidjni": "1.0.0",
         "com.unity.modules.animation": "1.0.0",
@@ -19,8 +19,7 @@
         "com.unity.modules.imgui": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0",
         "com.unity.modules.unitywebrequest": "1.0.0"
-      },
-      "hash": "8314eba034da8b0f7c78c14d7c6a215deee88053"
+      }
     },
     "com.unity.addressables": {
       "version": "1.22.3",

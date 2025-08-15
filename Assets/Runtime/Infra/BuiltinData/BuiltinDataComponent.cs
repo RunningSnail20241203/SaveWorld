@@ -16,8 +16,8 @@ namespace SaveWorld
         [SerializeField]
         private TextAsset m_BuildInfoTextAsset = null;
 
-        [SerializeField]
-        private TextAsset m_DefaultDictionaryTextAsset = null;
+        /*[SerializeField]
+        private TextAsset m_DefaultDictionaryTextAsset = null;*/
 
         [SerializeField]
         private UpdateResourceForm m_UpdateResourceFormTemplate = null;
