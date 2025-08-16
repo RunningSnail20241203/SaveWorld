@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Card Shared Data
   m_EditorClassIdentifier: 
   m_TableCollectionName: Card
-  m_TableCollectionNameGuidString: 00000000000000000000000000000000
+  m_TableCollectionNameGuidString: ee37cec109402404b86801b9dffaf27b
   m_Entries: []
   m_Metadata:
     m_Items: []

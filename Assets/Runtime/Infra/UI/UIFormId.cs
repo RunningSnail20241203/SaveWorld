@@ -18,6 +18,7 @@ namespace SaveWorld
         /// 弹出框。
         /// </summary>
         DialogForm = 1,
+        LoginForm = 2,
 
         /// <summary>
         /// 主菜单。

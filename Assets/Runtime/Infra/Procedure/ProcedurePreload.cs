@@ -17,30 +17,17 @@ namespace SaveWorld
 {
     public class ProcedurePreload : ProcedureBase
     {
-        public static readonly string[] DataTableNames = new string[]
-        {
-            "Aircraft",
-            "Armor",
-            "Asteroid",
-            "Entity",
+        public static readonly string[] DataTableNames = {
             "Music",
             "Scene",
             "Sound",
-            "Thruster",
             "UIForm",
             "UISound",
-            "Weapon",
         };
 
-        private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();
+        private Dictionary<string, bool> m_LoadedFlag = new();
 
-        public override bool UseNativeDialog
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UseNativeDialog => true;
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -82,8 +69,9 @@ namespace SaveWorld
                 }
             }
 
-            procedureOwner.SetData<VarInt32>("NextSceneId", GameEntry.Config.GetInt("Scene.Menu"));
-            ChangeState<ProcedureChangeScene>(procedureOwner);
+            /*procedureOwner.SetData<VarInt32>("NextSceneId", GameEntry.Config.GetInt("Scene.Menu"));
+            ChangeState<ProcedureChangeScene>(procedureOwner);*/
+            ChangeState<ProcedurePreLogin>(procedureOwner);
         }
 
         private void PreloadResources()
@@ -91,11 +79,11 @@ namespace SaveWorld
             // Preload configs
             LoadConfig("DefaultConfig");
 
-            /*// Preload data tables
+            // Preload data tables
             foreach (string dataTableName in DataTableNames)
             {
                 LoadDataTable(dataTableName);
-            }*/
+            }
 
             /*// Preload dictionaries
             LoadDictionary("Default");*/
@@ -111,12 +99,12 @@ namespace SaveWorld
             GameEntry.Config.ReadData(configAssetName, this);
         }
 
-        /*private void LoadDataTable(string dataTableName)
+        private void LoadDataTable(string dataTableName)
         {
             string dataTableAssetName = AssetUtility.GetDataTableAsset(dataTableName, false);
             m_LoadedFlag.Add(dataTableAssetName, false);
             GameEntry.DataTable.LoadDataTable(dataTableName, dataTableAssetName, this);
-        }*/
+        }
 
         /*
         private void LoadDictionary(string dictionaryName)

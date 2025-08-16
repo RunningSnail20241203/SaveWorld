@@ -22,9 +22,19 @@ MonoBehaviour:
     m_ReadOnly: 1
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71f3929f4ab6db5439345696ea8fd5a6
+    m_Address: Assets/Localization/Tables/Dialog Shared Data.asset
+    m_ReadOnly: 1
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d58b1f1437c499049a7bad55ed304f28
     m_Address: Assets/Localization/Settings/Localization Settings.asset
     m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee37cec109402404b86801b9dffaf27b
+    m_Address: Assets/Localization/Tables/Card Shared Data.asset
+    m_ReadOnly: 1
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0

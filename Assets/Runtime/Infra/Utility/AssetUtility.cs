@@ -18,6 +18,7 @@ namespace SaveWorld
 
         public static string GetDataTableAsset(string assetName, bool fromBytes)
         {
+            //Assets/DataTables/Aircraft.txt
             return Utility.Text.Format("Assets/DataTables/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
         }
 

@@ -9,13 +9,13 @@ using UnityEngine;
 
 
 public class ToAddressableManager : ICustomResourceManager
-{ 
+{
     private Dictionary<object, Queue<IEnumerator>> assetMap = new Dictionary<object, Queue<IEnumerator>>();
 
     public void ToLoadScene(string sceneAssetName, LoadSceneCallbacks loadSceneCallbacks, int priority, object userData)
     {
         //AsyncOperationHandle<SceneInstance>
-        var handle =  Addressables.LoadSceneAsync(sceneAssetName);
+        var handle = Addressables.LoadSceneAsync(sceneAssetName);
 
         //由于addressable没有加载进度事件
         //userData参数传递加载场景句柄，根据该句柄显示加载进度
@@ -24,7 +24,7 @@ public class ToAddressableManager : ICustomResourceManager
 
         handle.Completed += resource =>
         {
-            if(resource.Status == AsyncOperationStatus.Succeeded)
+            if (resource.Status == AsyncOperationStatus.Succeeded)
             {
                 loadSceneCallbacks.LoadSceneSuccessCallback(sceneAssetName, 0, userData);
                 if (!assetMap.ContainsKey(sceneAssetName))
@@ -42,28 +42,26 @@ public class ToAddressableManager : ICustomResourceManager
             {
                 loadSceneCallbacks.LoadSceneFailureCallback(sceneAssetName, LoadResourceStatus.NotExist, "", userData);
             }
-
         };
-
-    } 
+    }
 
 
     public void ToUnloadScene(string sceneAssetName, UnloadSceneCallbacks unloadSceneCallbacks, object userData)
     {
         if (assetMap.TryGetValue(sceneAssetName, out Queue<IEnumerator> assetObjects))
         {
-            var handle = (AsyncOperationHandle<SceneInstance>) assetObjects.Dequeue();
+            var handle = (AsyncOperationHandle<SceneInstance>)assetObjects.Dequeue();
             var unloadasync = Addressables.UnloadSceneAsync(handle);
 
             unloadasync.Completed += resource =>
             {
-                if(resource.Status == AsyncOperationStatus.Succeeded)
+                if (resource.Status == AsyncOperationStatus.Succeeded)
                 {
                     unloadSceneCallbacks.UnloadSceneSuccessCallback(sceneAssetName, userData);
                 }
                 else
                 {
-                     unloadSceneCallbacks.UnloadSceneFailureCallback(sceneAssetName, userData);
+                    unloadSceneCallbacks.UnloadSceneFailureCallback(sceneAssetName, userData);
                 }
             };
 
@@ -72,64 +70,75 @@ public class ToAddressableManager : ICustomResourceManager
                 assetMap.Remove(sceneAssetName);
             }
         }
-
     }
 
-    public void ToLoadAsset(string assetName, Type assetType, int priority, GameFramework.Resource.LoadAssetCallbacks loadAssetCallbacks, object userData)
+    public void ToLoadAsset(string assetName, Type assetType, int priority,
+        GameFramework.Resource.LoadAssetCallbacks loadAssetCallbacks, object userData)
     {
-        if(assetType == null)
+        if (assetType == null)
         {
             throw new Exception("加载参数assetType需要传入明确类型！");
         }
 
 
-        if(assetType == typeof(GameObject))
+        if (assetType == typeof(GameObject))
         {
-                RedirectHandle<GameObject>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<GameObject>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(Texture))
+
+        if (assetType == typeof(Texture))
         {
-                RedirectHandle<Texture>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<Texture>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(Texture2D))
+
+        if (assetType == typeof(Texture2D))
         {
-                RedirectHandle<Texture2D>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<Texture2D>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(AudioClip))
+
+        if (assetType == typeof(AudioClip))
         {
-                RedirectHandle<AudioClip>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<AudioClip>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(Texture3D))
+
+        if (assetType == typeof(Texture3D))
         {
-                RedirectHandle<Texture3D>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<Texture3D>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(AnimationClip))
+
+        if (assetType == typeof(AnimationClip))
         {
-                RedirectHandle<AnimationClip>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<AnimationClip>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(TextAsset))
+
+        if (assetType == typeof(TextAsset))
         {
-                RedirectHandle<TextAsset>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<TextAsset>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(Material))
+
+        if (assetType == typeof(Material))
         {
-                RedirectHandle<Material>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<Material>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(Shader))
+
+        if (assetType == typeof(Shader))
         {
-                RedirectHandle<Shader>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<Shader>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(ShaderVariantCollection))
+
+        if (assetType == typeof(ShaderVariantCollection))
         {
-                RedirectHandle<ShaderVariantCollection>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<ShaderVariantCollection>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(Mesh))
+
+        if (assetType == typeof(Mesh))
         {
-                RedirectHandle<Mesh>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<Mesh>(assetName, priority, loadAssetCallbacks, userData);
         }
-        if(assetType == typeof(TextMesh))
+
+        if (assetType == typeof(TextMesh))
         {
-                RedirectHandle<TextMesh>(assetName, priority, loadAssetCallbacks, userData);
+            RedirectHandle<TextMesh>(assetName, priority, loadAssetCallbacks, userData);
         }
 
 
@@ -140,9 +149,9 @@ public class ToAddressableManager : ICustomResourceManager
     {
         if (assetMap.TryGetValue(asset, out Queue<IEnumerator> assetObjects))
         {
-             var handle = assetObjects.Dequeue();
+            var handle = assetObjects.Dequeue();
             Addressables.Release(handle);
-            if(assetObjects.Count == 0)
+            if (assetObjects.Count == 0)
             {
                 assetMap.Remove(asset);
             }
@@ -150,22 +159,24 @@ public class ToAddressableManager : ICustomResourceManager
     }
 
     //重定向加载句柄，Addressable加载只支持明确类型
-    private void RedirectHandle<TObject>(string assetName, int priority, GameFramework.Resource.LoadAssetCallbacks loadAssetCallbacks, object userData) where TObject : UnityEngine.Object
+    private void RedirectHandle<TObject>(string assetName, int priority,
+        GameFramework.Resource.LoadAssetCallbacks loadAssetCallbacks, object userData)
+        where TObject : UnityEngine.Object
     {
-        AsyncOperationHandle<TObject> handle =  Addressables.LoadAssetAsync<TObject>(assetName);
-         //由于addressable没有加载进度事件
+        AsyncOperationHandle<TObject> handle = Addressables.LoadAssetAsync<TObject>(assetName);
+        //由于addressable没有加载进度事件
         //userData参数传递加载句柄，根据该句柄显示加载进度
         //  var percentage = handle.GetDownloadStatus().Percent;
         loadAssetCallbacks.LoadAssetUpdateCallback(assetName, 0, handle);
 
         handle.Completed += resource =>
         {
-            if(resource.Status == AsyncOperationStatus.Succeeded)
+            if (resource.Status == AsyncOperationStatus.Succeeded)
             {
                 loadAssetCallbacks.LoadAssetSuccessCallback(assetName, handle.Result, 0, userData);
                 if (!assetMap.ContainsKey(handle.Result))
                 {
-                    Queue<IEnumerator> assetObjects= new Queue<IEnumerator>();
+                    Queue<IEnumerator> assetObjects = new Queue<IEnumerator>();
                     assetObjects.Enqueue(resource);
                     assetMap.Add(handle.Result, assetObjects);
                 }
@@ -183,13 +194,7 @@ public class ToAddressableManager : ICustomResourceManager
 
     public void LaunchAsset(Action complet)
     {
-       
         var handle = Addressables.InitializeAsync();
-        handle.Completed += _ =>
-        {
-           complet?.Invoke();
-        };
-
+        handle.Completed += _ => { complet?.Invoke(); };
     }
-
 }

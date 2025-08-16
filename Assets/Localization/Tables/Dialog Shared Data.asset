@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Dialog Shared Data
   m_EditorClassIdentifier: 
   m_TableCollectionName: Dialog
-  m_TableCollectionNameGuidString: 00000000000000000000000000000000
+  m_TableCollectionNameGuidString: 71f3929f4ab6db5439345696ea8fd5a6
   m_Entries: []
   m_Metadata:
     m_Items: []

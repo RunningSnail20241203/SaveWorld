@@ -44,8 +44,8 @@ namespace SaveWorld
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            // 运行一帧即切换到 Splash 展示流程
-            ChangeState<ProcedureSplash>(procedureOwner);
+            // 运行一帧即切换到 初始化addressable阶段
+            ChangeState<ProcedureInitResources>(procedureOwner);
         }
 
         private void InitLanguageSettings()
@@ -66,7 +66,7 @@ namespace SaveWorld
             Log.Info("Init language settings complete, current language is '{0}'.", language.ToString());
         }
 
-        private void InitCurrentVariant()
+        /*private void InitCurrentVariant()
         {
             if (GameEntry.Base.EditorResourceMode)
             {
@@ -100,7 +100,7 @@ namespace SaveWorld
 
             GameEntry.Resource.SetCurrentVariant(currentVariant);
             Log.Info("Init current variant complete.");
-        }
+        }*/
 
         private void InitSoundSettings()
         {
