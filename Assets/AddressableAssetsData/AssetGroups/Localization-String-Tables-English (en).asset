@@ -16,7 +16,22 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: b63b052ed0e9b334094b725e63563ed6
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 2256f3e786baeb84aa51ca17380f12aa
+    m_Address: Assets/Localization/Tables/Card_en.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a2d02385f347ec4db35eee4b099b704
+    m_Address: Assets/Localization/Tables/Dialog_en.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91a19f65105e6f743967f06e145810f2
+    m_Address: Assets/Localization/Tables/UI_en.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 2f564be84de5418478237fa1a46b09b5, type: 2}
   m_SchemaSet:
