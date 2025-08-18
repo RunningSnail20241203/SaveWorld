@@ -1,4 +1,5 @@
-﻿//------------------------------------------------------------
+﻿/*
+//------------------------------------------------------------
 // Game Framework
 // Copyright © 2013-2021 Jiang Yin. All rights reserved.
 // Homepage: https://gameframework.cn/
@@ -19,14 +20,6 @@ namespace SaveWorld
         private bool m_CheckVersionComplete = false;
         private bool m_NeedUpdateVersion = false;
         private VersionInfo m_VersionInfo = null;
-
-        public override bool UseNativeDialog
-        {
-            get
-            {
-                return true;
-            }
-        }
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -171,3 +164,4 @@ namespace SaveWorld
         }
     }
 }
+*/

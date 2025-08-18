@@ -27,8 +27,6 @@ namespace SaveWorld
 
         private Dictionary<string, bool> m_LoadedFlag = new();
 
-        public override bool UseNativeDialog => true;
-
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
@@ -69,8 +67,6 @@ namespace SaveWorld
                 }
             }
 
-            /*procedureOwner.SetData<VarInt32>("NextSceneId", GameEntry.Config.GetInt("Scene.Menu"));
-            ChangeState<ProcedureChangeScene>(procedureOwner);*/
             ChangeState<ProcedurePreLogin>(procedureOwner);
         }
 

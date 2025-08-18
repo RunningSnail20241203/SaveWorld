@@ -15,26 +15,29 @@ MonoBehaviour:
   m_GroupName: Localization-String-Tables-Chinese (Simplified) (zh)
   m_Data:
     m_SerializedData: []
-  m_GUID: 17992fcc0e6c49d4ab8848e304d067ba
+  m_GUID: 766920bde0d81cd49b073d8e825a5d2d
   m_SerializeEntries:
   - m_GUID: 33dcd60b09759814a9d00c9dc17abb98
-    m_Address: Assets/Localization/Tables/Dialog_zh.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_Address: Dialog_zh
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-zh
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1e2ad48022ba494aacb9b645d6e11bc
-    m_Address: Assets/Localization/Tables/UI_zh.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_Address: UI_zh
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-zh
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c75754d4c1b1ea74193a5a92ae158a8b
-    m_Address: Assets/Localization/Tables/Card_zh.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_Address: Card_zh
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-zh
     FlaggedDuringContentUpdateRestriction: 0
-  m_ReadOnly: 0
+  m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: 2f564be84de5418478237fa1a46b09b5, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: ca1c1e26399ed5a48b3c3e940419e545, type: 2}
-    - {fileID: 11400000, guid: e9865fdeab1671042987b032fa68d9ef, type: 2}
+    - {fileID: 11400000, guid: cf0f9d290b00da14fb373beb159eda8a, type: 2}
+    - {fileID: 11400000, guid: d1d55d91694a7ef4790f98cd25f72c22, type: 2}

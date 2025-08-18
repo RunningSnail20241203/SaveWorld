@@ -1,4 +1,5 @@
-﻿//------------------------------------------------------------
+﻿/*
+//------------------------------------------------------------
 // Game Framework
 // Copyright © 2013-2021 Jiang Yin. All rights reserved.
 // Homepage: https://gameframework.cn/
@@ -15,14 +16,6 @@ namespace SaveWorld
     {
         private bool m_StartGame = false;
         private MenuForm m_MenuForm = null;
-
-        public override bool UseNativeDialog
-        {
-            get
-            {
-                return false;
-            }
-        }
 
         public void StartGame()
         {
@@ -76,3 +69,4 @@ namespace SaveWorld
         }
     }
 }
+*/

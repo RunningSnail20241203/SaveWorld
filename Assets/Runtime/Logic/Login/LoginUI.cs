@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class LoginUI : UGuiForm
 {
     [SerializeField] private Button loginButton;
+    private ProcedurePreLogin procedurePreLogin;
     private void Awake()
     {
         loginButton.onClick.AddListener(OnLoginBtnClick);
@@ -17,6 +18,13 @@ public class LoginUI : UGuiForm
 
     private void OnLoginBtnClick()
     {
-        GameEntry.Event.Fire(UIClickLoginBtnEventArgs.EventID, new UIClickLoginBtnEventArgs());
+        procedurePreLogin.StartLogin();
+    }
+
+    protected override void OnOpen(object userData)
+    {
+        base.OnOpen(userData);
+        
+        procedurePreLogin = userData as ProcedurePreLogin;
     }
 }

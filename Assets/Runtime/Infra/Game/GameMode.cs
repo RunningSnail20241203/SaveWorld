@@ -13,8 +13,16 @@ namespace SaveWorld
     public enum GameMode : byte
     {
         /// <summary>
-        /// 生存模式。
+        /// 单机模式
         /// </summary>
-        Survival,
+        PlaySingle,
+        /// <summary>
+        /// 匹配模式
+        /// </summary>
+        PlayMatch,
+        /// <summary>
+        /// 邀请模式
+        /// </summary>
+        PlayRoom,
     }
 }

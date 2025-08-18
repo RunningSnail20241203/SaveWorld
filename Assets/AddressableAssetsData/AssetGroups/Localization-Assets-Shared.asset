@@ -15,7 +15,7 @@ MonoBehaviour:
   m_GroupName: Localization-Assets-Shared
   m_Data:
     m_SerializedData: []
-  m_GUID: 1ac1cee87eee70342af0bc8e237d68e1
+  m_GUID: 3458233a3bb3c914a93af57b6bfcd075
   m_SerializeEntries:
   - m_GUID: 1809bdb750853f2498ae3154e0e0d0c5
     m_Address: Assets/Localization/Tables/UI Shared Data.asset
@@ -24,22 +24,17 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71f3929f4ab6db5439345696ea8fd5a6
     m_Address: Assets/Localization/Tables/Dialog Shared Data.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d58b1f1437c499049a7bad55ed304f28
-    m_Address: Assets/Localization/Settings/Localization Settings.asset
-    m_ReadOnly: 0
+    m_ReadOnly: 1
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ee37cec109402404b86801b9dffaf27b
     m_Address: Assets/Localization/Tables/Card Shared Data.asset
-    m_ReadOnly: 0
+    m_ReadOnly: 1
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  m_ReadOnly: 0
+  m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: 2f564be84de5418478237fa1a46b09b5, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 3d38ba6065afee74ba71b099f1207b41, type: 2}
-    - {fileID: 11400000, guid: 6deff7c68bc564d47bf9ffdb9a2618f6, type: 2}
+    - {fileID: 11400000, guid: b61af34ef20d8e649a25fa8faf0436be, type: 2}
+    - {fileID: 11400000, guid: 5487787e950a33a4899a7e4ffc1dd585, type: 2}

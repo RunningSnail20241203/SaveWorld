@@ -1,12 +1,4 @@
-﻿//------------------------------------------------------------
-// Game Framework
-// Copyright © 2013-2021 Jiang Yin. All rights reserved.
-// Homepage: https://gameframework.cn/
-// Feedback: mailto:ellan@gameframework.cn
-//------------------------------------------------------------
-
-using GameFramework.DataTable;
-using GameFramework.Event;
+﻿using GameFramework.Event;
 using UnityGameFramework.Runtime;
 using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedureManager>;
 
@@ -16,8 +8,6 @@ namespace SaveWorld
     {
         private bool m_IsChangeSceneComplete;
         private int m_BackgroundMusicId;
-
-        public override bool UseNativeDialog => false;
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -49,12 +39,12 @@ namespace SaveWorld
             GameEntry.Base.ResetNormalGameSpeed();
 
             // 获取下一个场景
-            var sceneName = procedureOwner.GetData<VarString>(Constant.String.NextSceneName);
+            var sceneId = procedureOwner.GetData<VarInt32>(Constant.String.NextSceneId);
             var dtScene = GameEntry.DataTable.GetDataTable<DRScene>();
-            var drScene = dtScene.GetDataRow(x=>x.AssetName == sceneName);
+            var drScene = dtScene.GetDataRow(sceneId);
             if (drScene == null)
             {
-                Log.Error("Can not load scene '{0}' from data table DRScene.", sceneName);
+                Log.Error("Can not load scene '{0}' from data table DRScene.", sceneId);
                 return;
             }
 
@@ -81,15 +71,8 @@ namespace SaveWorld
                 return;
             }
 
-            /*if (m_ChangeToMenu)
-            {
-                ChangeState<ProcedureMenu>(procedureOwner);
-            }
-            else
-            {
-                ChangeState<ProcedureMain>(procedureOwner);
-            }*/
-            ChangeState<ProcedureMain>(procedureOwner);
+            var nextProcedure = procedureOwner.GetData<VarType>(Constant.String.NextProcedureName);
+            ChangeState(procedureOwner, nextProcedure);
         }
 
         private void OnLoadSceneSuccess(object sender, GameEventArgs e)

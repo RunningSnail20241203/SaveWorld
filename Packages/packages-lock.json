@@ -8,7 +8,7 @@
       "hash": "7a0032934b438ad20a4a691f8093ce1865824c42"
     },
     "com.jiangyin.gameframework": {
-      "version": "file:G:/GitRepo/CombinedGF-Unity",
+      "version": "file:D:/Program Files/git-fork/CombinedGF-Unity",
       "depth": 0,
       "source": "local",
       "dependencies": {

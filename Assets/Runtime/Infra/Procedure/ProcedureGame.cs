@@ -1,49 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using GameFramework.Event;
+﻿using System.Collections.Generic;
 using GameFramework.Fsm;
 using GameFramework.Procedure;
-using Runtime.Logic.Event;
 using UnityGameFramework.Runtime;
 
 namespace SaveWorld
 {
     public class ProcedureGame : ProcedureBase
     {
-        public override bool UseNativeDialog => false;
         private readonly Dictionary<GameMode, GameBase> m_Games = new();
         private GameBase m_CurrentGame;
-        private IFsm<IProcedureManager>  m_ProcedureManager = null;
+        private int? m_SettlementFormId;
+        private int? m_GameFormId;
+
 
         protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            GameMode gameMode = (GameMode)procedureOwner.GetData<VarByte>("GameMode").Value;
+            GameMode gameMode = (GameMode)procedureOwner.GetData<VarByte>(Constant.String.CurrentGameMode).Value;
             m_CurrentGame = m_Games[gameMode];
             m_CurrentGame.Initialize();
-            
-            GameEntry.Event.Subscribe(LeaveGameEventArgs.EventId, OnReceiveLeaveGameEvent);
+
+            m_GameFormId = GameEntry.UI.OpenUIForm(GameEntry.Config.GetInt(Constant.UI.GameForm), this);
         }
 
         protected override void OnInit(IFsm<IProcedureManager> procedureOwner)
         {
-            m_ProcedureManager = procedureOwner;
             base.OnInit(procedureOwner);
 
-            m_Games.Add(GameMode.Survival, new SurvivalGame());
-        }
-
-        protected override void OnLeave(IFsm<IProcedureManager> procedureOwner, bool isShutdown)
-        {
-            GameEntry.Event.Unsubscribe(LeaveGameEventArgs.EventId, OnReceiveLeaveGameEvent);
-            
-            if (m_CurrentGame != null)
-            {
-                m_CurrentGame.Shutdown();
-                m_CurrentGame = null;
-            }
-
-            base.OnLeave(procedureOwner, isShutdown);
+            m_Games.Add(GameMode.PlaySingle, new PlaySingleGame());
+            m_Games.Add(GameMode.PlayMatch, new PlayMatchGame());
+            m_Games.Add(GameMode.PlayRoom, new PlayRoomGame());
         }
 
         protected override void OnUpdate(IFsm<IProcedureManager> procedureOwner, float elapseSeconds,
@@ -53,6 +39,11 @@ namespace SaveWorld
             if (m_CurrentGame != null)
             {
                 m_CurrentGame.Update(elapseSeconds, realElapseSeconds);
+
+                if (m_CurrentGame.GameOver && m_SettlementFormId == null)
+                {
+                    StartSettle();
+                }
             }
         }
 
@@ -62,17 +53,40 @@ namespace SaveWorld
             base.OnDestroy(procedureOwner);
         }
 
-        private void OnReceiveLeaveGameEvent(object sender, GameEventArgs e)
+        protected override void OnLeave(IFsm<IProcedureManager> procedureOwner, bool isShutdown)
         {
-            if (e is not LeaveGameEventArgs ne) return;
-            LeaveGame(m_ProcedureManager, ne.NextSceneName, ne.NextProcedureType);
+            if (m_CurrentGame != null)
+            {
+                m_CurrentGame.Shutdown();
+                m_CurrentGame = null;
+            }
+
+            if (m_GameFormId != null)
+            {
+                GameEntry.UI.CloseUIForm(m_GameFormId.Value, this);
+                m_GameFormId = null;
+            }
+
+            if (m_SettlementFormId != null)
+            {
+                GameEntry.UI.CloseUIForm(m_SettlementFormId.Value, this);
+                m_SettlementFormId = null;
+            }
+
+            base.OnLeave(procedureOwner, isShutdown);
         }
 
-        private void LeaveGame(IFsm<IProcedureManager> procedureOwner, string sceneName, Type procedureType)
+        public void StartSettle()
         {
-            procedureOwner.SetData<VarString>(Constant.String.NextSceneName, sceneName);
-            procedureOwner.SetData<VarType>(Constant.String.NextProcedureName, procedureType); 
-            ChangeState<ProcedureChangeScene>(procedureOwner);
+            m_SettlementFormId = GameEntry.UI.OpenUIForm(GameEntry.Config.GetInt(Constant.UI.SettlementForm), this);
+        }
+
+        public void LeaveGame()
+        {
+            m_ProcedureOwner.SetData<VarInt32>(Constant.String.NextSceneId,
+                GameEntry.Config.GetInt(Constant.Scene.MainScene));
+            m_ProcedureOwner.SetData<VarType>(Constant.String.NextProcedureName, typeof(ProcedureMain));
+            ChangeState<ProcedureChangeScene>(m_ProcedureOwner);
         }
     }
 }

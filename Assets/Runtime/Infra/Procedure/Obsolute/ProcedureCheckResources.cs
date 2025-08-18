@@ -1,4 +1,5 @@
-﻿using UnityGameFramework.Runtime;
+﻿/*
+using UnityGameFramework.Runtime;
 using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedureManager>;
 
 namespace SaveWorld
@@ -9,14 +10,6 @@ namespace SaveWorld
         private bool m_NeedUpdateResources = false;
         private int m_UpdateResourceCount = 0;
         private long m_UpdateResourceTotalCompressedLength = 0L;
-
-        public override bool UseNativeDialog
-        {
-            get
-            {
-                return true;
-            }
-        }
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -61,3 +54,4 @@ namespace SaveWorld
         }
     }
 }
+*/

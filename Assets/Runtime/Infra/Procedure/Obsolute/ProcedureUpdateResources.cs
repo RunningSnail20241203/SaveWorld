@@ -1,4 +1,5 @@
-﻿using GameFramework;
+﻿/*
+using GameFramework;
 using GameFramework.Event;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,13 +17,6 @@ namespace SaveWorld
         private List<UpdateLengthData> m_UpdateLengthData = new List<UpdateLengthData>();
         private UpdateResourceForm m_UpdateResourceForm = null;
 
-        public override bool UseNativeDialog
-        {
-            get
-            {
-                return true;
-            }
-        }
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
@@ -110,7 +104,7 @@ namespace SaveWorld
 
             float progressTotal = (float)currentTotalUpdateLength / m_UpdateTotalCompressedLength;
             /*string descriptionText = GameEntry.Localization.GetString("UpdateResource.Tips", m_UpdateSuccessCount.ToString(), m_UpdateCount.ToString(), GetByteLengthString(currentTotalUpdateLength), GetByteLengthString(m_UpdateTotalCompressedLength), progressTotal, GetByteLengthString((int)GameEntry.Download.CurrentSpeed));
-            m_UpdateResourceForm.SetProgress(progressTotal, descriptionText);*/
+            m_UpdateResourceForm.SetProgress(progressTotal, descriptionText);#1#
         }
 
         private string GetByteLengthString(long byteLength)
@@ -266,3 +260,4 @@ namespace SaveWorld
         }
     }
 }
+*/

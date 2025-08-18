@@ -14,15 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_TableCollectionName: UI
   m_TableCollectionNameGuidString: 1809bdb750853f2498ae3154e0e0d0c5
-  m_Entries: []
+  m_Entries:
+  - m_Id: 19172
+    m_Key: Login/Start
+    m_Metadata:
+      m_Items:
+      - rid: 421329970733776905
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
-    rid: 421329882543292452
+    rid: 421329970733776896
   references:
     version: 2
     RefIds:
-    - rid: 421329882543292452
+    - rid: 421329970733776896
       type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
       data:
-        m_CustomEpoch: 1755162846104
+        m_CustomEpoch: 1755497396344
+    - rid: 421329970733776905
+      type: {class: Comment, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_CommentText: "\u767B\u5F55\u754C\u9762\u7684\u5F00\u59CB\u6309\u94AE"

@@ -14,10 +14,44 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_SharedTableData: {fileID: 11400000, guid: 1809bdb750853f2498ae3154e0e0d0c5, type: 2}
   m_Tables:
-  - {fileID: 11400000, guid: 91a19f65105e6f743967f06e145810f2, type: 2}
   - {fileID: 11400000, guid: a1e2ad48022ba494aacb9b645d6e11bc, type: 2}
-  m_Extensions: []
+  - {fileID: 11400000, guid: 91a19f65105e6f743967f06e145810f2, type: 2}
+  m_Extensions:
+  - rid: 421329970733776897
   m_Group: String Table
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 421329970733776897
+      type: {class: CsvExtension, ns: UnityEditor.Localization.Plugins.CSV, asm: Unity.Localization.Editor}
+      data:
+        m_Collection: {fileID: 11400000}
+        m_ColumnsList:
+        - rid: 421329970733776898
+        - rid: 421329970733776899
+        - rid: 421329970733776900
+        m_ConnectedFile: LocalizationTable/UI.csv
+    - rid: 421329970733776898
+      type: {class: KeyIdColumns, ns: UnityEditor.Localization.Plugins.CSV.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_IncludeId: 1
+        m_IncludeSharedComments: 1
+        m_KeyFieldName: Key
+        m_IdFieldName: Id
+        m_CommentFieldName: Shared Comments
+    - rid: 421329970733776899
+      type: {class: LocaleColumns, ns: UnityEditor.Localization.Plugins.CSV.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_LocaleIdentifier:
+          m_Code: zh
+        m_FieldName: Chinese (Simplified)(zh)
+        m_CommentFieldName: Chinese (Simplified)(zh) Comments
+        m_IncludeComments: 1
+    - rid: 421329970733776900
+      type: {class: LocaleColumns, ns: UnityEditor.Localization.Plugins.CSV.Columns, asm: Unity.Localization.Editor}
+      data:
+        m_LocaleIdentifier:
+          m_Code: en
+        m_FieldName: English(en)
+        m_CommentFieldName: English(en) Comments
+        m_IncludeComments: 1
