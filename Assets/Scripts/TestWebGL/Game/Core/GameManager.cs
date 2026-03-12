@@ -1,6 +1,9 @@
 using UnityEngine;
 using TestWebGL.Game.Grid;
 using TestWebGL.Game.Player;
+using TestWebGL.Game.Crafting;
+using TestWebGL.Game.Feedback;
+using TestWebGL.Game.Items;
 
 namespace TestWebGL.Game.Core
 {
@@ -31,6 +34,9 @@ namespace TestWebGL.Game.Core
         private GridManager _gridManager;
         private PlayerManager _playerManager;
         private PlayerData _playerData;
+        private CraftingSystem _craftingSystem;
+        private CraftingEngine _craftingEngine;
+        private FeedbackSystem _feedbackSystem;
 
         // 游戏状态
         private GameState _gameState = GameState.Initializing;
@@ -99,7 +105,20 @@ namespace TestWebGL.Game.Core
             _gridManager.OnGridUnlocked += HandleGridUnlocked;
             Debug.Log("[GameManager] 格子系统已初始化");
 
-            // 4. 输出初始化统计
+            // 4. 初始化合成系统
+            _craftingSystem = new CraftingSystem();
+            _craftingEngine = new CraftingEngine();
+            _craftingEngine.Initialize(_gridManager, _craftingSystem);
+            _craftingEngine.OnCraftSuccess += HandleCraftSuccess;
+            _craftingEngine.OnCraftFailure += HandleCraftFailure;
+            _craftingEngine.OnFullGridFeedback += HandleFullGridFeedback;
+            Debug.Log("[GameManager] 合成系统已初始化");
+
+            // 5. 初始化反馈系统
+            _feedbackSystem = FeedbackSystem.Instance;
+            Debug.Log("[GameManager] 反馈系统已初始化");
+
+            // 6. 输出初始化统计
             var gridStats = _gridManager.GetStatistics();
             var gridDims = _gridManager.GetDimensions();
             Debug.Log($"[GameManager] 格子统计: 总={gridStats.totalCellCount}, 锁定={gridStats.lockedCellCount}, " +
@@ -154,6 +173,9 @@ namespace TestWebGL.Game.Core
         public GridManager GetGridManager() => _gridManager;
         public PlayerManager GetPlayerManager() => _playerManager;
         public PlayerData GetPlayerData() => _playerData;
+        public CraftingSystem GetCraftingSystem() => _craftingSystem;
+        public CraftingEngine GetCraftingEngine() => _craftingEngine;
+        public FeedbackSystem GetFeedbackSystem() => _feedbackSystem;
 
         public GameState GetGameState() => _gameState;
 
@@ -182,7 +204,30 @@ namespace TestWebGL.Game.Core
         private void HandleGridUnlocked(int row, int col, Grid.GridCell cell)
         {
             Debug.Log($"[GameManager] 格子解锁 [{row},{col}]!");
-            // 可以在这里触发解锁动画、音效等
+            // 触发反馈
+            _feedbackSystem.UnlockSuccessFeedback();
+        }
+
+        private void HandleCraftSuccess(ItemType inputItem, int inputCount, ItemType outputItem, int outputCount)
+        {
+            Debug.Log($"[GameManager] 合成成功: {ItemConfig.GetItemName(inputItem)}×{inputCount} → {ItemConfig.GetItemName(outputItem)}×{outputCount}");
+            _feedbackSystem.CraftSuccessFeedback();
+            
+            // 获得经验奖励（每合成1个物品获得1×物品等级经验）
+            int expReward = outputCount * ItemConfig.GetItemLevel(outputItem);
+            _playerManager.GainExperience(expReward, $"合成{ItemConfig.GetItemName(outputItem)}");
+        }
+
+        private void HandleCraftFailure(string reason)
+        {
+            Debug.Log($"[GameManager] 合成失败: {reason}");
+            _feedbackSystem.CraftFailureFeedback();
+        }
+
+        private void HandleFullGridFeedback()
+        {
+            Debug.Log($"[GameManager] 满格提示！");
+            _feedbackSystem.FullGridFlash();
         }
 
         // ==================== 测试/调试方法 ====================
@@ -269,6 +314,47 @@ namespace TestWebGL.Game.Core
             }
         }
 
+        /// <summary>
+        /// 调试：双击合成
+        /// </summary>
+        public void Debug_DoubleTapCraft(int row, int col)
+        {
+            if (_craftingEngine.TryDoubleTapCraft(row, col))
+            {
+                Debug.Log($"[DEBUG] 在格子[{row},{col}]执行双击合成");
+            }
+            else
+            {
+                Debug.Log($"[DEBUG] 双击合成失败!");
+            }
+        }
+
+        /// <summary>
+        /// 调试：拖拽解锁
+        /// </summary>
+        public void Debug_DragToUnlock(int fromRow, int fromCol, int toRow, int toCol)
+        {
+            if (_craftingEngine.TryDragToUnlock(fromRow, fromCol, toRow, toCol))
+            {
+                Debug.Log($"[DEBUG] 成功解锁格子!");
+            }
+            else
+            {
+                Debug.Log($"[DEBUG] 解锁失败!");
+            }
+        }
+
+        /// <summary>
+        /// 调试：输出合成系统状态
+        /// </summary>
+        public void Debug_PrintCraftingInfo()
+        {
+            Debug.Log($"\n========== 合成系统状态 ==========");
+            Debug.Log($"空格子数: {_craftingEngine.GetEmptyCellCount()}");
+            Debug.Log($"已填充格子数: {_craftingEngine.GetFilledCellCount()}");
+            Debug.Log($"格子满: {(_craftingEngine.IsGridFull() ? "是" : "否")}");
+        }
+
         private void OnDestroy()
         {
             // 清理事件订阅
@@ -277,6 +363,13 @@ namespace TestWebGL.Game.Core
                 _playerManager.OnLevelChanged -= HandlePlayerLevelChanged;
                 _playerManager.OnStaminaChanged -= HandlePlayerStaminaChanged;
                 _playerManager.OnExperienceGained -= HandleExperienceGained;
+            }
+
+            if (_craftingEngine != null)
+            {
+                _craftingEngine.OnCraftSuccess -= HandleCraftSuccess;
+                _craftingEngine.OnCraftFailure -= HandleCraftFailure;
+                _craftingEngine.OnFullGridFeedback -= HandleFullGridFeedback;
             }
         }
     }

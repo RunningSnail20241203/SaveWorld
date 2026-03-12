@@ -74,6 +74,46 @@ namespace TestWebGL.Game
         }
 
         /// <summary>
+        /// 第二阶段功能测试 - 合成系统
+        /// </summary>
+        private void TestPhase2()
+        {
+            Debug.Log("\n========== 第二阶段测试（合成系统）==========\n");
+
+            var gameManager = GameManager.Instance;
+
+            // 测试1: 准备合成环境
+            Debug.Log("【测试1】准备合成环境 - 放置2个净水");
+            gameManager.Debug_PlaceItem(3, 3, ItemType.Water_L1, 2);
+            gameManager.Debug_PlaceItem(3, 4, ItemType.Food_L1, 4);
+            gameManager.Debug_PlaceItem(4, 4, ItemType.Tool_L1, 3);
+            gameManager.Debug_PrintGridInfo();
+
+            // 测试2: 双击合成
+            Debug.Log("\n【测试2】双击格子(3,3)进行合成");
+            gameManager.Debug_DoubleTapCraft(3, 3);
+            gameManager.Debug_PrintGridInfo();
+
+            // 测试3: 再次合成
+            Debug.Log("\n【测试3】继续在格子(3,4)合成食物");
+            gameManager.Debug_DoubleTapCraft(3, 4);
+            gameManager.Debug_PrintGridInfo();
+
+            // 测试4: 拖拽解锁
+            Debug.Log("\n【测试4】拖拽解锁 - 将工具×2拖到[0,0]解锁");
+            gameManager.Debug_DragToUnlock(4, 4, 0, 0);
+            gameManager.Debug_PrintGridInfo();
+
+            // 测试5: 输出合成状态
+            Debug.Log("\n【测试5】合成系统状态");
+            gameManager.Debug_PrintCraftingInfo();
+
+            gameManager.Debug_PrintPlayerInfo();
+
+            Debug.Log("\n========== 测试完成 ==========\n");
+        }
+
+        /// <summary>
         /// 处理调试输入
         /// </summary>
         private void HandleDebugInput()
@@ -86,6 +126,12 @@ namespace TestWebGL.Game
                 TestPhase1();
             }
 
+            // 2键: 触发第二阶段测试
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                TestPhase2();
+            }
+
             // G键: 输出格子信息
             if (Input.GetKeyDown(KeyCode.G))
             {
@@ -96,6 +142,12 @@ namespace TestWebGL.Game
             if (Input.GetKeyDown(KeyCode.P))
             {
                 gameManager.Debug_PrintPlayerInfo();
+            }
+
+            // C键: 输出合成系统信息
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                gameManager.Debug_PrintCraftingInfo();
             }
 
             // E键: 获得100经验
