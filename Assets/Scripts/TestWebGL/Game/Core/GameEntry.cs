@@ -89,6 +89,24 @@ namespace TestWebGL.Game.Core
             {
                 _gameManager.Debug_Explore();
             }
+
+            // U键：显示UI信息
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                Debug_PrintUIInfo();
+            }
+
+            // I键：显示设置面板
+            if (Input.GetKeyDown(KeyCode.I))
+            {
+                ShowSettingsPanel();
+            }
+
+            // O键：显示订单面板
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                ShowOrdersPanel();
+            }
         }
 
         /// <summary>
@@ -312,5 +330,73 @@ namespace TestWebGL.Game.Core
             // 测试6：清理测试数据（可选）
             // _gameManager.DeleteAllSaveData();
         }
+
+        #region UI调试方法
+
+        /// <summary>
+        /// 打印UI系统信息
+        /// </summary>
+        private void Debug_PrintUIInfo()
+        {
+            Debug.Log("========== UI系统信息 ==========");
+            if (_gameManager != null && _gameManager.GetUIManager() != null)
+            {
+                var uiManager = _gameManager.GetUIManager();
+                Debug.Log($"UI管理器状态: 激活");
+                Debug.Log($"网格UI: {(uiManager.GetGridUI() != null ? "已创建" : "未创建")}");
+                Debug.Log($"玩家信息面板: {(uiManager.GetPlayerInfoPanel() != null ? "已创建" : "未创建")}");
+                Debug.Log($"控制面板: {(uiManager.GetControlPanel() != null ? "已创建" : "未创建")}");
+                Debug.Log($"物品详情弹窗: {(uiManager.GetItemDetailPopup() != null ? "已创建" : "未创建")}");
+                Debug.Log($"设置面板: {(uiManager.GetSettingsPanel() != null ? "已创建" : "未创建")}");
+                Debug.Log($"订单面板: {(uiManager.GetOrdersPanel() != null ? "已创建" : "未创建")}");
+            }
+            else
+            {
+                Debug.Log("UI管理器: 未初始化");
+            }
+            Debug.Log("===============================");
+        }
+
+        /// <summary>
+        /// 显示设置面板
+        /// </summary>
+        private void ShowSettingsPanel()
+        {
+            if (_gameManager != null && _gameManager.GetUIManager() != null)
+            {
+                var settingsPanel = _gameManager.GetUIManager().GetSettingsPanel();
+                if (settingsPanel != null)
+                {
+                    settingsPanel.Show();
+                    Debug.Log("设置面板已显示");
+                }
+                else
+                {
+                    Debug.LogWarning("设置面板未创建");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 显示订单面板
+        /// </summary>
+        private void ShowOrdersPanel()
+        {
+            if (_gameManager != null && _gameManager.GetUIManager() != null)
+            {
+                var ordersPanel = _gameManager.GetUIManager().GetOrdersPanel();
+                if (ordersPanel != null)
+                {
+                    ordersPanel.Show();
+                    Debug.Log("订单面板已显示");
+                }
+                else
+                {
+                    Debug.LogWarning("订单面板未创建");
+                }
+            }
+        }
+
+        #endregion
     }
 }

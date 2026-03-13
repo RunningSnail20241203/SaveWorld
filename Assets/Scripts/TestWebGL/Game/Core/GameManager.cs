@@ -6,7 +6,7 @@ using TestWebGL.Game.Feedback;
 using TestWebGL.Game.Items;
 using TestWebGL.Game.Exploration;
 using TestWebGL.Game.Order;
-using TestWebGL.Game.Storage;
+using TestWebGL.Game.Achievement;
 
 namespace TestWebGL.Game.Core
 {
@@ -45,6 +45,7 @@ namespace TestWebGL.Game.Core
         private OrderSystem _orderSystem;
         private OrderEngine _orderEngine;
         private StorageSystem _storageSystem;
+        private AchievementSystem _achievementSystem;
 
         // 游戏状态
         private GameState _gameState = GameState.Initializing;
@@ -175,7 +176,15 @@ namespace TestWebGL.Game.Core
             _orderEngine.OnRewardGranted += HandleRewardGranted;
             Debug.Log("[GameManager] 订单系统已初始化");
 
-            // 8. 输出初始化统计
+            // 8. 初始化UI系统
+            InitializeUISystem();
+            Debug.Log("[GameManager] UI系统已初始化");
+
+            // 9. 初始化成就系统
+            _achievementSystem = AchievementSystem.Instance;
+            Debug.Log("[GameManager] 成就系统已初始化");
+
+            // 10. 输出初始化统计
             var gridStats = _gridManager.GetStatistics();
             var gridDims = _gridManager.GetDimensions();
             Debug.Log($"[GameManager] 格子统计: 总={gridStats.totalCellCount}, 锁定={gridStats.lockedCellCount}, " +
@@ -395,6 +404,9 @@ namespace TestWebGL.Game.Core
             if (success && items != null)
             {
                 _feedbackSystem.ExploreSuccessFeedback();
+
+                // 更新成就：首次探索
+                _achievementSystem.UpdateProgress(AchievementType.FirstExplore);
             }
             else
             {
@@ -573,20 +585,20 @@ namespace TestWebGL.Game.Core
         }
 
         /// <summary>
-        /// 调试：生成每日订单
+        /// 初始化UI系统
         /// </summary>
-        public void Debug_GenerateDailyOrders()
+        private void InitializeUISystem()
         {
-            var playerData = _playerManager.GetPlayerData();
-            _orderSystem.GenerateDailyOrders(playerData.level, playerData.historyMaxLevel);
-        }
+            // 初始化UIManager（会自动创建UI组件）
+            var uiManager = TestWebGL.Game.UI.UIManager.Instance;
+            uiManager.Initialize();
 
-        /// <summary>
-        /// 调试：提交订单
-        /// </summary>
-        public void Debug_SubmitOrder(int orderId)
-        {
-            _orderEngine.TrySubmitOrder(orderId);
+            // 注册UI更新事件
+            OnGameStateChanged += (state) => uiManager.RefreshAllUI();
+            _playerManager.OnLevelChanged += (newLevel, oldLevel) => uiManager.RefreshAllUI();
+            _playerManager.OnStaminaChanged += (newStamina, maxStamina) => uiManager.RefreshAllUI();
+            _playerManager.OnExperienceGained += (amount, reason) => uiManager.RefreshAllUI();
+            _gridManager.OnCellChanged += (cell) => uiManager.RefreshAllUI();
         }
 
         private void OnDestroy()

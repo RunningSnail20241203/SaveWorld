@@ -304,5 +304,14 @@ namespace TestWebGL.Game.Items
             var data = GetItemData(itemType);
             return data != null ? data.level : 0;
         }
+
+        /// <summary>
+        /// 获取物品描述
+        /// </summary>
+        public static string GetItemDescription(ItemType itemType)
+        {
+            var data = GetItemData(itemType);
+            return data != null ? data.description : "未知物品描述";
+        }
     }
 }
