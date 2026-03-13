@@ -341,6 +341,14 @@ namespace TestWebGL.Game.Player
                 playTime = DateTime.Now - _playerData.createdTime,
             };
         }
+
+        /// <summary>
+        /// 获取历史最高等级
+        /// </summary>
+        public int GetHistoryMaxLevel()
+        {
+            return _playerData.historyMaxLevel;
+        }
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using TestWebGL.Game.Items;
 using TestWebGL.Game.Exploration;
 using TestWebGL.Game.Order;
 using TestWebGL.Game.Achievement;
+using TestWebGL.Game.Storage;
 
 namespace TestWebGL.Game.Core
 {
@@ -319,6 +320,7 @@ namespace TestWebGL.Game.Core
         public OrderSystem GetOrderSystem() => _orderSystem;
         public OrderEngine GetOrderEngine() => _orderEngine;
         public StorageSystem GetStorageSystem() => _storageSystem;
+        public TestWebGL.Game.UI.UIManager GetUIManager() => TestWebGL.Game.UI.UIManager.Instance;
 
         public GameState GetGameState() => _gameState;
 
@@ -595,6 +597,16 @@ namespace TestWebGL.Game.Core
         }
 
         /// <summary>
+        /// 调试：生成每日订单
+        /// </summary>
+        public void Debug_GenerateDailyOrders()
+        {
+            int playerLevel = _playerManager.GetStatistics().level;
+            int maxLevelReached = _playerManager.GetHistoryMaxLevel();
+            _orderSystem.GenerateDailyOrders(playerLevel, maxLevelReached);
+        }
+
+        /// <summary>
         /// 初始化UI系统
         /// </summary>
         private void InitializeUISystem()
@@ -608,7 +620,7 @@ namespace TestWebGL.Game.Core
             _playerManager.OnLevelChanged += (newLevel, oldLevel) => uiManager.RefreshAllUI();
             _playerManager.OnStaminaChanged += (newStamina, maxStamina) => uiManager.RefreshAllUI();
             _playerManager.OnExperienceGained += (amount, reason) => uiManager.RefreshAllUI();
-            _gridManager.OnCellChanged += (cell) => uiManager.RefreshAllUI();
+            _gridManager.OnCellChanged += (row, col, cell) => uiManager.RefreshAllUI();
         }
 
         private void OnDestroy()

@@ -132,7 +132,6 @@ namespace TestWebGL.Game.Achievement
                     7) }, // 天数
             };
 
-            Debug.Log($"[AchievementSystem] 初始化了 {_achievements.Count} 个成就");
         }
 
         /// <summary>
@@ -191,8 +190,6 @@ namespace TestWebGL.Game.Achievement
                 achievement.isUnlocked = true;
                 achievement.unlockTime = DateTime.Now;
                 _achievements[type] = achievement;
-
-                Debug.Log($"[AchievementSystem] 成就解锁: {achievement.title}");
 
                 // 触发事件
                 OnAchievementUnlocked?.Invoke(achievement);
@@ -257,7 +254,6 @@ namespace TestWebGL.Game.Achievement
                 achievement.progress = 0;
                 _achievements[type] = achievement;
             }
-            Debug.Log("[AchievementSystem] 所有成就已重置");
         }
     }
 }

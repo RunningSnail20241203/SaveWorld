@@ -30,6 +30,16 @@ namespace TestWebGL.Game.UI
             }
         }
 
+        // UI预制件引用
+        [Header("UI预制件")]
+        public GameObject gridUIPrefab;
+        public GameObject playerInfoPanelPrefab;
+        public GameObject controlPanelPrefab;
+        public GameObject itemDetailPopupPrefab;
+        public GameObject settingsPanelPrefab;
+        public GameObject ordersPanelPrefab;
+        public GameObject achievementPanelPrefab;
+
         // UI组件引用
         [Header("主要UI面板")]
         public GameObject mainCanvas;
@@ -82,7 +92,6 @@ namespace TestWebGL.Game.UI
             InitializeSettingsPanel();
             InitializeOrdersPanel();
             InitializeAchievementPanel();
-            InitializeAchievementPanel();
 
             _isInitialized = true;
             Debug.Log("[UIManager] UI系统初始化完成");
@@ -116,15 +125,36 @@ namespace TestWebGL.Game.UI
         }
 
         /// <summary>
+        /// 从预制件实例化UI组件
+        /// </summary>
+        private T InstantiateFromPrefab<T>(GameObject prefab, string name) where T : Component
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[UIManager] {name}预制件未设置，将动态创建");
+                GameObject go = new GameObject(name);
+                go.transform.SetParent(mainCanvas.transform, false);
+                return go.AddComponent<T>();
+            }
+
+            GameObject instance = Object.Instantiate(prefab, mainCanvas.transform);
+            instance.name = name;
+            T component = instance.GetComponent<T>();
+            if (component == null)
+            {
+                component = instance.AddComponent<T>();
+            }
+            return component;
+        }
+
+        /// <summary>
         /// 初始化网格UI
         /// </summary>
         private void InitializeGridUI()
         {
             if (gridUI == null)
             {
-                GameObject gridUIGO = new GameObject("GridUI");
-                gridUIGO.transform.SetParent(mainCanvas.transform, false);
-                gridUI = gridUIGO.AddComponent<GridUI>();
+                gridUI = InstantiateFromPrefab<GridUI>(gridUIPrefab, "GridUI");
             }
             gridUI.Initialize();
         }
@@ -136,9 +166,7 @@ namespace TestWebGL.Game.UI
         {
             if (playerInfoPanel == null)
             {
-                GameObject panelGO = new GameObject("PlayerInfoPanel");
-                panelGO.transform.SetParent(mainCanvas.transform, false);
-                playerInfoPanel = panelGO.AddComponent<PlayerInfoPanel>();
+                playerInfoPanel = InstantiateFromPrefab<PlayerInfoPanel>(playerInfoPanelPrefab, "PlayerInfoPanel");
             }
             playerInfoPanel.Initialize();
         }
@@ -150,9 +178,7 @@ namespace TestWebGL.Game.UI
         {
             if (controlPanel == null)
             {
-                GameObject panelGO = new GameObject("ControlPanel");
-                panelGO.transform.SetParent(mainCanvas.transform, false);
-                controlPanel = panelGO.AddComponent<ControlPanel>();
+                controlPanel = InstantiateFromPrefab<ControlPanel>(controlPanelPrefab, "ControlPanel");
             }
             controlPanel.Initialize();
         }
@@ -164,9 +190,7 @@ namespace TestWebGL.Game.UI
         {
             if (itemDetailPopup == null)
             {
-                GameObject popupGO = new GameObject("ItemDetailPopup");
-                popupGO.transform.SetParent(mainCanvas.transform, false);
-                itemDetailPopup = popupGO.AddComponent<ItemDetailPopup>();
+                itemDetailPopup = InstantiateFromPrefab<ItemDetailPopup>(itemDetailPopupPrefab, "ItemDetailPopup");
             }
             itemDetailPopup.Initialize();
         }
@@ -178,9 +202,7 @@ namespace TestWebGL.Game.UI
         {
             if (settingsPanel == null)
             {
-                GameObject panelGO = new GameObject("SettingsPanel");
-                panelGO.transform.SetParent(mainCanvas.transform, false);
-                settingsPanel = panelGO.AddComponent<SettingsPanel>();
+                settingsPanel = InstantiateFromPrefab<SettingsPanel>(settingsPanelPrefab, "SettingsPanel");
             }
             settingsPanel.Initialize();
         }
@@ -192,9 +214,7 @@ namespace TestWebGL.Game.UI
         {
             if (ordersPanel == null)
             {
-                GameObject panelGO = new GameObject("OrdersPanel");
-                panelGO.transform.SetParent(mainCanvas.transform, false);
-                ordersPanel = panelGO.AddComponent<OrdersPanel>();
+                ordersPanel = InstantiateFromPrefab<OrdersPanel>(ordersPanelPrefab, "OrdersPanel");
             }
             ordersPanel.Initialize();
         }
