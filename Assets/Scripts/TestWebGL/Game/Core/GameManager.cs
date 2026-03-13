@@ -348,6 +348,9 @@ namespace TestWebGL.Game.Core
             Debug.Log($"[GameManager] 玩家升级！ Lv{oldLevel} → Lv{newLevel}");
             // 重要事件：升级时保存数据
             SavePlayerData();
+
+            // 更新成就：等级提升
+            _achievementSystem.UpdateProgress(AchievementType.LevelUp, newLevel);
         }
 
         private void HandlePlayerStaminaChanged(int newStamina, int maxStamina)
@@ -380,6 +383,9 @@ namespace TestWebGL.Game.Core
             // 获得经验奖励（每合成1个物品获得1×物品等级经验）
             int expReward = outputCount * ItemConfig.GetItemLevel(outputItem);
             _playerManager.GainExperience(expReward, $"合成{ItemConfig.GetItemName(outputItem)}");
+
+            // 更新成就：合成大师
+            _achievementSystem.UpdateProgress(AchievementType.CraftingMaster);
 
             // 重要事件：合成成功时保存数据
             SavePlayerData();
@@ -425,6 +431,10 @@ namespace TestWebGL.Game.Core
             if (success)
             {
                 _feedbackSystem.OrderCompleteFeedback();
+
+                // 更新成就：订单达人
+                _achievementSystem.UpdateProgress(AchievementType.OrderComplete);
+
                 // 重要事件：订单完成时保存数据
                 SavePlayerData();
                 SaveGridData();

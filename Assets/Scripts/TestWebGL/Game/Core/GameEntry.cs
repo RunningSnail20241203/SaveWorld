@@ -107,6 +107,12 @@ namespace TestWebGL.Game.Core
             {
                 ShowOrdersPanel();
             }
+
+            // A键：显示成就面板
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                ShowAchievementsPanel();
+            }
         }
 
         /// <summary>
@@ -393,6 +399,26 @@ namespace TestWebGL.Game.Core
                 else
                 {
                     Debug.LogWarning("订单面板未创建");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 显示成就面板
+        /// </summary>
+        private void ShowAchievementsPanel()
+        {
+            if (_gameManager != null && _gameManager.GetUIManager() != null)
+            {
+                var achievementPanel = _gameManager.GetUIManager().GetAchievementPanel();
+                if (achievementPanel != null)
+                {
+                    achievementPanel.Show();
+                    Debug.Log("成就面板已显示");
+                }
+                else
+                {
+                    Debug.LogWarning("成就面板未创建");
                 }
             }
         }
