@@ -6,6 +6,7 @@ using TestWebGL.Game.Feedback;
 using TestWebGL.Game.Items;
 using TestWebGL.Game.Exploration;
 using TestWebGL.Game.Order;
+using TestWebGL.Game.Storage;
 
 namespace TestWebGL.Game.Core
 {
@@ -43,9 +44,14 @@ namespace TestWebGL.Game.Core
         private ExplorationEngine _explorationEngine;
         private OrderSystem _orderSystem;
         private OrderEngine _orderEngine;
+        private StorageSystem _storageSystem;
 
         // 游戏状态
         private GameState _gameState = GameState.Initializing;
+
+        // 自动保存
+        private float _autoSaveTimer = 0f;
+        private const float AUTO_SAVE_INTERVAL = 300f; // 5分钟自动保存
 
         // 事件
         public delegate void GameStateChangedHandler(GameState newState);
@@ -72,6 +78,30 @@ namespace TestWebGL.Game.Core
             DontDestroyOnLoad(gameObject);
         }
 
+        private void Update()
+        {
+            // 自动保存计时器
+            if (_gameState == GameState.Playing)
+            {
+                _autoSaveTimer += Time.deltaTime;
+                if (_autoSaveTimer >= AUTO_SAVE_INTERVAL)
+                {
+                    _autoSaveTimer = 0f;
+                    PerformAutoSave();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行自动保存
+        /// </summary>
+        private void PerformAutoSave()
+        {
+            Debug.Log("[GameManager] 执行自动保存...");
+            SavePlayerData();
+            SaveGridData();
+        }
+
         private void Start()
         {
             Initialize();
@@ -83,6 +113,10 @@ namespace TestWebGL.Game.Core
         private void Initialize()
         {
             Debug.Log("[GameManager] 初始化游戏系统...");
+
+            // 0. 初始化存储系统
+            _storageSystem = new StorageSystem();
+            Debug.Log("[GameManager] 存储系统已初始化");
 
             // 1. 加载或创建玩家数据
             _playerData = LoadPlayerData();
@@ -110,6 +144,9 @@ namespace TestWebGL.Game.Core
             _gridManager.OnCellChanged += HandleGridCellChanged;
             _gridManager.OnGridUnlocked += HandleGridUnlocked;
             Debug.Log("[GameManager] 格子系统已初始化");
+
+            // 3.1 加载网格数据
+            LoadGridData();
 
             // 4. 初始化合成系统
             _craftingSystem = new CraftingSystem();
@@ -164,15 +201,19 @@ namespace TestWebGL.Game.Core
             }
         }
 
-        /// <summary>
-        /// 加载玩家数据（从本地存储）
-        /// 第一阶段简单实现，后续接入存储系统
-        /// </summary>
         private PlayerData LoadPlayerData()
         {
-            // 临时实现：始终返回null，表示新游戏
-            // 后期需要集成PlayerPrefs或其他存储方案
-            return null;
+            var (result, data) = _storageSystem.LoadPlayerData();
+            if (result == StorageSystem.StorageResult.Success)
+            {
+                Debug.Log("[GameManager] 玩家数据加载成功");
+                return data;
+            }
+            else
+            {
+                Debug.LogWarning($"[GameManager] 玩家数据加载失败: {result}");
+                return null;
+            }
         }
 
         /// <summary>
@@ -183,8 +224,76 @@ namespace TestWebGL.Game.Core
             if (_playerData != null)
             {
                 _playerData.lastSaveTime = System.DateTime.Now;
-                // 后期实现具体的存储逻辑
-                Debug.Log("[GameManager] 玩家数据已保存");
+                var result = _storageSystem.SavePlayerData(_playerData);
+                if (result == StorageSystem.StorageResult.Success)
+                {
+                    Debug.Log("[GameManager] 玩家数据保存成功");
+                }
+                else
+                {
+                    Debug.LogError($"[GameManager] 玩家数据保存失败: {result}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 保存网格数据
+        /// </summary>
+        public void SaveGridData()
+        {
+            if (_gridManager != null)
+            {
+                var result = _storageSystem.SaveGridData(_gridManager);
+                if (result == StorageSystem.StorageResult.Success)
+                {
+                    Debug.Log("[GameManager] 网格数据保存成功");
+                }
+                else
+                {
+                    Debug.LogError($"[GameManager] 网格数据保存失败: {result}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 加载网格数据
+        /// </summary>
+        private void LoadGridData()
+        {
+            if (_gridManager != null)
+            {
+                var (result, gridData) = _storageSystem.LoadGridData();
+                if (result == StorageSystem.StorageResult.Success && gridData != null && gridData.cells != null)
+                {
+                    // 加载每个单元格的数据
+                    foreach (var cellData in gridData.cells)
+                    {
+                        Grid.GridCell newCell;
+                        if (cellData.isLocked)
+                        {
+                            // 创建锁定单元格
+                            newCell = Grid.GridCell.CreateLockedCell(cellData.row, cellData.col, (ItemType)cellData.lockedItemType, cellData.lockedItemLevel);
+                        }
+                        else if ((ItemType)cellData.itemType != ItemType.None && cellData.itemCount > 0)
+                        {
+                            // 创建有物品的单元格
+                            newCell = Grid.GridCell.CreateFilledCell(cellData.row, cellData.col, (ItemType)cellData.itemType, cellData.itemCount);
+                        }
+                        else
+                        {
+                            // 创建空单元格
+                            newCell = Grid.GridCell.CreateUnlockedCell(cellData.row, cellData.col);
+                        }
+
+                        // 设置单元格
+                        _gridManager.SetCell(cellData.row, cellData.col, newCell);
+                    }
+                    Debug.Log("[GameManager] 网格数据加载成功");
+                }
+                else
+                {
+                    Debug.LogWarning($"[GameManager] 网格数据加载失败: {result}");
+                }
             }
         }
 
@@ -200,14 +309,36 @@ namespace TestWebGL.Game.Core
         public ExplorationEngine GetExplorationEngine() => _explorationEngine;
         public OrderSystem GetOrderSystem() => _orderSystem;
         public OrderEngine GetOrderEngine() => _orderEngine;
+        public StorageSystem GetStorageSystem() => _storageSystem;
 
         public GameState GetGameState() => _gameState;
+
+        // ==================== 调试方法 ====================
+
+        /// <summary>
+        /// 获取存储系统信息（调试用）
+        /// </summary>
+        public string GetStorageInfo()
+        {
+            return _storageSystem.GetStorageInfo();
+        }
+
+        /// <summary>
+        /// 删除所有保存数据（调试用）
+        /// </summary>
+        public void DeleteAllSaveData()
+        {
+            _storageSystem.DeleteAllSaveData();
+            Debug.Log("[GameManager] 已删除所有保存数据");
+        }
 
         // ==================== 事件处理 ====================
 
         private void HandlePlayerLevelChanged(int newLevel, int oldLevel)
         {
             Debug.Log($"[GameManager] 玩家升级！ Lv{oldLevel} → Lv{newLevel}");
+            // 重要事件：升级时保存数据
+            SavePlayerData();
         }
 
         private void HandlePlayerStaminaChanged(int newStamina, int maxStamina)
@@ -236,10 +367,14 @@ namespace TestWebGL.Game.Core
         {
             Debug.Log($"[GameManager] 合成成功: {ItemConfig.GetItemName(inputItem)}×{inputCount} → {ItemConfig.GetItemName(outputItem)}×{outputCount}");
             _feedbackSystem.CraftSuccessFeedback();
-            
+
             // 获得经验奖励（每合成1个物品获得1×物品等级经验）
             int expReward = outputCount * ItemConfig.GetItemLevel(outputItem);
             _playerManager.GainExperience(expReward, $"合成{ItemConfig.GetItemName(outputItem)}");
+
+            // 重要事件：合成成功时保存数据
+            SavePlayerData();
+            SaveGridData();
         }
 
         private void HandleCraftFailure(string reason)
@@ -278,6 +413,9 @@ namespace TestWebGL.Game.Core
             if (success)
             {
                 _feedbackSystem.OrderCompleteFeedback();
+                // 重要事件：订单完成时保存数据
+                SavePlayerData();
+                SaveGridData();
             }
         }
 

@@ -1,6 +1,7 @@
 using UnityEngine;
 using TestWebGL.Game.Items;
 using TestWebGL.Game.Grid;
+using TestWebGL.Game.Player;
 
 namespace TestWebGL.Game.Core
 {
@@ -29,8 +30,8 @@ namespace TestWebGL.Game.Core
         /// </summary>
         private void HandleDebugInput()
         {
-            // D键：执行第一阶段测试
-            if (Input.GetKeyDown(KeyCode.D))
+            // 1键：执行第一阶段测试
+            if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 TestPhase1();
             }
@@ -45,6 +46,12 @@ namespace TestWebGL.Game.Core
             if (Input.GetKeyDown(KeyCode.Alpha3))
             {
                 TestPhase3();
+            }
+
+            // 4键：执行第四阶段测试（存储系统）
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                TestPhase4();
             }
 
             // G键：打印格子信息
@@ -227,6 +234,83 @@ namespace TestWebGL.Game.Core
             _gameManager.Debug_PrintPlayerInfo();
 
             Debug.Log("========== 第三阶段测试完成 ==========\n");
+        }
+
+        /// <summary>
+        /// 第四阶段测试：存储系统验证
+        /// 测试保存和加载功能
+        /// </summary>
+        private void TestPhase4()
+        {
+            Debug.Log("========== 第四阶段测试：存储系统 ==========");
+
+            // 测试1：打印存储信息
+            Debug.Log("[TestPhase4] 测试1: 打印存储信息");
+            Debug.Log(_gameManager.GetStorageInfo());
+
+            // 测试2：手动保存数据
+            Debug.Log("[TestPhase4] 测试2: 手动保存数据");
+            _gameManager.SavePlayerData();
+            _gameManager.SaveGridData();
+
+            // 测试3：打印存储信息（确认保存）
+            Debug.Log("[TestPhase4] 测试3: 确认保存后的存储信息");
+            Debug.Log(_gameManager.GetStorageInfo());
+
+            // 测试4：模拟游戏重启（重新创建GameManager）
+            Debug.Log("[TestPhase4] 测试4: 模拟游戏重启");
+            var oldPlayerData = _gameManager.GetPlayerData();
+            var oldGridStats = _gameManager.GetGridManager().GetStatistics();
+
+            // 销毁旧的GameManager
+            Destroy(_gameManager.gameObject);
+
+            // 等待一帧让销毁完成
+            StartCoroutine(TestStorageReload(oldPlayerData, oldGridStats));
+
+            Debug.Log("========== 第四阶段测试完成 ==========\n");
+        }
+
+        /// <summary>
+        /// 测试存储重载的协程
+        /// </summary>
+        private System.Collections.IEnumerator TestStorageReload(PlayerData oldPlayerData, GridStatistics oldGridStats)
+        {
+            yield return null; // 等待一帧
+
+            // 创建新的GameManager（会自动加载数据）
+            _gameManager = GameManager.Instance;
+
+            yield return new WaitForSeconds(0.1f); // 等待初始化完成
+
+            // 测试5：验证数据重载
+            Debug.Log("[TestPhase4] 测试5: 验证数据重载");
+            var newPlayerData = _gameManager.GetPlayerData();
+            var newGridStats = _gameManager.GetGridManager().GetStatistics();
+
+            bool playerDataMatch = newPlayerData != null &&
+                                   newPlayerData.playerName == oldPlayerData.playerName &&
+                                   newPlayerData.level == oldPlayerData.level &&
+                                   newPlayerData.experience == oldPlayerData.experience;
+
+            bool gridDataMatch = newGridStats.totalCellCount == oldGridStats.totalCellCount &&
+                                newGridStats.filledCellCount == oldGridStats.filledCellCount &&
+                                newGridStats.lockedCellCount == oldGridStats.lockedCellCount;
+
+            Debug.Log($"  玩家数据匹配: {playerDataMatch}");
+            Debug.Log($"  网格数据匹配: {gridDataMatch}");
+
+            if (playerDataMatch && gridDataMatch)
+            {
+                Debug.Log("[TestPhase4] ✅ 存储系统测试通过！");
+            }
+            else
+            {
+                Debug.Log("[TestPhase4] ❌ 存储系统测试失败！");
+            }
+
+            // 测试6：清理测试数据（可选）
+            // _gameManager.DeleteAllSaveData();
         }
     }
 }
