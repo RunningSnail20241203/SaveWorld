@@ -211,6 +211,16 @@ namespace TestWebGL.Game.Feedback
         }
 
         /// <summary>
+        /// 探索成功反馈
+        /// </summary>
+        public void ExploreSuccessFeedback()
+        {
+            PlaySound(SoundType.ExploreClick);
+            LightVibration();
+            Debug.Log("[FeedbackSystem] 探索成功反馈");
+        }
+
+        /// <summary>
         /// 订单完成反馈
         /// </summary>
         public void OrderCompleteFeedback()

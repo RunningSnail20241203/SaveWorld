@@ -167,43 +167,90 @@ namespace TestWebGL.Game.Grid
         /// <summary>
         /// 在格子中放置物品
         /// 如果格子已有同类型物品，自动堆叠
+        /// 返回(success, errorCode)
         /// </summary>
-        public bool TryPlaceItem(int row, int col, ItemType itemType, int count = 1)
+        public (bool success, PlacementErrorCode errorCode) TryPlaceItem(int row, int col, ItemType itemType, int count = 1)
         {
             if (!IsValidPosition(row, col))
-                return false;
+                return (false, PlacementErrorCode.InvalidPosition);
 
             GridCell cell = _gridCells[row, col];
+
+            // 检查是否被锁定
+            if (cell.IsLocked)
+                return (false, PlacementErrorCode.CellLocked);
 
             // 尝试堆叠
             if (cell.CurrentItemType == itemType)
             {
                 bool stacked = cell.TryStackItem(itemType, count);
                 if (stacked)
+                {
                     OnCellChanged?.Invoke(row, col, cell);
-                return stacked;
+                    return (true, PlacementErrorCode.None);
+                }
+                else
+                {
+                    return (false, PlacementErrorCode.StackLimitExceeded);
+                }
             }
+
+            // 检查格子是否已有其他物品
+            if (cell.HasItem)
+                return (false, PlacementErrorCode.CellOccupied);
 
             // 尝试放置到空格子
             bool placed = cell.TryPlaceItem(itemType, count);
             if (placed)
+            {
                 OnCellChanged?.Invoke(row, col, cell);
-            return placed;
+                return (true, PlacementErrorCode.None);
+            }
+            else
+            {
+                return (false, PlacementErrorCode.PlacementFailed);
+            }
         }
 
         /// <summary>
         /// 从格子移除物品
+        /// 返回(success, errorCode)
         /// </summary>
-        public bool TryRemoveItem(int row, int col, int removeCount)
+        public (bool success, RemovalErrorCode errorCode) TryRemoveItem(int row, int col, int removeCount)
         {
             if (!IsValidPosition(row, col))
-                return false;
+                return (false, RemovalErrorCode.InvalidPosition);
 
             GridCell cell = _gridCells[row, col];
+            
+            if (!cell.HasItem)
+                return (false, RemovalErrorCode.CellEmpty);
+
+            if (cell.ItemCount < removeCount)
+                return (false, RemovalErrorCode.InsufficientItems);
+
             bool removed = cell.TryRemoveItem(removeCount);
             if (removed)
+            {
                 OnCellChanged?.Invoke(row, col, cell);
-            return removed;
+                return (true, RemovalErrorCode.None);
+            }
+            else
+            {
+                return (false, RemovalErrorCode.RemovalFailed);
+            }
+        }
+
+        /// <summary>
+        /// 设置格子状态（用于内部更新）
+        /// </summary>
+        public void SetCell(int row, int col, GridCell newCell)
+        {
+            if (!IsValidPosition(row, col))
+                return;
+
+            _gridCells[row, col] = newCell;
+            OnCellChanged?.Invoke(row, col, newCell);
         }
 
         /// <summary>
@@ -291,5 +338,30 @@ namespace TestWebGL.Game.Grid
         public int totalCells;
         public int cellSize;      // 单个格子像素大小
         public int cellSpacing;   // 格子间距
+    }
+
+    /// <summary>
+    /// 放置操作的错误码
+    /// </summary>
+    public enum PlacementErrorCode
+    {
+        None = 0,
+        InvalidPosition = 1,    // 位置无效
+        CellLocked = 2,         // 格子被锁定
+        StackLimitExceeded = 3, // 堆叠数量超限
+        CellOccupied = 4,       // 格子已有其他物品
+        PlacementFailed = 5,    // 放置操作异常
+    }
+
+    /// <summary>
+    /// 移除操作的错误码
+    /// </summary>
+    public enum RemovalErrorCode
+    {
+        None = 0,
+        InvalidPosition = 1,    // 位置无效
+        CellEmpty = 2,          // 格子无物品
+        InsufficientItems = 3,  // 物品数量不足
+        RemovalFailed = 4,      // 移除操作异常
     }
 }

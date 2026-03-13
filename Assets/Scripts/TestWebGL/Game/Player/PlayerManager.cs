@@ -243,6 +243,30 @@ namespace TestWebGL.Game.Player
         }
 
         /// <summary>
+        /// 消耗体力（不检查，直接扣）
+        /// </summary>
+        public void UseStamina(int amount)
+        {
+            TryUseStamina(amount);
+        }
+
+        /// <summary>
+        /// 获取当前体力
+        /// </summary>
+        public int GetCurrentStamina()
+        {
+            return _playerData.currentStamina;
+        }
+
+        /// <summary>
+        /// 获取玩家等级
+        /// </summary>
+        public int GetLevel()
+        {
+            return _playerData.level;
+        }
+
+        /// <summary>
         /// 恢复体力
         /// </summary>
         public void RecoverStamina(int amount)

@@ -4,6 +4,8 @@ using TestWebGL.Game.Player;
 using TestWebGL.Game.Crafting;
 using TestWebGL.Game.Feedback;
 using TestWebGL.Game.Items;
+using TestWebGL.Game.Exploration;
+using TestWebGL.Game.Order;
 
 namespace TestWebGL.Game.Core
 {
@@ -37,6 +39,10 @@ namespace TestWebGL.Game.Core
         private CraftingSystem _craftingSystem;
         private CraftingEngine _craftingEngine;
         private FeedbackSystem _feedbackSystem;
+        private ExplorationSystem _explorationSystem;
+        private ExplorationEngine _explorationEngine;
+        private OrderSystem _orderSystem;
+        private OrderEngine _orderEngine;
 
         // 游戏状态
         private GameState _gameState = GameState.Initializing;
@@ -118,7 +124,21 @@ namespace TestWebGL.Game.Core
             _feedbackSystem = FeedbackSystem.Instance;
             Debug.Log("[GameManager] 反馈系统已初始化");
 
-            // 6. 输出初始化统计
+            // 6. 初始化探索系统
+            _explorationSystem = new ExplorationSystem();
+            _explorationEngine = new ExplorationEngine(_explorationSystem, _gridManager, _playerManager);
+            _explorationEngine.OnExploreResult += HandleExploreResult;
+            _explorationEngine.OnPlacementFailed += HandlePlacementFailed;
+            Debug.Log("[GameManager] 探索系统已初始化");
+
+            // 7. 初始化订单系统
+            _orderSystem = new OrderSystem();
+            _orderEngine = new OrderEngine(_orderSystem, _gridManager, _playerManager);
+            _orderEngine.OnOrderSubmitResult += HandleOrderSubmitResult;
+            _orderEngine.OnRewardGranted += HandleRewardGranted;
+            Debug.Log("[GameManager] 订单系统已初始化");
+
+            // 8. 输出初始化统计
             var gridStats = _gridManager.GetStatistics();
             var gridDims = _gridManager.GetDimensions();
             Debug.Log($"[GameManager] 格子统计: 总={gridStats.totalCellCount}, 锁定={gridStats.lockedCellCount}, " +
@@ -176,6 +196,10 @@ namespace TestWebGL.Game.Core
         public CraftingSystem GetCraftingSystem() => _craftingSystem;
         public CraftingEngine GetCraftingEngine() => _craftingEngine;
         public FeedbackSystem GetFeedbackSystem() => _feedbackSystem;
+        public ExplorationSystem GetExplorationSystem() => _explorationSystem;
+        public ExplorationEngine GetExplorationEngine() => _explorationEngine;
+        public OrderSystem GetOrderSystem() => _orderSystem;
+        public OrderEngine GetOrderEngine() => _orderEngine;
 
         public GameState GetGameState() => _gameState;
 
@@ -230,7 +254,37 @@ namespace TestWebGL.Game.Core
             _feedbackSystem.FullGridFlash();
         }
 
-        // ==================== 测试/调试方法 ====================
+        private void HandleExploreResult(bool success, ItemType[] items, string message)
+        {
+            Debug.Log($"[GameManager] 探索结果: {(success ? "成功" : "失败")} - {message}");
+            if (success && items != null)
+            {
+                _feedbackSystem.ExploreSuccessFeedback();
+            }
+            else
+            {
+                _feedbackSystem.CraftFailureFeedback();  // 暂时使用失败音效
+            }
+        }
+
+        private void HandlePlacementFailed(string reason)
+        {
+            Debug.Log($"[GameManager] 物品放置失败: {reason}");
+        }
+
+        private void HandleOrderSubmitResult(bool success, OrderSystem.OrderData order, string message)
+        {
+            Debug.Log($"[GameManager] 订单提交结果: {(success ? "成功" : "失败")} - {message}");
+            if (success)
+            {
+                _feedbackSystem.OrderCompleteFeedback();
+            }
+        }
+
+        private void HandleRewardGranted(OrderSystem.RewardType rewardType, int amount)
+        {
+            Debug.Log($"[GameManager] 分发奖励: {rewardType} ×{amount}");
+        }
 
         /// <summary>
         /// 调试：输出格子详细信息
@@ -304,14 +358,31 @@ namespace TestWebGL.Game.Core
         /// </summary>
         public void Debug_PlaceItem(int row, int col, Items.ItemType itemType, int count = 1)
         {
-            if (_gridManager.TryPlaceItem(row, col, itemType, count))
+            var (success, errorCode) = _gridManager.TryPlaceItem(row, col, itemType, count);
+            if (success)
             {
                 Debug.Log($"[DEBUG] 在格子[{row},{col}]放置了 {Items.ItemConfig.GetItemName(itemType)} ×{count}");
             }
             else
             {
-                Debug.Log($"[DEBUG] 放置失败!");
+                Debug.Log($"[DEBUG] 放置失败: {GetPlacementErrorMessage(row, col, itemType, errorCode)}");
             }
+        }
+
+        /// <summary>
+        /// 获取放置错误的可读消息
+        /// </summary>
+        private string GetPlacementErrorMessage(int row, int col, ItemType itemType, Grid.PlacementErrorCode errorCode)
+        {
+            return errorCode switch
+            {
+                Grid.PlacementErrorCode.InvalidPosition => $"格子位置[{row},{col}]无效",
+                Grid.PlacementErrorCode.CellLocked => $"格子[{row},{col}]已锁定",
+                Grid.PlacementErrorCode.StackLimitExceeded => $"格子[{row},{col}]堆叠数量超限",
+                Grid.PlacementErrorCode.CellOccupied => $"格子[{row},{col}]已有其他物品",
+                Grid.PlacementErrorCode.PlacementFailed => $"格子[{row},{col}]放置操作异常",
+                _ => $"未知错误 ({errorCode})"
+            };
         }
 
         /// <summary>
@@ -355,6 +426,31 @@ namespace TestWebGL.Game.Core
             Debug.Log($"格子满: {(_craftingEngine.IsGridFull() ? "是" : "否")}");
         }
 
+        /// <summary>
+        /// 调试：执行探索
+        /// </summary>
+        public void Debug_Explore()
+        {
+            _explorationEngine.TryExplore();
+        }
+
+        /// <summary>
+        /// 调试：生成每日订单
+        /// </summary>
+        public void Debug_GenerateDailyOrders()
+        {
+            var playerData = _playerManager.GetPlayerData();
+            _orderSystem.GenerateDailyOrders(playerData.level, playerData.historyMaxLevel);
+        }
+
+        /// <summary>
+        /// 调试：提交订单
+        /// </summary>
+        public void Debug_SubmitOrder(int orderId)
+        {
+            _orderEngine.TrySubmitOrder(orderId);
+        }
+
         private void OnDestroy()
         {
             // 清理事件订阅
@@ -370,6 +466,18 @@ namespace TestWebGL.Game.Core
                 _craftingEngine.OnCraftSuccess -= HandleCraftSuccess;
                 _craftingEngine.OnCraftFailure -= HandleCraftFailure;
                 _craftingEngine.OnFullGridFeedback -= HandleFullGridFeedback;
+            }
+
+            if (_explorationEngine != null)
+            {
+                _explorationEngine.OnExploreResult -= HandleExploreResult;
+                _explorationEngine.OnPlacementFailed -= HandlePlacementFailed;
+            }
+
+            if (_orderEngine != null)
+            {
+                _orderEngine.OnOrderSubmitResult -= HandleOrderSubmitResult;
+                _orderEngine.OnRewardGranted -= HandleRewardGranted;
             }
         }
     }

@@ -91,7 +91,13 @@ namespace TestWebGL.Game.Crafting
             }
 
             // 执行操作：移除输入物品
-            _gridManager.TryRemoveItem(row, col, inputCount - remainingInput);
+            var (removeSuccess, removeError) = _gridManager.TryRemoveItem(row, col, inputCount - remainingInput);
+            if (!removeSuccess)
+            {
+                UnityEngine.Debug.Log($"[CraftingEngine] 移除输入物品失败: {removeError}");
+                OnCraftFailure?.Invoke($"移除物品失败 ({removeError})");
+                return false;
+            }
 
             // 如果有剩余物品，保留在原格子
             if (remainingInput == 0)
@@ -100,7 +106,13 @@ namespace TestWebGL.Game.Crafting
             }
 
             // 在空格子中放置输出物品
-            _gridManager.TryPlaceItem(emptyRow, emptyCol, outputItem, outputCount);
+            var (placeSuccess, placeError) = _gridManager.TryPlaceItem(emptyRow, emptyCol, outputItem, outputCount);
+            if (!placeSuccess)
+            {
+                UnityEngine.Debug.Log($"[CraftingEngine] 放置输出物品失败: {placeError}");
+                OnCraftFailure?.Invoke($"放置物品失败 ({placeError})");
+                return false;
+            }
 
             // 记录已合成的物品（用于图鉴）
             var gameManager = Core.GameManager.Instance;
@@ -158,7 +170,14 @@ namespace TestWebGL.Game.Crafting
             }
 
             // 执行解锁：消耗2个物品，解锁格子
-            _gridManager.TryRemoveItem(fromRow, fromCol, 2);
+            var (removeSuccess, removeError) = _gridManager.TryRemoveItem(fromRow, fromCol, 2);
+            if (!removeSuccess)
+            {
+                UnityEngine.Debug.Log($"[CraftingEngine] 解锁时移除物品失败: {removeError}");
+                OnCraftFailure?.Invoke($"移除物品失败 ({removeError})");
+                return false;
+            }
+            
             _gridManager.TryUnlockCell(toRow, toCol);
 
             // 获得经验奖励（解锁格子奖励：20 × 物品等级）
