@@ -119,6 +119,9 @@ namespace TestWebGL.Game.UI
             GameObject buttonGO = new GameObject(name);
             buttonGO.transform.SetParent(transform, false);
 
+            // 添加RectTransform组件（UI元素必须要有）
+            RectTransform buttonRect = buttonGO.AddComponent<RectTransform>();
+            
             // 添加按钮组件
             Button button = buttonGO.AddComponent<Button>();
             button.transition = Selectable.Transition.ColorTint;
@@ -131,7 +134,6 @@ namespace TestWebGL.Game.UI
             button.colors = colors;
 
             // 设置按钮大小
-            RectTransform buttonRect = buttonGO.GetComponent<RectTransform>();
             buttonRect.sizeDelta = new Vector2(80, 60);
 
             // 创建文本

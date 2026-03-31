@@ -36,207 +36,40 @@ namespace TestWebGL.Game.UI
         /// </summary>
         public void Initialize()
         {
+            // 从预制件获取RectTransform
             if (popupRect == null)
             {
-                CreatePopup();
+                popupRect = GetComponent<RectTransform>();
             }
 
-            CreateUIComponents();
-            SetupButtonEvents();
+            // 从预制件获取UI组件引用
+            if (backgroundImage == null)
+                backgroundImage = GetComponent<Image>();
+            if (itemIcon == null)
+                itemIcon = transform.Find("ItemIcon")?.GetComponent<Image>();
+            if (itemNameText == null)
+                itemNameText = transform.Find("ItemName")?.GetComponent<TextMeshProUGUI>();
+            if (itemLevelText == null)
+                itemLevelText = transform.Find("ItemLevel")?.GetComponent<TextMeshProUGUI>();
+            if (itemCountText == null)
+                itemCountText = transform.Find("ItemCount")?.GetComponent<TextMeshProUGUI>();
+            if (itemDescriptionText == null)
+                itemDescriptionText = transform.Find("ItemDescription")?.GetComponent<TextMeshProUGUI>();
+            if (closeButton == null)
+                closeButton = transform.Find("CloseButton")?.GetComponent<Button>();
+            if (actionButton == null)
+                actionButton = transform.Find("ActionButton")?.GetComponent<Button>();
+
+            // 设置按钮事件
+            if (closeButton != null)
+                closeButton.onClick.AddListener(Hide);
+            if (actionButton != null)
+                actionButton.onClick.AddListener(OnActionButtonClicked);
 
             // 初始隐藏
             Hide();
 
             Debug.Log("[ItemDetailPopup] 物品详情弹窗初始化完成");
-        }
-
-        /// <summary>
-        /// 创建弹窗
-        /// </summary>
-        private void CreatePopup()
-        {
-            popupRect = GetComponent<RectTransform>();
-            if (popupRect == null)
-            {
-                popupRect = gameObject.AddComponent<RectTransform>();
-            }
-
-            // 设置弹窗位置和大小（屏幕中央）
-            popupRect.anchorMin = new Vector2(0.5f, 0.5f);
-            popupRect.anchorMax = new Vector2(0.5f, 0.5f);
-            popupRect.pivot = new Vector2(0.5f, 0.5f);
-            popupRect.anchoredPosition = Vector2.zero;
-            popupRect.sizeDelta = popupSize;
-
-            // 添加背景
-            backgroundImage = gameObject.AddComponent<Image>();
-            backgroundImage.color = backgroundColor;
-
-            // 添加垂直布局
-            VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(20, 20, 20, 20);
-            layout.spacing = 10;
-            layout.childAlignment = TextAnchor.UpperCenter;
-        }
-
-        /// <summary>
-        /// 创建UI组件
-        /// </summary>
-        private void CreateUIComponents()
-        {
-            // 关闭按钮
-            if (closeButton == null)
-            {
-                GameObject closeGO = new GameObject("CloseButton");
-                closeGO.transform.SetParent(transform, false);
-
-                closeButton = closeGO.AddComponent<Button>();
-                closeButton.onClick.AddListener(Hide);
-
-                // 设置关闭按钮样式
-                Image closeImage = closeGO.AddComponent<Image>();
-                closeImage.color = new Color(0.8f, 0.2f, 0.2f);
-
-                // 关闭按钮文本
-                GameObject closeTextGO = new GameObject("Text");
-                closeTextGO.transform.SetParent(closeGO.transform, false);
-
-                TextMeshProUGUI closeText = closeTextGO.AddComponent<TextMeshProUGUI>();
-                closeText.text = "×";
-                closeText.fontSize = 24;
-                closeText.alignment = TextAlignmentOptions.Center;
-                closeText.color = Color.white;
-
-                // 设置关闭按钮位置（右上角）
-                RectTransform closeRect = closeGO.GetComponent<RectTransform>();
-                closeRect.anchorMin = new Vector2(1f, 1f);
-                closeRect.anchorMax = new Vector2(1f, 1f);
-                closeRect.pivot = new Vector2(1f, 1f);
-                closeRect.anchoredPosition = new Vector2(-10, -10);
-                closeRect.sizeDelta = new Vector2(40, 40);
-
-                RectTransform closeTextRect = closeTextGO.GetComponent<RectTransform>();
-                closeTextRect.anchorMin = Vector2.zero;
-                closeTextRect.anchorMax = Vector2.one;
-                closeTextRect.offsetMin = Vector2.zero;
-                closeTextRect.offsetMax = Vector2.zero;
-            }
-
-            // 物品图标
-            if (itemIcon == null)
-            {
-                GameObject iconGO = new GameObject("ItemIcon");
-                iconGO.transform.SetParent(transform, false);
-
-                itemIcon = iconGO.AddComponent<Image>();
-                itemIcon.color = Color.white;
-
-                RectTransform iconRect = iconGO.GetComponent<RectTransform>();
-                iconRect.sizeDelta = new Vector2(80, 80);
-            }
-
-            // 物品名称
-            if (itemNameText == null)
-            {
-                GameObject nameGO = new GameObject("ItemName");
-                nameGO.transform.SetParent(transform, false);
-
-                itemNameText = nameGO.AddComponent<TextMeshProUGUI>();
-                itemNameText.fontSize = 20;
-                itemNameText.alignment = TextAlignmentOptions.Center;
-                itemNameText.color = Color.white;
-
-                RectTransform nameRect = nameGO.GetComponent<RectTransform>();
-                nameRect.sizeDelta = new Vector2(popupSize.x - 40, 30);
-            }
-
-            // 物品等级
-            if (itemLevelText == null)
-            {
-                GameObject levelGO = new GameObject("ItemLevel");
-                levelGO.transform.SetParent(transform, false);
-
-                itemLevelText = levelGO.AddComponent<TextMeshProUGUI>();
-                itemLevelText.fontSize = 16;
-                itemLevelText.alignment = TextAlignmentOptions.Center;
-                itemLevelText.color = Color.yellow;
-
-                RectTransform levelRect = levelGO.GetComponent<RectTransform>();
-                levelRect.sizeDelta = new Vector2(popupSize.x - 40, 25);
-            }
-
-            // 物品数量
-            if (itemCountText == null)
-            {
-                GameObject countGO = new GameObject("ItemCount");
-                countGO.transform.SetParent(transform, false);
-
-                itemCountText = countGO.AddComponent<TextMeshProUGUI>();
-                itemCountText.fontSize = 16;
-                itemCountText.alignment = TextAlignmentOptions.Center;
-                itemCountText.color = Color.green;
-
-                RectTransform countRect = countGO.GetComponent<RectTransform>();
-                countRect.sizeDelta = new Vector2(popupSize.x - 40, 25);
-            }
-
-            // 物品描述
-            if (itemDescriptionText == null)
-            {
-                GameObject descGO = new GameObject("ItemDescription");
-                descGO.transform.SetParent(transform, false);
-
-                itemDescriptionText = descGO.AddComponent<TextMeshProUGUI>();
-                itemDescriptionText.fontSize = 14;
-                itemDescriptionText.alignment = TextAlignmentOptions.TopLeft;
-                itemDescriptionText.color = Color.gray;
-                itemDescriptionText.enableWordWrapping = true;
-
-                RectTransform descRect = descGO.GetComponent<RectTransform>();
-                descRect.sizeDelta = new Vector2(popupSize.x - 40, 80);
-            }
-
-            // 操作按钮
-            if (actionButton == null)
-            {
-                GameObject actionGO = new GameObject("ActionButton");
-                actionGO.transform.SetParent(transform, false);
-
-                actionButton = actionGO.AddComponent<Button>();
-                actionButton.onClick.AddListener(OnActionButtonClicked);
-
-                // 设置按钮样式
-                Image actionImage = actionGO.AddComponent<Image>();
-                actionImage.color = new Color(0.3f, 0.6f, 0.3f);
-
-                // 按钮文本
-                GameObject actionTextGO = new GameObject("Text");
-                actionTextGO.transform.SetParent(actionGO.transform, false);
-
-                TextMeshProUGUI actionText = actionTextGO.AddComponent<TextMeshProUGUI>();
-                actionText.text = "操作";
-                actionText.fontSize = 16;
-                actionText.alignment = TextAlignmentOptions.Center;
-                actionText.color = Color.white;
-
-                // 设置按钮位置和大小
-                RectTransform actionRect = actionGO.GetComponent<RectTransform>();
-                actionRect.sizeDelta = new Vector2(popupSize.x - 40, 40);
-
-                RectTransform actionTextRect = actionTextGO.GetComponent<RectTransform>();
-                actionTextRect.anchorMin = Vector2.zero;
-                actionTextRect.anchorMax = Vector2.one;
-                actionTextRect.offsetMin = Vector2.zero;
-                actionTextRect.offsetMax = Vector2.zero;
-            }
-        }
-
-        /// <summary>
-        /// 设置按钮事件
-        /// </summary>
-        private void SetupButtonEvents()
-        {
-            // 已经在CreateUIComponents中设置了
         }
 
         /// <summary>

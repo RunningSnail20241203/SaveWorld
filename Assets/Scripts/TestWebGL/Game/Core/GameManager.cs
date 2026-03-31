@@ -8,6 +8,10 @@ using TestWebGL.Game.Exploration;
 using TestWebGL.Game.Order;
 using TestWebGL.Game.Achievement;
 using TestWebGL.Game.Storage;
+using TestWebGL.Game.Audio;
+using TestWebGL.Game.Analytics;
+using TestWebGL.Game.Social;
+using TestWebGL.Game.Operations;
 
 namespace TestWebGL.Game.Core
 {
@@ -46,7 +50,15 @@ namespace TestWebGL.Game.Core
         private OrderSystem _orderSystem;
         private OrderEngine _orderEngine;
         private StorageSystem _storageSystem;
+        private CloudStorageSystem _cloudStorageSystem;
         private AchievementSystem _achievementSystem;
+        private AudioManager _audioManager;
+        private AnalyticsSystem _analyticsSystem;
+        private SocialSystem _socialSystem;
+        private OperationsManager _operationsManager;
+        private CustomerServiceSystem _customerServiceSystem;
+        private EventSystem _eventSystem;
+        private HotUpdateSystem _hotUpdateSystem;
 
         // 游戏状态
         private GameState _gameState = GameState.Initializing;
@@ -185,6 +197,46 @@ namespace TestWebGL.Game.Core
             _achievementSystem = AchievementSystem.Instance;
             Debug.Log("[GameManager] 成就系统已初始化");
 
+            // 10. 初始化音频管理器
+            _audioManager = AudioManager.Instance;
+            _audioManager.Initialize();
+            Debug.Log("[GameManager] 音频管理器已初始化");
+
+            // 11. 初始化数据分析系统
+            _analyticsSystem = AnalyticsSystem.Instance;
+            _analyticsSystem.Initialize();
+            Debug.Log("[GameManager] 数据分析系统已初始化");
+
+            // 12. 初始化社交系统
+            _socialSystem = SocialSystem.Instance;
+            _socialSystem.Initialize();
+            Debug.Log("[GameManager] 社交系统已初始化");
+
+            // 13. 初始化云存储系统
+            _cloudStorageSystem = CloudStorageSystem.Instance;
+            _cloudStorageSystem.Initialize();
+            Debug.Log("[GameManager] 云存储系统已初始化");
+
+            // 14. 初始化运营系统
+            _operationsManager = OperationsManager.Instance;
+            _operationsManager.Initialize();
+            Debug.Log("[GameManager] 运营系统已初始化");
+
+            // 15. 初始化客服系统
+            _customerServiceSystem = CustomerServiceSystem.Instance;
+            _customerServiceSystem.Initialize();
+            Debug.Log("[GameManager] 客服系统已初始化");
+
+            // 16. 初始化活动系统
+            _eventSystem = EventSystem.Instance;
+            _eventSystem.Initialize();
+            Debug.Log("[GameManager] 活动系统已初始化");
+
+            // 17. 初始化热更新系统
+            _hotUpdateSystem = HotUpdateSystem.Instance;
+            _hotUpdateSystem.Initialize();
+            Debug.Log("[GameManager] 热更新系统已初始化");
+
             // 10. 输出初始化统计
             var gridStats = _gridManager.GetStatistics();
             var gridDims = _gridManager.GetDimensions();
@@ -320,6 +372,14 @@ namespace TestWebGL.Game.Core
         public OrderSystem GetOrderSystem() => _orderSystem;
         public OrderEngine GetOrderEngine() => _orderEngine;
         public StorageSystem GetStorageSystem() => _storageSystem;
+        public CloudStorageSystem GetCloudStorageSystem() => _cloudStorageSystem;
+        public AudioManager GetAudioManager() => _audioManager;
+        public AnalyticsSystem GetAnalyticsSystem() => _analyticsSystem;
+        public SocialSystem GetSocialSystem() => _socialSystem;
+        public OperationsManager GetOperationsManager() => _operationsManager;
+        public CustomerServiceSystem GetCustomerServiceSystem() => _customerServiceSystem;
+        public EventSystem GetEventSystem() => _eventSystem;
+        public HotUpdateSystem GetHotUpdateSystem() => _hotUpdateSystem;
         public TestWebGL.Game.UI.UIManager GetUIManager() => TestWebGL.Game.UI.UIManager.Instance;
 
         public GameState GetGameState() => _gameState;
@@ -334,15 +394,6 @@ namespace TestWebGL.Game.Core
             return _storageSystem.GetStorageInfo();
         }
 
-        /// <summary>
-        /// 删除所有保存数据（调试用）
-        /// </summary>
-        public void DeleteAllSaveData()
-        {
-            _storageSystem.DeleteAllSaveData();
-            Debug.Log("[GameManager] 已删除所有保存数据");
-        }
-
         // ==================== 事件处理 ====================
 
         private void HandlePlayerLevelChanged(int newLevel, int oldLevel)
@@ -353,6 +404,12 @@ namespace TestWebGL.Game.Core
 
             // 更新成就：等级提升
             _achievementSystem.UpdateProgress(AchievementType.LevelUp, newLevel);
+
+            // 记录升级事件
+            _analyticsSystem.LogPlayerLevelUp(newLevel, oldLevel);
+
+            // 播放升级音效
+            _audioManager.PlayAchievementUnlock();
         }
 
         private void HandlePlayerStaminaChanged(int newStamina, int maxStamina)
@@ -389,6 +446,15 @@ namespace TestWebGL.Game.Core
             // 更新成就：合成大师
             _achievementSystem.UpdateProgress(AchievementType.CraftingMaster);
 
+            // 记录合成事件
+            _analyticsSystem.LogCraftItem(outputItem.ToString(), outputCount, true);
+
+            // 播放合成成功音效
+            _audioManager.PlayCraftSuccess();
+
+            // 更新活动进度
+            _eventSystem.UpdateEventProgress("craft", outputCount);
+
             // 重要事件：合成成功时保存数据
             SavePlayerData();
             SaveGridData();
@@ -415,10 +481,25 @@ namespace TestWebGL.Game.Core
 
                 // 更新成就：首次探索
                 _achievementSystem.UpdateProgress(AchievementType.FirstExplore);
+
+                // 记录探索事件
+                string[] itemNames = new string[items.Length];
+                for (int i = 0; i < items.Length; i++)
+                {
+                    itemNames[i] = items[i].ToString();
+                }
+                _analyticsSystem.LogExplore(1, itemNames);
+
+                // 播放探索音效
+                _audioManager.PlayExploreClick();
+
+                // 更新活动进度
+                _eventSystem.UpdateEventProgress("explore", 1);
             }
             else
             {
                 _feedbackSystem.CraftFailureFeedback();  // 暂时使用失败音效
+                _audioManager.PlayCraftFailure();
             }
         }
 
@@ -436,6 +517,15 @@ namespace TestWebGL.Game.Core
 
                 // 更新成就：订单达人
                 _achievementSystem.UpdateProgress(AchievementType.OrderComplete);
+
+                // 记录订单完成事件
+                _analyticsSystem.LogOrderComplete(order.requiredItem.ToString(), order.requiredLevel, order.rewardType.ToString());
+
+                // 播放订单完成音效
+                _audioManager.PlayOrderComplete();
+
+                // 更新活动进度
+                _eventSystem.UpdateEventProgress("order", 1);
 
                 // 重要事件：订单完成时保存数据
                 SavePlayerData();
@@ -511,8 +601,46 @@ namespace TestWebGL.Game.Core
         /// </summary>
         public void Debug_GainExperience(int amount)
         {
-            _playerManager.GainExperience(amount, "DEBUG");
+            _playerManager.GainExperience(amount, "调试获得");
             Debug.Log($"[DEBUG] 获得 {amount} 经验");
+        }
+
+        /// <summary>
+        /// 删除所有保存数据（调试用）
+        /// </summary>
+        public void DeleteAllSaveData()
+        {
+            _storageSystem.DeleteAllSaveData();
+            Debug.Log("[GameManager] 已删除所有保存数据");
+        }
+
+        /// <summary>
+        /// 同步数据到云端
+        /// </summary>
+        public void SyncToCloud()
+        {
+            if (_cloudStorageSystem != null)
+            {
+                _cloudStorageSystem.SyncToCloud(_playerData, _gridManager);
+            }
+        }
+
+        /// <summary>
+        /// 从云端下载数据
+        /// </summary>
+        public void DownloadFromCloud()
+        {
+            if (_cloudStorageSystem != null)
+            {
+                _cloudStorageSystem.DownloadFromCloud((success, message, playerData, gridData) =>
+                {
+                    if (success && playerData != null)
+                    {
+                        // 这里可以实现数据合并逻辑
+                        Debug.Log("[GameManager] 云端数据下载成功");
+                    }
+                });
+            }
         }
 
         /// <summary>

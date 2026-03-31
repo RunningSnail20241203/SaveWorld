@@ -26,6 +26,16 @@ namespace TestWebGL.Game.UI
         /// </summary>
         public void Initialize()
         {
+            // 从预制件获取UI组件引用
+            if (achievementItemPrefab == null)
+                achievementItemPrefab = Resources.Load<GameObject>("Prefabs/UI/AchievementItem");
+            if (achievementListContainer == null)
+                achievementListContainer = transform.Find("AchievementsContainer");
+            if (progressText == null)
+                progressText = transform.Find("ProgressText")?.GetComponent<TextMeshProUGUI>();
+            if (closeButton == null)
+                closeButton = transform.Find("CloseButton")?.GetComponent<Button>();
+
             if (closeButton != null)
             {
                 closeButton.onClick.AddListener(Hide);

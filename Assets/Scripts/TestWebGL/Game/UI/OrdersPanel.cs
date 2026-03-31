@@ -84,8 +84,12 @@ namespace TestWebGL.Game.UI
             panelRect.anchoredPosition = Vector2.zero;
             panelRect.sizeDelta = panelSize;
 
-            // 添加背景
-            backgroundImage = gameObject.AddComponent<Image>();
+            // 添加背景 - 先检查是否已存在Image组件
+            backgroundImage = GetComponent<Image>();
+            if (backgroundImage == null)
+            {
+                backgroundImage = gameObject.AddComponent<Image>();
+            }
             backgroundImage.color = backgroundColor;
 
             // 添加垂直布局
@@ -177,7 +181,7 @@ namespace TestWebGL.Game.UI
             tabsLayout.spacing = 10;
             tabsLayout.childAlignment = TextAnchor.MiddleCenter;
 
-            RectTransform tabsRect = tabsContainer.GetComponent<RectTransform>();
+            RectTransform tabsRect = tabsContainer.AddComponent<RectTransform>();
             tabsRect.sizeDelta = new Vector2(panelSize.x - 40, 50);
 
             // 活跃订单标签
@@ -255,7 +259,7 @@ namespace TestWebGL.Game.UI
             tabText.color = Color.white;
 
             // 设置标签大小
-            RectTransform tabRect = tabGO.GetComponent<RectTransform>();
+            RectTransform tabRect = tabGO.AddComponent<RectTransform>();
             tabRect.sizeDelta = new Vector2(120, 40);
 
             RectTransform textRect = textGO.GetComponent<RectTransform>();
@@ -276,7 +280,7 @@ namespace TestWebGL.Game.UI
             GameObject listContainer = new GameObject("OrdersList");
             listContainer.transform.SetParent(transform, false);
 
-            RectTransform listRect = listContainer.GetComponent<RectTransform>();
+            RectTransform listRect = listContainer.AddComponent<RectTransform>();
             listRect.sizeDelta = new Vector2(panelSize.x - 40, 200);
 
             // 滚动视图
@@ -338,7 +342,7 @@ namespace TestWebGL.Game.UI
             detailsLayout.spacing = 8;
             detailsLayout.childAlignment = TextAnchor.UpperLeft;
 
-            RectTransform detailsRect = detailsContainer.GetComponent<RectTransform>();
+            RectTransform detailsRect = detailsContainer.AddComponent<RectTransform>();
             detailsRect.sizeDelta = new Vector2(panelSize.x - 40, 150);
 
             // 背景
@@ -598,7 +602,7 @@ namespace TestWebGL.Game.UI
 
             _orderItems.Add(itemUI);
 
-            RectTransform itemRect = itemGO.GetComponent<RectTransform>();
+            RectTransform itemRect = itemGO.AddComponent<RectTransform>();
             itemRect.sizeDelta = new Vector2(panelSize.x - 60, 50);
         }
 
@@ -737,7 +741,7 @@ namespace TestWebGL.Game.UI
                 titleText.fontSize = 14;
                 titleText.color = Color.white;
 
-                RectTransform titleRect = titleGO.GetComponent<RectTransform>();
+                RectTransform titleRect = titleGO.AddComponent<RectTransform>();
                 titleRect.sizeDelta = new Vector2(200, 40);
             }
 
@@ -752,7 +756,7 @@ namespace TestWebGL.Game.UI
                 statusText.alignment = TextAlignmentOptions.Right;
                 statusText.color = Color.yellow;
 
-                RectTransform statusRect = statusGO.GetComponent<RectTransform>();
+                RectTransform statusRect = statusGO.AddComponent<RectTransform>();
                 statusRect.sizeDelta = new Vector2(100, 40);
             }
         }

@@ -78,10 +78,20 @@ namespace TestWebGL.Game.UI
             // 初始化物品图标管理器
             ItemIconManager.Instance.PreloadAllIcons();
 
-            // 查找或创建主Canvas
+            // 从预制件加载主Canvas
             if (mainCanvas == null)
             {
-                mainCanvas = CreateMainCanvas();
+                GameObject canvasPrefab = Resources.Load<GameObject>("Prefabs/UI/MainCanvas");
+                if (canvasPrefab != null)
+                {
+                    mainCanvas = Instantiate(canvasPrefab, transform);
+                    mainCanvas.name = "MainCanvas";
+                }
+                else
+                {
+                    Debug.LogError("[UIManager] 无法加载MainCanvas预制件");
+                    return;
+                }
             }
 
             // 初始化各个UI组件
@@ -95,33 +105,6 @@ namespace TestWebGL.Game.UI
 
             _isInitialized = true;
             Debug.Log("[UIManager] UI系统初始化完成");
-        }
-
-        /// <summary>
-        /// 创建主Canvas
-        /// </summary>
-        private GameObject CreateMainCanvas()
-        {
-            // 创建Canvas GameObject
-            GameObject canvasGO = new GameObject("MainCanvas");
-            canvasGO.transform.SetParent(transform);
-
-            // 添加Canvas组件
-            Canvas canvas = canvasGO.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 0;
-
-            // 添加CanvasScaler
-            CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f;
-
-            // 添加GraphicRaycaster
-            canvasGO.AddComponent<GraphicRaycaster>();
-
-            return canvasGO;
         }
 
         /// <summary>

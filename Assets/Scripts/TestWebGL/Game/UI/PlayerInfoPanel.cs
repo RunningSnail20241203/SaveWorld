@@ -34,12 +34,28 @@ namespace TestWebGL.Game.UI
         {
             _playerManager = GameManager.Instance.GetPlayerManager();
 
+            // 从预制件获取RectTransform
             if (panelRect == null)
             {
-                CreatePanel();
+                panelRect = GetComponent<RectTransform>();
             }
 
-            CreateUIComponents();
+            // 从预制件获取UI组件引用
+            if (playerNameText == null)
+                playerNameText = transform.Find("PlayerName")?.GetComponent<TextMeshProUGUI>();
+            if (levelText == null)
+                levelText = transform.Find("LevelInfo")?.GetComponent<TextMeshProUGUI>();
+            if (experienceText == null)
+                experienceText = transform.Find("ExperienceBar/ExperienceText")?.GetComponent<TextMeshProUGUI>();
+            if (experienceSlider == null)
+                experienceSlider = transform.Find("ExperienceBar/Background")?.GetComponent<Slider>();
+            if (staminaText == null)
+                staminaText = transform.Find("StaminaBar/StaminaText")?.GetComponent<TextMeshProUGUI>();
+            if (staminaSlider == null)
+                staminaSlider = transform.Find("StaminaBar/Background")?.GetComponent<Slider>();
+            if (playTimeText == null)
+                playTimeText = transform.Find("PlayTime")?.GetComponent<TextMeshProUGUI>();
+
             Refresh();
 
             // 订阅玩家数据变化事件
@@ -48,208 +64,6 @@ namespace TestWebGL.Game.UI
             _playerManager.OnExperienceGained += OnExperienceGained;
 
             Debug.Log("[PlayerInfoPanel] 玩家信息面板初始化完成");
-        }
-
-        /// <summary>
-        /// 创建面板
-        /// </summary>
-        private void CreatePanel()
-        {
-            panelRect = GetComponent<RectTransform>();
-            if (panelRect == null)
-            {
-                panelRect = gameObject.AddComponent<RectTransform>();
-            }
-
-            // 设置面板位置和大小
-            panelRect.anchorMin = new Vector2(0.5f, 1f);
-            panelRect.anchorMax = new Vector2(0.5f, 1f);
-            panelRect.pivot = new Vector2(0.5f, 1f);
-            panelRect.anchoredPosition = panelPosition;
-            panelRect.sizeDelta = panelSize;
-
-            // 添加背景
-            Image background = gameObject.AddComponent<Image>();
-            background.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
-        }
-
-        /// <summary>
-        /// 创建UI组件
-        /// </summary>
-        private void CreateUIComponents()
-        {
-            // 创建垂直布局
-            VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 10, 10);
-            layout.spacing = 5;
-            layout.childAlignment = TextAnchor.UpperCenter;
-
-            // 玩家名称
-            CreatePlayerNameText();
-
-            // 等级信息
-            CreateLevelInfo();
-
-            // 经验条
-            CreateExperienceBar();
-
-            // 体力条
-            CreateStaminaBar();
-
-            // 游戏时长
-            CreatePlayTimeText();
-        }
-
-        /// <summary>
-        /// 创建玩家名称文本
-        /// </summary>
-        private void CreatePlayerNameText()
-        {
-            GameObject nameGO = new GameObject("PlayerName");
-            nameGO.transform.SetParent(transform, false);
-
-            playerNameText = nameGO.AddComponent<TextMeshProUGUI>();
-            playerNameText.fontSize = 24;
-            playerNameText.alignment = TextAlignmentOptions.Center;
-            playerNameText.color = Color.white;
-
-            // 设置RectTransform
-            RectTransform rect = nameGO.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(panelSize.x - 20, 30);
-        }
-
-        /// <summary>
-        /// 创建等级信息
-        /// </summary>
-        private void CreateLevelInfo()
-        {
-            GameObject levelGO = new GameObject("LevelInfo");
-            levelGO.transform.SetParent(transform, false);
-
-            levelText = levelGO.AddComponent<TextMeshProUGUI>();
-            levelText.fontSize = 18;
-            levelText.alignment = TextAlignmentOptions.Center;
-            levelText.color = Color.yellow;
-
-            // 设置RectTransform
-            RectTransform rect = levelGO.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(panelSize.x - 20, 25);
-        }
-
-        /// <summary>
-        /// 创建经验条
-        /// </summary>
-        private void CreateExperienceBar()
-        {
-            GameObject expGO = new GameObject("ExperienceBar");
-            expGO.transform.SetParent(transform, false);
-
-            // 经验条背景
-            GameObject bgGO = new GameObject("Background");
-            bgGO.transform.SetParent(expGO.transform, false);
-            Image bgImage = bgGO.AddComponent<Image>();
-            bgImage.color = Color.gray;
-
-            RectTransform bgRect = bgGO.GetComponent<RectTransform>();
-            bgRect.sizeDelta = new Vector2(panelSize.x - 20, 20);
-
-            // 经验条填充
-            GameObject fillGO = new GameObject("Fill");
-            fillGO.transform.SetParent(bgGO.transform, false);
-            Image fillImage = fillGO.AddComponent<Image>();
-            fillImage.color = Color.blue;
-
-            RectTransform fillRect = fillGO.GetComponent<RectTransform>();
-            fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = Vector2.zero;
-            fillRect.offsetMax = Vector2.zero;
-
-            // 经验条组件
-            experienceSlider = bgGO.AddComponent<Slider>();
-            experienceSlider.fillRect = fillRect;
-            experienceSlider.minValue = 0;
-            experienceSlider.maxValue = 1;
-            experienceSlider.interactable = false;
-
-            // 经验文本
-            GameObject textGO = new GameObject("ExperienceText");
-            textGO.transform.SetParent(expGO.transform, false);
-
-            experienceText = textGO.AddComponent<TextMeshProUGUI>();
-            experienceText.fontSize = 14;
-            experienceText.alignment = TextAlignmentOptions.Center;
-            experienceText.color = Color.white;
-
-            RectTransform textRect = textGO.GetComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(panelSize.x - 20, 20);
-        }
-
-        /// <summary>
-        /// 创建体力条
-        /// </summary>
-        private void CreateStaminaBar()
-        {
-            GameObject staminaGO = new GameObject("StaminaBar");
-            staminaGO.transform.SetParent(transform, false);
-
-            // 体力条背景
-            GameObject bgGO = new GameObject("Background");
-            bgGO.transform.SetParent(staminaGO.transform, false);
-            Image bgImage = bgGO.AddComponent<Image>();
-            bgImage.color = Color.gray;
-
-            RectTransform bgRect = bgGO.GetComponent<RectTransform>();
-            bgRect.sizeDelta = new Vector2(panelSize.x - 20, 20);
-
-            // 体力条填充
-            GameObject fillGO = new GameObject("Fill");
-            fillGO.transform.SetParent(bgGO.transform, false);
-            Image fillImage = fillGO.AddComponent<Image>();
-            fillImage.color = Color.green;
-
-            RectTransform fillRect = fillGO.GetComponent<RectTransform>();
-            fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = Vector2.zero;
-            fillRect.offsetMax = Vector2.zero;
-
-            // 体力条组件
-            staminaSlider = bgGO.AddComponent<Slider>();
-            staminaSlider.fillRect = fillRect;
-            staminaSlider.minValue = 0;
-            staminaSlider.maxValue = 1;
-            staminaSlider.interactable = false;
-
-            // 体力文本
-            GameObject textGO = new GameObject("StaminaText");
-            textGO.transform.SetParent(staminaGO.transform, false);
-
-            staminaText = textGO.AddComponent<TextMeshProUGUI>();
-            staminaText.fontSize = 14;
-            staminaText.alignment = TextAlignmentOptions.Center;
-            staminaText.color = Color.white;
-
-            RectTransform textRect = textGO.GetComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(panelSize.x - 20, 20);
-        }
-
-        /// <summary>
-        /// 创建游戏时长文本
-        /// </summary>
-        private void CreatePlayTimeText()
-        {
-            GameObject timeGO = new GameObject("PlayTime");
-            timeGO.transform.SetParent(transform, false);
-
-            playTimeText = timeGO.AddComponent<TextMeshProUGUI>();
-            playTimeText.fontSize = 16;
-            playTimeText.alignment = TextAlignmentOptions.Center;
-            playTimeText.color = Color.cyan;
-
-            // 设置RectTransform
-            RectTransform rect = timeGO.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(panelSize.x - 20, 25);
         }
 
         /// <summary>

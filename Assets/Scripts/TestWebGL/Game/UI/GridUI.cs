@@ -35,17 +35,54 @@ namespace TestWebGL.Game.UI
         {
             _gridManager = GameManager.Instance.GetGridManager();
 
+            // 如果cellPrefab未赋值，尝试自动加载
+            if (cellPrefab == null)
+            {
+                // 尝试从Resources加载
+                cellPrefab = Resources.Load<GameObject>("Prefabs/UI/GridCellUI");
+                
+                if (cellPrefab == null)
+                {
+                    Debug.LogError("[GridUI] 无法加载GridCellUI预制体，请在Inspector中手动赋值cellPrefab");
+                    return;
+                }
+                Debug.Log("[GridUI] 自动加载GridCellUI预制体成功");
+            }
+
+            // 从预制件获取gridContainer和gridLayout
             if (gridContainer == null)
             {
-                CreateGridContainer();
+                gridContainer = transform.Find("GridContainer")?.GetComponent<RectTransform>();
             }
 
-            if (gridLayout == null)
+            if (gridLayout == null && gridContainer != null)
             {
-                SetupGridLayout();
+                gridLayout = gridContainer.GetComponent<GridLayoutGroup>();
             }
 
-            CreateCellUIs();
+            // 初始化格子UI数组
+            if (_cellUIs == null)
+            {
+                _cellUIs = new GridCellUI[rows, cols];
+                
+                // 从GridContainer获取所有已存在的GridCellUI
+                if (gridContainer != null)
+                {
+                    for (int i = 0; i < gridContainer.childCount && i < rows * cols; i++)
+                    {
+                        Transform child = gridContainer.GetChild(i);
+                        GridCellUI cellUI = child.GetComponent<GridCellUI>();
+                        if (cellUI != null)
+                        {
+                            int row = i / cols;
+                            int col = i % cols;
+                            cellUI.Initialize(row, col);
+                            _cellUIs[row, col] = cellUI;
+                        }
+                    }
+                }
+            }
+
             Refresh();
 
             // 订阅网格变化事件
@@ -53,70 +90,6 @@ namespace TestWebGL.Game.UI
             _gridManager.OnGridUnlocked += OnGridUnlocked;
 
             Debug.Log("[GridUI] 网格UI初始化完成");
-        }
-
-        /// <summary>
-        /// 创建网格容器
-        /// </summary>
-        private void CreateGridContainer()
-        {
-            GameObject containerGO = new GameObject("GridContainer");
-            containerGO.transform.SetParent(transform, false);
-            gridContainer = containerGO.AddComponent<RectTransform>();
-
-            // 设置容器位置和大小
-            gridContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            gridContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            gridContainer.pivot = new Vector2(0.5f, 0.5f);
-            gridContainer.anchoredPosition = Vector2.zero;
-            gridContainer.sizeDelta = new Vector2(800, 1000);
-        }
-
-        /// <summary>
-        /// 设置网格布局
-        /// </summary>
-        private void SetupGridLayout()
-        {
-            gridLayout = gridContainer.gameObject.AddComponent<GridLayoutGroup>();
-            gridLayout.cellSize = cellSize;
-            gridLayout.spacing = spacing;
-            gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            gridLayout.constraintCount = cols;
-            gridLayout.childAlignment = TextAnchor.MiddleCenter;
-        }
-
-        /// <summary>
-        /// 创建所有格子UI
-        /// </summary>
-        private void CreateCellUIs()
-        {
-            _cellUIs = new GridCellUI[rows, cols];
-
-            for (int row = 0; row < rows; row++)
-            {
-                for (int col = 0; col < cols; col++)
-                {
-                    CreateCellUI(row, col);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 创建单个格子UI
-        /// </summary>
-        private void CreateCellUI(int row, int col)
-        {
-            GameObject cellGO = Instantiate(cellPrefab, gridContainer);
-            cellGO.name = $"Cell_{row}_{col}";
-
-            GridCellUI cellUI = cellGO.GetComponent<GridCellUI>();
-            if (cellUI == null)
-            {
-                cellUI = cellGO.AddComponent<GridCellUI>();
-            }
-
-            cellUI.Initialize(row, col);
-            _cellUIs[row, col] = cellUI;
         }
 
         /// <summary>
