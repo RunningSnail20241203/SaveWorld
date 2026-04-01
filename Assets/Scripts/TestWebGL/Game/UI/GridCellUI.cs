@@ -59,75 +59,68 @@ namespace TestWebGL.Game.UI
                 rectTransform = gameObject.AddComponent<RectTransform>();
             }
 
-            // 创建背景图片
+            // 从预制件加载背景图片
             if (backgroundImage == null)
             {
-                GameObject bgGO = new GameObject("Background");
-                bgGO.transform.SetParent(transform, false);
-                backgroundImage = bgGO.AddComponent<Image>();
-                backgroundImage.color = normalColor;
-                backgroundImage.raycastTarget = false;
-
-                // 设置背景RectTransform
-                RectTransform bgRect = bgGO.GetComponent<RectTransform>();
-                bgRect.anchorMin = Vector2.zero;
-                bgRect.anchorMax = Vector2.one;
-                bgRect.offsetMin = Vector2.zero;
-                bgRect.offsetMax = Vector2.zero;
+                GameObject bgPrefab = Resources.Load<GameObject>("Prefabs/UI/GridCellBackground");
+                if (bgPrefab != null)
+                {
+                    GameObject bgGO = Instantiate(bgPrefab, transform);
+                    bgGO.name = "Background";
+                    backgroundImage = bgGO.GetComponent<Image>();
+                }
+                else
+                {
+                    Debug.LogError("[GridCellUI] 无法加载GridCellBackground预制件");
+                }
             }
 
-            // 创建物品图标
+            // 从预制件加载物品图标
             if (itemIcon == null)
             {
-                GameObject iconGO = new GameObject("ItemIcon");
-                iconGO.transform.SetParent(transform, false);
-                itemIcon = iconGO.AddComponent<Image>();
-                itemIcon.raycastTarget = false;
-
-                // 设置图标RectTransform
-                RectTransform iconRect = iconGO.GetComponent<RectTransform>();
-                iconRect.anchorMin = new Vector2(0.1f, 0.1f);
-                iconRect.anchorMax = new Vector2(0.9f, 0.9f);
-                iconRect.offsetMin = Vector2.zero;
-                iconRect.offsetMax = Vector2.zero;
+                GameObject iconPrefab = Resources.Load<GameObject>("Prefabs/UI/GridCellItemIcon");
+                if (iconPrefab != null)
+                {
+                    GameObject iconGO = Instantiate(iconPrefab, transform);
+                    iconGO.name = "ItemIcon";
+                    itemIcon = iconGO.GetComponent<Image>();
+                }
+                else
+                {
+                    Debug.LogError("[GridCellUI] 无法加载GridCellItemIcon预制件");
+                }
             }
 
-            // 创建数量文本
+            // 从预制件加载数量文本
             if (itemCountText == null)
             {
-                GameObject countGO = new GameObject("ItemCount");
-                countGO.transform.SetParent(transform, false);
-                itemCountText = countGO.AddComponent<TextMeshProUGUI>();
-                itemCountText.fontSize = 16;
-                itemCountText.alignment = TextAlignmentOptions.BottomRight;
-                itemCountText.color = Color.white;
-                itemCountText.raycastTarget = false;
-
-                // 设置文本RectTransform
-                RectTransform countRect = countGO.GetComponent<RectTransform>();
-                countRect.anchorMin = Vector2.zero;
-                countRect.anchorMax = Vector2.one;
-                countRect.offsetMin = new Vector2(0, 0);
-                countRect.offsetMax = new Vector2(0, 0);
+                GameObject countPrefab = Resources.Load<GameObject>("Prefabs/UI/GridCellItemCount");
+                if (countPrefab != null)
+                {
+                    GameObject countGO = Instantiate(countPrefab, transform);
+                    countGO.name = "ItemCount";
+                    itemCountText = countGO.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    Debug.LogError("[GridCellUI] 无法加载GridCellItemCount预制件");
+                }
             }
 
-            // 创建锁定等级文本
+            // 从预制件加载锁定等级文本
             if (lockLevelText == null)
             {
-                GameObject lockGO = new GameObject("LockLevel");
-                lockGO.transform.SetParent(transform, false);
-                lockLevelText = lockGO.AddComponent<TextMeshProUGUI>();
-                lockLevelText.fontSize = 20;
-                lockLevelText.alignment = TextAlignmentOptions.Center;
-                lockLevelText.color = Color.white;
-                lockLevelText.raycastTarget = false;
-
-                // 设置文本RectTransform
-                RectTransform lockRect = lockGO.GetComponent<RectTransform>();
-                lockRect.anchorMin = Vector2.zero;
-                lockRect.anchorMax = Vector2.one;
-                lockRect.offsetMin = Vector2.zero;
-                lockRect.offsetMax = Vector2.zero;
+                GameObject lockPrefab = Resources.Load<GameObject>("Prefabs/UI/GridCellLockLevel");
+                if (lockPrefab != null)
+                {
+                    GameObject lockGO = Instantiate(lockPrefab, transform);
+                    lockGO.name = "LockLevel";
+                    lockLevelText = lockGO.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    Debug.LogError("[GridCellUI] 无法加载GridCellLockLevel预制件");
+                }
             }
 
             // 创建按钮

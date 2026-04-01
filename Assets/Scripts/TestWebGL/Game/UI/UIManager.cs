@@ -114,10 +114,18 @@ namespace TestWebGL.Game.UI
         {
             if (prefab == null)
             {
-                Debug.LogWarning($"[UIManager] {name}预制件未设置，将动态创建");
-                GameObject go = new GameObject(name);
-                go.transform.SetParent(mainCanvas.transform, false);
-                return go.AddComponent<T>();
+                Debug.LogWarning($"[UIManager] {name}预制件未设置，尝试从Resources加载");
+                // 尝试从Resources加载预制件
+                GameObject loadedPrefab = Resources.Load<GameObject>($"Prefabs/UI/{name}");
+                if (loadedPrefab != null)
+                {
+                    prefab = loadedPrefab;
+                }
+                else
+                {
+                    Debug.LogError($"[UIManager] 无法加载{name}预制件，跳过创建");
+                    return null;
+                }
             }
 
             GameObject instance = Object.Instantiate(prefab, mainCanvas.transform);

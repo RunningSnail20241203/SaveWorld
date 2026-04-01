@@ -898,13 +898,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoSetup: 1
-  gridUIPrefab: {fileID: 572598098399058435, guid: e9462a65ce9f9ac4383f0aebece730a4, type: 3}
-  playerInfoPanelPrefab: {fileID: 3472284234430843306, guid: 2f3278374718ff84182eff4d7e4fab4c, type: 3}
-  controlPanelPrefab: {fileID: 8565312924316583319, guid: f131e43739167bc4b984aa8316b59e25, type: 3}
-  itemDetailPopupPrefab: {fileID: 3504502093168696868, guid: 4ac8d8a2202a38846a917259f71955c3, type: 3}
-  settingsPanelPrefab: {fileID: 4991101535709091597, guid: 4aa68a6d9af2a1c45a46734167242aa0, type: 3}
-  ordersPanelPrefab: {fileID: 2278652202842962696, guid: 2bc87d91b94ec1e42b1ccc5cc70b5fdb, type: 3}
-  achievementPanelPrefab: {fileID: 2056323241674134537, guid: 9ff7156da7b3de842b9e96abcc839e87, type: 3}
+  gridUIPrefab: {fileID: 9103214526200823339, guid: 7be0f13986ad8004ab4c207e19382329, type: 3}
+  playerInfoPanelPrefab: {fileID: 2372710854942270361, guid: 172ffaf51bfd3dd4ea897bac3504e263, type: 3}
+  controlPanelPrefab: {fileID: 7461823591643781510, guid: 5e5716b320630914aa741f02805c29ea, type: 3}
+  itemDetailPopupPrefab: {fileID: 5489668738728518707, guid: 284378f11a2c45b408770916a98c1649, type: 3}
+  settingsPanelPrefab: {fileID: 4534149926976899907, guid: 4a99a283e0f2420479bd1675a557f095, type: 3}
+  ordersPanelPrefab: {fileID: 140299551472243677, guid: 668610b5c0d5926469e4b53f0c409534, type: 3}
+  achievementPanelPrefab: {fileID: 405964286629709053, guid: 5514dedefffe7354abab3a4d519f9ff2, type: 3}
 --- !u!4 &1900141131
 Transform:
   m_ObjectHideFlags: 0

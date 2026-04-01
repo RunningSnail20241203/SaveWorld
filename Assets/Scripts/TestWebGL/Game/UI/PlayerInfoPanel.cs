@@ -22,8 +22,8 @@ namespace TestWebGL.Game.UI
         public TextMeshProUGUI playTimeText;
 
         [Header("面板设置")]
-        public Vector2 panelSize = new Vector2(400, 200);
-        public Vector2 panelPosition = new Vector2(0, 400);
+        public Vector2 panelSize = new Vector2(500, 250);
+        public Vector2 panelPosition = new Vector2(0, 500);
 
         private PlayerManager _playerManager;
 

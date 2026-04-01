@@ -23,6 +23,9 @@ namespace TestWebGL.Game.UI
         public ScrollRect ordersScrollRect;
         public RectTransform ordersContent;
         public GameObject orderItemPrefab;
+        
+        [Header("预制件")]
+        public GameObject orderItemPrefabAsset;
 
         [Header("订单详情")]
         public TextMeshProUGUI orderTitleText;
@@ -52,12 +55,12 @@ namespace TestWebGL.Game.UI
         /// </summary>
         public void Initialize()
         {
+            // 从预制件加载
             if (panelRect == null)
             {
-                CreatePanel();
+                LoadFromPrefab();
             }
 
-            CreateUIComponents();
             SetupButtonEvents();
 
             // 初始隐藏
@@ -67,408 +70,83 @@ namespace TestWebGL.Game.UI
         }
 
         /// <summary>
-        /// 创建面板
+        /// 从预制件加载
         /// </summary>
-        private void CreatePanel()
+        private void LoadFromPrefab()
         {
-            panelRect = GetComponent<RectTransform>();
-            if (panelRect == null)
+            GameObject prefab = Resources.Load<GameObject>("Prefabs/UI/OrdersPanel");
+            if (prefab != null)
             {
-                panelRect = gameObject.AddComponent<RectTransform>();
+                GameObject instance = Instantiate(prefab, transform);
+                instance.name = "OrdersPanel";
+                
+                // 获取组件引用
+                panelRect = instance.GetComponent<RectTransform>();
+                backgroundImage = instance.GetComponent<Image>();
+                titleText = instance.transform.Find("Title")?.GetComponent<TextMeshProUGUI>();
+                closeButton = instance.transform.Find("CloseButton")?.GetComponent<Button>();
+                
+                // 获取标签页
+                Transform tabsContainer = instance.transform.Find("TabsContainer");
+                if (tabsContainer != null)
+                {
+                    activeOrdersTab = tabsContainer.Find("ActiveOrdersTab")?.GetComponent<Button>();
+                    completedOrdersTab = tabsContainer.Find("CompletedOrdersTab")?.GetComponent<Button>();
+                    
+                    if (activeOrdersTab != null)
+                        activeTabIndicator = activeOrdersTab.transform.Find("ActiveTabIndicator")?.GetComponent<Image>();
+                    if (completedOrdersTab != null)
+                        completedTabIndicator = completedOrdersTab.transform.Find("CompletedTabIndicator")?.GetComponent<Image>();
+                }
+                
+                // 获取订单列表
+                Transform ordersList = instance.transform.Find("OrdersList");
+                if (ordersList != null)
+                {
+                    Transform scrollView = ordersList.Find("ScrollView");
+                    if (scrollView != null)
+                    {
+                        ordersScrollRect = scrollView.GetComponent<ScrollRect>();
+                        Transform viewport = scrollView.Find("Viewport");
+                        if (viewport != null)
+                        {
+                            Transform content = viewport.Find("Content");
+                            if (content != null)
+                            {
+                                ordersContent = content.GetComponent<RectTransform>();
+                            }
+                        }
+                    }
+                }
+                
+                // 获取订单详情
+                Transform orderDetails = instance.transform.Find("OrderDetails");
+                if (orderDetails != null)
+                {
+                    orderTitleText = orderDetails.Find("OrderTitle")?.GetComponent<TextMeshProUGUI>();
+                    orderDescriptionText = orderDetails.Find("OrderDescription")?.GetComponent<TextMeshProUGUI>();
+                    orderRewardText = orderDetails.Find("OrderReward")?.GetComponent<TextMeshProUGUI>();
+                    
+                    Transform timeStatusContainer = orderDetails.Find("TimeStatusContainer");
+                    if (timeStatusContainer != null)
+                    {
+                        orderTimeText = timeStatusContainer.Find("OrderTime")?.GetComponent<TextMeshProUGUI>();
+                        orderStatusText = timeStatusContainer.Find("OrderStatus")?.GetComponent<TextMeshProUGUI>();
+                    }
+                    
+                    completeOrderButton = orderDetails.Find("CompleteOrderButton")?.GetComponent<Button>();
+                }
+                
+                // 加载OrderItem预制件
+                orderItemPrefabAsset = Resources.Load<GameObject>("Prefabs/UI/OrderItem");
+                if (orderItemPrefabAsset == null)
+                {
+                    Debug.LogWarning("[OrdersPanel] 无法加载OrderItem预制件");
+                }
             }
-
-            // 设置面板位置和大小（屏幕中央）
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = panelSize;
-
-            // 添加背景 - 先检查是否已存在Image组件
-            backgroundImage = GetComponent<Image>();
-            if (backgroundImage == null)
+            else
             {
-                backgroundImage = gameObject.AddComponent<Image>();
-            }
-            backgroundImage.color = backgroundColor;
-
-            // 添加垂直布局
-            VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(20, 20, 20, 20);
-            layout.spacing = 10;
-            layout.childAlignment = TextAnchor.UpperCenter;
-        }
-
-        /// <summary>
-        /// 创建UI组件
-        /// </summary>
-        private void CreateUIComponents()
-        {
-            // 标题
-            if (titleText == null)
-            {
-                GameObject titleGO = new GameObject("Title");
-                titleGO.transform.SetParent(transform, false);
-
-                titleText = titleGO.AddComponent<TextMeshProUGUI>();
-                titleText.text = "订单管理";
-                titleText.fontSize = 24;
-                titleText.alignment = TextAlignmentOptions.Center;
-                titleText.color = Color.white;
-
-                RectTransform titleRect = titleGO.GetComponent<RectTransform>();
-                titleRect.sizeDelta = new Vector2(panelSize.x - 40, 40);
-            }
-
-            // 关闭按钮
-            if (closeButton == null)
-            {
-                GameObject closeGO = new GameObject("CloseButton");
-                closeGO.transform.SetParent(transform, false);
-
-                closeButton = closeGO.AddComponent<Button>();
-                closeButton.onClick.AddListener(Hide);
-
-                // 设置关闭按钮样式
-                Image closeImage = closeGO.AddComponent<Image>();
-                closeImage.color = new Color(0.8f, 0.2f, 0.2f);
-
-                // 关闭按钮文本
-                GameObject closeTextGO = new GameObject("Text");
-                closeTextGO.transform.SetParent(closeGO.transform, false);
-
-                TextMeshProUGUI closeText = closeTextGO.AddComponent<TextMeshProUGUI>();
-                closeText.text = "×";
-                closeText.fontSize = 24;
-                closeText.alignment = TextAlignmentOptions.Center;
-                closeText.color = Color.white;
-
-                // 设置关闭按钮位置（右上角）
-                RectTransform closeRect = closeGO.GetComponent<RectTransform>();
-                closeRect.anchorMin = new Vector2(1f, 1f);
-                closeRect.anchorMax = new Vector2(1f, 1f);
-                closeRect.pivot = new Vector2(1f, 1f);
-                closeRect.anchoredPosition = new Vector2(-10, -10);
-                closeRect.sizeDelta = new Vector2(40, 40);
-
-                RectTransform closeTextRect = closeTextGO.GetComponent<RectTransform>();
-                closeTextRect.anchorMin = Vector2.zero;
-                closeTextRect.anchorMax = Vector2.one;
-                closeTextRect.offsetMin = Vector2.zero;
-                closeTextRect.offsetMax = Vector2.zero;
-            }
-
-            // 标签页
-            CreateTabs();
-
-            // 订单列表区域
-            CreateOrdersList();
-
-            // 订单详情区域
-            CreateOrderDetails();
-        }
-
-        /// <summary>
-        /// 创建标签页
-        /// </summary>
-        private void CreateTabs()
-        {
-            // 标签页容器
-            GameObject tabsContainer = new GameObject("TabsContainer");
-            tabsContainer.transform.SetParent(transform, false);
-
-            HorizontalLayoutGroup tabsLayout = tabsContainer.AddComponent<HorizontalLayoutGroup>();
-            tabsLayout.spacing = 10;
-            tabsLayout.childAlignment = TextAnchor.MiddleCenter;
-
-            RectTransform tabsRect = tabsContainer.AddComponent<RectTransform>();
-            tabsRect.sizeDelta = new Vector2(panelSize.x - 40, 50);
-
-            // 活跃订单标签
-            if (activeOrdersTab == null)
-            {
-                activeOrdersTab = CreateTab(tabsContainer, "ActiveOrdersTab", "活跃订单", OnActiveOrdersTabClicked);
-            }
-
-            // 已完成订单标签
-            if (completedOrdersTab == null)
-            {
-                completedOrdersTab = CreateTab(tabsContainer, "CompletedOrdersTab", "已完成", OnCompletedOrdersTabClicked);
-            }
-
-            // 标签指示器
-            if (activeTabIndicator == null)
-            {
-                GameObject indicatorGO = new GameObject("ActiveTabIndicator");
-                indicatorGO.transform.SetParent(activeOrdersTab.transform, false);
-
-                activeTabIndicator = indicatorGO.AddComponent<Image>();
-                activeTabIndicator.color = Color.green;
-
-                RectTransform indicatorRect = indicatorGO.GetComponent<RectTransform>();
-                indicatorRect.anchorMin = new Vector2(0f, 0f);
-                indicatorRect.anchorMax = new Vector2(1f, 0f);
-                indicatorRect.pivot = new Vector2(0.5f, 0f);
-                indicatorRect.anchoredPosition = Vector2.zero;
-                indicatorRect.sizeDelta = new Vector2(0, 3);
-            }
-
-            if (completedTabIndicator == null)
-            {
-                GameObject indicatorGO = new GameObject("CompletedTabIndicator");
-                indicatorGO.transform.SetParent(completedOrdersTab.transform, false);
-
-                completedTabIndicator = indicatorGO.AddComponent<Image>();
-                completedTabIndicator.color = Color.green;
-
-                RectTransform indicatorRect = indicatorGO.GetComponent<RectTransform>();
-                indicatorRect.anchorMin = new Vector2(0f, 0f);
-                indicatorRect.anchorMax = new Vector2(1f, 0f);
-                indicatorRect.pivot = new Vector2(0.5f, 0f);
-                indicatorRect.anchoredPosition = Vector2.zero;
-                indicatorRect.sizeDelta = new Vector2(0, 3);
-            }
-
-            // 初始状态
-            UpdateTabIndicators();
-        }
-
-        /// <summary>
-        /// 创建标签
-        /// </summary>
-        private Button CreateTab(GameObject parent, string name, string text, UnityEngine.Events.UnityAction action)
-        {
-            GameObject tabGO = new GameObject(name);
-            tabGO.transform.SetParent(parent.transform, false);
-
-            Button button = tabGO.AddComponent<Button>();
-            button.onClick.AddListener(action);
-
-            // 设置标签样式
-            Image tabImage = tabGO.AddComponent<Image>();
-            tabImage.color = new Color(0.2f, 0.2f, 0.2f);
-
-            // 标签文本
-            GameObject textGO = new GameObject("Text");
-            textGO.transform.SetParent(tabGO.transform, false);
-
-            TextMeshProUGUI tabText = textGO.AddComponent<TextMeshProUGUI>();
-            tabText.text = text;
-            tabText.fontSize = 16;
-            tabText.alignment = TextAlignmentOptions.Center;
-            tabText.color = Color.white;
-
-            // 设置标签大小
-            RectTransform tabRect = tabGO.AddComponent<RectTransform>();
-            tabRect.sizeDelta = new Vector2(120, 40);
-
-            RectTransform textRect = textGO.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            return button;
-        }
-
-        /// <summary>
-        /// 创建订单列表
-        /// </summary>
-        private void CreateOrdersList()
-        {
-            // 列表容器
-            GameObject listContainer = new GameObject("OrdersList");
-            listContainer.transform.SetParent(transform, false);
-
-            RectTransform listRect = listContainer.AddComponent<RectTransform>();
-            listRect.sizeDelta = new Vector2(panelSize.x - 40, 200);
-
-            // 滚动视图
-            GameObject scrollGO = new GameObject("ScrollView");
-            scrollGO.transform.SetParent(listContainer.transform, false);
-
-            ordersScrollRect = scrollGO.AddComponent<ScrollRect>();
-
-            RectTransform scrollRect = scrollGO.GetComponent<RectTransform>();
-            scrollRect.anchorMin = Vector2.zero;
-            scrollRect.anchorMax = Vector2.one;
-            scrollRect.offsetMin = Vector2.zero;
-            scrollRect.offsetMax = Vector2.zero;
-
-            // 视口
-            GameObject viewportGO = new GameObject("Viewport");
-            viewportGO.transform.SetParent(scrollGO.transform, false);
-
-            Image viewportImage = viewportGO.AddComponent<Image>();
-            viewportImage.color = new Color(0.15f, 0.15f, 0.15f);
-
-            RectTransform viewportRect = viewportGO.GetComponent<RectTransform>();
-            viewportRect.anchorMin = Vector2.zero;
-            viewportRect.anchorMax = Vector2.one;
-            viewportRect.offsetMin = Vector2.zero;
-            viewportRect.offsetMax = Vector2.zero;
-
-            // 内容区域
-            GameObject contentGO = new GameObject("Content");
-            contentGO.transform.SetParent(viewportGO.transform, false);
-
-            ordersContent = contentGO.GetComponent<RectTransform>();
-            ordersContent.anchorMin = new Vector2(0f, 1f);
-            ordersContent.anchorMax = new Vector2(1f, 1f);
-            ordersContent.pivot = new Vector2(0f, 1f);
-            ordersContent.anchoredPosition = Vector2.zero;
-            ordersContent.sizeDelta = new Vector2(0, 200);
-
-            VerticalLayoutGroup contentLayout = contentGO.AddComponent<VerticalLayoutGroup>();
-            contentLayout.spacing = 5;
-            contentLayout.childAlignment = TextAnchor.UpperCenter;
-
-            // 设置滚动视图引用
-            ordersScrollRect.viewport = viewportRect;
-            ordersScrollRect.content = ordersContent;
-        }
-
-        /// <summary>
-        /// 创建订单详情
-        /// </summary>
-        private void CreateOrderDetails()
-        {
-            // 详情容器
-            GameObject detailsContainer = new GameObject("OrderDetails");
-            detailsContainer.transform.SetParent(transform, false);
-
-            VerticalLayoutGroup detailsLayout = detailsContainer.AddComponent<VerticalLayoutGroup>();
-            detailsLayout.padding = new RectOffset(10, 10, 10, 10);
-            detailsLayout.spacing = 8;
-            detailsLayout.childAlignment = TextAnchor.UpperLeft;
-
-            RectTransform detailsRect = detailsContainer.AddComponent<RectTransform>();
-            detailsRect.sizeDelta = new Vector2(panelSize.x - 40, 150);
-
-            // 背景
-            Image detailsBG = detailsContainer.AddComponent<Image>();
-            detailsBG.color = new Color(0.15f, 0.15f, 0.15f);
-
-            // 订单标题
-            if (orderTitleText == null)
-            {
-                GameObject titleGO = new GameObject("OrderTitle");
-                titleGO.transform.SetParent(detailsContainer.transform, false);
-
-                orderTitleText = titleGO.AddComponent<TextMeshProUGUI>();
-                orderTitleText.text = "选择订单查看详情";
-                orderTitleText.fontSize = 16;
-                orderTitleText.color = Color.white;
-                orderTitleText.fontStyle = FontStyles.Bold;
-
-                RectTransform titleRect = titleGO.GetComponent<RectTransform>();
-                titleRect.sizeDelta = new Vector2(panelSize.x - 60, 25);
-            }
-
-            // 订单描述
-            if (orderDescriptionText == null)
-            {
-                GameObject descGO = new GameObject("OrderDescription");
-                descGO.transform.SetParent(detailsContainer.transform, false);
-
-                orderDescriptionText = descGO.AddComponent<TextMeshProUGUI>();
-                orderDescriptionText.text = "";
-                orderDescriptionText.fontSize = 14;
-                orderDescriptionText.color = Color.gray;
-                orderDescriptionText.enableWordWrapping = true;
-
-                RectTransform descRect = descGO.GetComponent<RectTransform>();
-                descRect.sizeDelta = new Vector2(panelSize.x - 60, 40);
-            }
-
-            // 订单奖励
-            if (orderRewardText == null)
-            {
-                GameObject rewardGO = new GameObject("OrderReward");
-                rewardGO.transform.SetParent(detailsContainer.transform, false);
-
-                orderRewardText = rewardGO.AddComponent<TextMeshProUGUI>();
-                orderRewardText.text = "";
-                orderRewardText.fontSize = 14;
-                orderRewardText.color = Color.yellow;
-
-                RectTransform rewardRect = rewardGO.GetComponent<RectTransform>();
-                rewardRect.sizeDelta = new Vector2(panelSize.x - 60, 25);
-            }
-
-            // 订单时间和状态
-            GameObject timeStatusContainer = new GameObject("TimeStatusContainer");
-            timeStatusContainer.transform.SetParent(detailsContainer.transform, false);
-
-            HorizontalLayoutGroup timeStatusLayout = timeStatusContainer.AddComponent<HorizontalLayoutGroup>();
-            timeStatusLayout.spacing = 20;
-            timeStatusLayout.childAlignment = TextAnchor.MiddleLeft;
-
-            RectTransform timeStatusRect = timeStatusContainer.GetComponent<RectTransform>();
-            timeStatusRect.sizeDelta = new Vector2(panelSize.x - 60, 25);
-
-            // 时间
-            if (orderTimeText == null)
-            {
-                GameObject timeGO = new GameObject("OrderTime");
-                timeGO.transform.SetParent(timeStatusContainer.transform, false);
-
-                orderTimeText = timeGO.AddComponent<TextMeshProUGUI>();
-                orderTimeText.text = "";
-                orderTimeText.fontSize = 12;
-                orderTimeText.color = Color.cyan;
-
-                RectTransform timeRect = timeGO.GetComponent<RectTransform>();
-                timeRect.sizeDelta = new Vector2(150, 25);
-            }
-
-            // 状态
-            if (orderStatusText == null)
-            {
-                GameObject statusGO = new GameObject("OrderStatus");
-                statusGO.transform.SetParent(timeStatusContainer.transform, false);
-
-                orderStatusText = statusGO.AddComponent<TextMeshProUGUI>();
-                orderStatusText.text = "";
-                orderStatusText.fontSize = 12;
-                orderStatusText.color = Color.green;
-
-                RectTransform statusRect = statusGO.GetComponent<RectTransform>();
-                statusRect.sizeDelta = new Vector2(100, 25);
-            }
-
-            // 完成按钮
-            if (completeOrderButton == null)
-            {
-                GameObject buttonGO = new GameObject("CompleteOrderButton");
-                buttonGO.transform.SetParent(detailsContainer.transform, false);
-
-                completeOrderButton = buttonGO.AddComponent<Button>();
-                completeOrderButton.onClick.AddListener(OnCompleteOrderButtonClicked);
-
-                // 设置按钮样式
-                Image buttonImage = buttonGO.AddComponent<Image>();
-                buttonImage.color = new Color(0.3f, 0.6f, 0.3f);
-
-                // 按钮文本
-                GameObject textGO = new GameObject("Text");
-                textGO.transform.SetParent(buttonGO.transform, false);
-
-                TextMeshProUGUI buttonText = textGO.AddComponent<TextMeshProUGUI>();
-                buttonText.text = "完成订单";
-                buttonText.fontSize = 14;
-                buttonText.alignment = TextAlignmentOptions.Center;
-                buttonText.color = Color.white;
-
-                // 设置按钮大小
-                RectTransform buttonRect = buttonGO.GetComponent<RectTransform>();
-                buttonRect.sizeDelta = new Vector2(120, 30);
-
-                RectTransform textRect = textGO.GetComponent<RectTransform>();
-                textRect.anchorMin = Vector2.zero;
-                textRect.anchorMax = Vector2.one;
-                textRect.offsetMin = Vector2.zero;
-                textRect.offsetMax = Vector2.zero;
+                Debug.LogError("[OrdersPanel] 无法加载OrdersPanel预制件");
             }
         }
 
@@ -477,7 +155,28 @@ namespace TestWebGL.Game.UI
         /// </summary>
         private void SetupButtonEvents()
         {
-            // 已在创建时设置
+            // 设置关闭按钮事件
+            if (closeButton != null)
+            {
+                closeButton.onClick.AddListener(Hide);
+            }
+            
+            // 设置标签页按钮事件
+            if (activeOrdersTab != null)
+            {
+                activeOrdersTab.onClick.AddListener(OnActiveOrdersTabClicked);
+            }
+            
+            if (completedOrdersTab != null)
+            {
+                completedOrdersTab.onClick.AddListener(OnCompletedOrdersTabClicked);
+            }
+            
+            // 设置完成订单按钮事件
+            if (completeOrderButton != null)
+            {
+                completeOrderButton.onClick.AddListener(OnCompleteOrderButtonClicked);
+            }
         }
 
         /// <summary>
@@ -593,17 +292,29 @@ namespace TestWebGL.Game.UI
         private void CreateOrderItem(OrderSystem.OrderData order)
         {
             if (ordersContent == null) return;
+            if (orderItemPrefabAsset == null)
+            {
+                Debug.LogError("[OrdersPanel] OrderItem预制件未设置");
+                return;
+            }
 
-            GameObject itemGO = new GameObject("OrderItem");
-            itemGO.transform.SetParent(ordersContent, false);
+            GameObject itemGO = Instantiate(orderItemPrefabAsset, ordersContent);
+            itemGO.name = "OrderItem";
 
-            OrderItemUI itemUI = itemGO.AddComponent<OrderItemUI>();
+            OrderItemUI itemUI = itemGO.GetComponent<OrderItemUI>();
+            if (itemUI == null)
+            {
+                itemUI = itemGO.AddComponent<OrderItemUI>();
+            }
             itemUI.Initialize(order, OnOrderItemClicked);
 
             _orderItems.Add(itemUI);
 
-            RectTransform itemRect = itemGO.AddComponent<RectTransform>();
-            itemRect.sizeDelta = new Vector2(panelSize.x - 60, 50);
+            RectTransform itemRect = itemGO.GetComponent<RectTransform>();
+            if (itemRect != null)
+            {
+                itemRect.sizeDelta = new Vector2(panelSize.x - 60, 50);
+            }
         }
 
         /// <summary>
@@ -712,14 +423,22 @@ namespace TestWebGL.Game.UI
 
         private void CreateUI()
         {
-            // 背景
+            // 从预制件加载子组件
             if (background == null)
             {
-                background = gameObject.AddComponent<Image>();
-                background.color = new Color(0.2f, 0.2f, 0.2f);
+                GameObject bgPrefab = Resources.Load<GameObject>("Prefabs/UI/OrderItemBackground");
+                if (bgPrefab != null)
+                {
+                    GameObject bgGO = Instantiate(bgPrefab, transform);
+                    bgGO.name = "Background";
+                    background = bgGO.GetComponent<Image>();
+                }
+                else
+                {
+                    Debug.LogError("[OrderItemUI] 无法加载OrderItemBackground预制件");
+                }
             }
 
-            // 按钮
             if (button == null)
             {
                 button = gameObject.AddComponent<Button>();
@@ -731,33 +450,34 @@ namespace TestWebGL.Game.UI
             layout.spacing = 10;
             layout.childAlignment = TextAnchor.MiddleLeft;
 
-            // 标题文本
             if (titleText == null)
             {
-                GameObject titleGO = new GameObject("Title");
-                titleGO.transform.SetParent(transform, false);
-
-                titleText = titleGO.AddComponent<TextMeshProUGUI>();
-                titleText.fontSize = 14;
-                titleText.color = Color.white;
-
-                RectTransform titleRect = titleGO.AddComponent<RectTransform>();
-                titleRect.sizeDelta = new Vector2(200, 40);
+                GameObject titlePrefab = Resources.Load<GameObject>("Prefabs/UI/OrderItemTitle");
+                if (titlePrefab != null)
+                {
+                    GameObject titleGO = Instantiate(titlePrefab, transform);
+                    titleGO.name = "Title";
+                    titleText = titleGO.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    Debug.LogError("[OrderItemUI] 无法加载OrderItemTitle预制件");
+                }
             }
 
-            // 状态文本
             if (statusText == null)
             {
-                GameObject statusGO = new GameObject("Status");
-                statusGO.transform.SetParent(transform, false);
-
-                statusText = statusGO.AddComponent<TextMeshProUGUI>();
-                statusText.fontSize = 12;
-                statusText.alignment = TextAlignmentOptions.Right;
-                statusText.color = Color.yellow;
-
-                RectTransform statusRect = statusGO.AddComponent<RectTransform>();
-                statusRect.sizeDelta = new Vector2(100, 40);
+                GameObject statusPrefab = Resources.Load<GameObject>("Prefabs/UI/OrderItemStatus");
+                if (statusPrefab != null)
+                {
+                    GameObject statusGO = Instantiate(statusPrefab, transform);
+                    statusGO.name = "Status";
+                    statusText = statusGO.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    Debug.LogError("[OrderItemUI] 无法加载OrderItemStatus预制件");
+                }
             }
         }
 

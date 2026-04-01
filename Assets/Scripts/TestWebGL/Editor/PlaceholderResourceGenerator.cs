@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using System.IO;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ namespace TestWebGL.Editor
     /// </summary>
     public class PlaceholderResourceGenerator : EditorWindow
     {
-        private const string PREFAB_PATH = "Assets/Prefabs/UI";
+        private const string PREFAB_PATH = "Assets/Resources/Prefabs/UI";
         private const string RESOURCE_PATH = "Assets/Resources";
 
         [MenuItem("Tools/生成占位资源")]
@@ -642,16 +643,65 @@ namespace TestWebGL.Editor
 
             // 创建各个UI预制件
             CreateGridUIPrefab();
+            CreateGridCellUIChildPrefabs(); // 创建GridCellUI子组件预制件
             CreateGridCellUIPrefab();
             CreatePlayerInfoPanelPrefab();
+            CreateControlPanelButtonPrefab(); // 创建控制面板按钮预制件
             CreateControlPanelPrefab();
             CreateItemDetailPopupPrefab();
             CreateSettingsPanelPrefab();
+            CreateOrderItemPrefab(); // 创建订单项目预制件
             CreateOrdersPanelPrefab();
             CreateAchievementPanelPrefab();
 
             Debug.Log("UI预制件创建完成！");
             AssetDatabase.Refresh();
+
+            // 打开main场景并设置SceneSetup引用
+            SetupMainScene();
+        }
+
+        /// <summary>
+        /// 设置main场景
+        /// </summary>
+        private static void SetupMainScene()
+        {
+            // 打开main场景
+            string mainScenePath = "Assets/Scenes/main.unity";
+            EditorSceneManager.OpenScene(mainScenePath);
+
+            // 查找SceneSetup组件
+            TestWebGL.Game.Core.SceneSetup sceneSetup = Object.FindAnyObjectByType<TestWebGL.Game.Core.SceneSetup>();
+            if (sceneSetup == null)
+            {
+                Debug.LogWarning("[PlaceholderGenerator] SceneSetup组件不存在，跳过设置");
+                return;
+            }
+
+            // 加载预制件引用
+            GameObject gridUIPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/GridUI.prefab");
+            GameObject playerInfoPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/PlayerInfoPanel.prefab");
+            GameObject controlPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/ControlPanel.prefab");
+            GameObject itemDetailPopupPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/ItemDetailPopup.prefab");
+            GameObject settingsPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/SettingsPanel.prefab");
+            GameObject ordersPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/OrdersPanel.prefab");
+            GameObject achievementPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/AchievementPanel.prefab");
+
+            // 使用SerializedObject设置引用
+            SerializedObject serializedSetup = new SerializedObject(sceneSetup);
+            serializedSetup.FindProperty("gridUIPrefab").objectReferenceValue = gridUIPrefab;
+            serializedSetup.FindProperty("playerInfoPanelPrefab").objectReferenceValue = playerInfoPanelPrefab;
+            serializedSetup.FindProperty("controlPanelPrefab").objectReferenceValue = controlPanelPrefab;
+            serializedSetup.FindProperty("itemDetailPopupPrefab").objectReferenceValue = itemDetailPopupPrefab;
+            serializedSetup.FindProperty("settingsPanelPrefab").objectReferenceValue = settingsPanelPrefab;
+            serializedSetup.FindProperty("ordersPanelPrefab").objectReferenceValue = ordersPanelPrefab;
+            serializedSetup.FindProperty("achievementPanelPrefab").objectReferenceValue = achievementPanelPrefab;
+            serializedSetup.ApplyModifiedProperties();
+
+            // 保存场景
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+
+            Debug.Log("[PlaceholderGenerator] main场景设置完成，已保存SceneSetup引用");
         }
 
         /// <summary>
@@ -659,7 +709,7 @@ namespace TestWebGL.Editor
         /// </summary>
         private static void CreateMainCanvasPrefab()
         {
-            GameObject canvasGO = new GameObject("MainCanvas");
+            GameObject canvasGO = new GameObject("MainCanvas", new System.Type[]{typeof(RectTransform)});
 
             // 添加Canvas组件
             Canvas canvas = canvasGO.AddComponent<Canvas>();
@@ -676,16 +726,19 @@ namespace TestWebGL.Editor
             // 添加GraphicRaycaster
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            // 创建预制件
-            PrefabUtility.SaveAsPrefabAsset(canvasGO, $"{PREFAB_PATH}/MainCanvas.prefab");
+            // 创建预制件到Assets/Resources/Prefabs/UI目录
+            string prefabPath = $"{PREFAB_PATH}/MainCanvas.prefab";
+            PrefabUtility.SaveAsPrefabAsset(canvasGO, prefabPath);
+            
             Object.DestroyImmediate(canvasGO);
             
             Debug.Log("[PlaceholderGenerator] MainCanvas预制体创建完成");
+            Debug.Log($"[PlaceholderGenerator] 预制件已保存到: {prefabPath}");
         }
 
         private static void EnsureDirectoriesExist()
         {
-            // 创建预制件文件夹
+            // 创建预制件文件夹（现在直接在Resources目录下）
             if (!Directory.Exists(PREFAB_PATH))
                 Directory.CreateDirectory(PREFAB_PATH);
 
@@ -717,7 +770,7 @@ namespace TestWebGL.Editor
                 gridCellUIPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(gridCellUIPath);
             }
 
-            GameObject gridUI = new GameObject("GridUI");
+            GameObject gridUI = new GameObject("GridUI", new System.Type[]{typeof(RectTransform)});
             gridUI.AddComponent<CanvasRenderer>();
 
             // 添加背景
@@ -725,7 +778,7 @@ namespace TestWebGL.Editor
             background.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);
 
             // 添加网格容器
-            GameObject container = new GameObject("GridContainer");
+            GameObject container = new GameObject("GridContainer", new System.Type[]{typeof(RectTransform)});
             container.transform.SetParent(gridUI.transform);
             GridLayoutGroup gridLayout = container.AddComponent<GridLayoutGroup>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -752,51 +805,141 @@ namespace TestWebGL.Editor
             Debug.Log("[PlaceholderGenerator] GridUI预制体创建完成，已自动设置cellPrefab引用");
         }
 
-        private static void CreateGridCellUIPrefab()
+        /// <summary>
+        /// 创建GridCellUI子组件预制件
+        /// </summary>
+        private static void CreateGridCellUIChildPrefabs()
         {
-            GameObject cell = new GameObject("GridCellUI");
+            // 创建背景预制件
+            GameObject bgGO = new GameObject("GridCellBackground", new System.Type[]{typeof(RectTransform)});
+            Image bgImage = bgGO.AddComponent<Image>();
+            bgImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+            RectTransform bgRect = bgGO.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            PrefabUtility.SaveAsPrefabAsset(bgGO, $"{PREFAB_PATH}/GridCellBackground.prefab");
+            Object.DestroyImmediate(bgGO);
 
-            // 背景
-            Image background = cell.AddComponent<Image>();
-            background.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+            // 创建物品图标预制件
+            GameObject iconGO = new GameObject("GridCellItemIcon", new System.Type[]{typeof(RectTransform)});
+            Image iconImage = iconGO.AddComponent<Image>();
+            iconImage.color = Color.white;
+            RectTransform iconRect = iconGO.GetComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0.1f, 0.1f);
+            iconRect.anchorMax = new Vector2(0.9f, 0.9f);
+            iconRect.offsetMin = Vector2.zero;
+            iconRect.offsetMax = Vector2.zero;
+            PrefabUtility.SaveAsPrefabAsset(iconGO, $"{PREFAB_PATH}/GridCellItemIcon.prefab");
+            Object.DestroyImmediate(iconGO);
 
-            // 物品图标
-            GameObject iconGO = new GameObject("ItemIcon");
-            iconGO.transform.SetParent(cell.transform);
-            Image icon = iconGO.AddComponent<Image>();
-            icon.color = Color.white;
-
-            // 物品数量文本
-            GameObject countGO = new GameObject("ItemCount");
-            countGO.transform.SetParent(cell.transform);
+            // 创建数量文本预制件
+            GameObject countGO = new GameObject("GridCellItemCount", new System.Type[]{typeof(RectTransform)});
             TextMeshProUGUI countText = countGO.AddComponent<TextMeshProUGUI>();
             countText.font = GetDefaultFontAsset();
             countText.text = "";
             countText.fontSize = 12;
             countText.color = Color.white;
             countText.alignment = TextAlignmentOptions.BottomRight;
-
-            // 设置RectTransforms
-            RectTransform cellRect = cell.GetComponent<RectTransform>();
-            cellRect.sizeDelta = new Vector2(60, 60);
-
-            RectTransform iconRect = iconGO.GetComponent<RectTransform>();
-            iconRect.anchorMin = Vector2.zero;
-            iconRect.anchorMax = Vector2.one;
-            iconRect.offsetMin = new Vector2(5, 5);
-            iconRect.offsetMax = new Vector2(-5, -5);
-
             RectTransform countRect = countGO.GetComponent<RectTransform>();
             countRect.anchorMin = Vector2.zero;
             countRect.anchorMax = Vector2.one;
             countRect.offsetMin = Vector2.zero;
             countRect.offsetMax = Vector2.zero;
+            PrefabUtility.SaveAsPrefabAsset(countGO, $"{PREFAB_PATH}/GridCellItemCount.prefab");
+            Object.DestroyImmediate(countGO);
 
-            // 添加脚本
-            cell.AddComponent<TestWebGL.Game.UI.GridCellUI>();
+            // 创建锁定等级文本预制件
+            GameObject lockGO = new GameObject("GridCellLockLevel", new System.Type[]{typeof(RectTransform)});
+            TextMeshProUGUI lockText = lockGO.AddComponent<TextMeshProUGUI>();
+            lockText.font = GetDefaultFontAsset();
+            lockText.text = "";
+            lockText.fontSize = 20;
+            lockText.color = Color.white;
+            lockText.alignment = TextAlignmentOptions.Center;
+            RectTransform lockRect = lockGO.GetComponent<RectTransform>();
+            lockRect.anchorMin = Vector2.zero;
+            lockRect.anchorMax = Vector2.one;
+            lockRect.offsetMin = Vector2.zero;
+            lockRect.offsetMax = Vector2.zero;
+            PrefabUtility.SaveAsPrefabAsset(lockGO, $"{PREFAB_PATH}/GridCellLockLevel.prefab");
+            Object.DestroyImmediate(lockGO);
+
+            Debug.Log("[PlaceholderGenerator] GridCellUI子组件预制件创建完成");
+        }
+
+        private static void CreateGridCellUIPrefab()
+        {
+            // 先确保子组件预制件存在
+            string bgPrefabPath = $"{PREFAB_PATH}/GridCellBackground.prefab";
+            string iconPrefabPath = $"{PREFAB_PATH}/GridCellItemIcon.prefab";
+            string countPrefabPath = $"{PREFAB_PATH}/GridCellItemCount.prefab";
+            string lockPrefabPath = $"{PREFAB_PATH}/GridCellLockLevel.prefab";
+
+            GameObject bgPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(bgPrefabPath);
+            GameObject iconPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(iconPrefabPath);
+            GameObject countPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(countPrefabPath);
+            GameObject lockPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(lockPrefabPath);
+
+            if (bgPrefab == null || iconPrefab == null || countPrefab == null || lockPrefab == null)
+            {
+                Debug.LogWarning("[PlaceholderGenerator] GridCellUI子组件预制件不存在，先创建它们");
+                CreateGridCellUIChildPrefabs();
+                bgPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(bgPrefabPath);
+                iconPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(iconPrefabPath);
+                countPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(countPrefabPath);
+                lockPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(lockPrefabPath);
+            }
+
+            GameObject cell = new GameObject("GridCellUI", new System.Type[]{typeof(RectTransform)});
+
+            // 使用预制件创建子组件
+            GameObject bgGO = Object.Instantiate(bgPrefab, cell.transform);
+            bgGO.name = "Background";
+            Image backgroundImage = bgGO.GetComponent<Image>();
+
+            GameObject iconGO = Object.Instantiate(iconPrefab, cell.transform);
+            iconGO.name = "ItemIcon";
+            Image itemIcon = iconGO.GetComponent<Image>();
+
+            GameObject countGO = Object.Instantiate(countPrefab, cell.transform);
+            countGO.name = "ItemCount";
+            TextMeshProUGUI itemCountText = countGO.GetComponent<TextMeshProUGUI>();
+
+            GameObject lockGO = Object.Instantiate(lockPrefab, cell.transform);
+            lockGO.name = "LockLevel";
+            TextMeshProUGUI lockLevelText = lockGO.GetComponent<TextMeshProUGUI>();
+
+            // 设置RectTransforms
+            RectTransform cellRect = cell.GetComponent<RectTransform>();
+            cellRect.sizeDelta = new Vector2(60, 60);
+
+            // 添加按钮组件
+            Button cellButton = cell.AddComponent<Button>();
+            cellButton.transition = Selectable.Transition.ColorTint;
+            ColorBlock colors = cellButton.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f);
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
+            cellButton.colors = colors;
+
+            // 添加GridCellUI脚本并设置引用
+            TestWebGL.Game.UI.GridCellUI gridCellUI = cell.AddComponent<TestWebGL.Game.UI.GridCellUI>();
+            
+            // 使用SerializedObject设置引用
+            SerializedObject serializedCell = new SerializedObject(gridCellUI);
+            serializedCell.FindProperty("backgroundImage").objectReferenceValue = backgroundImage;
+            serializedCell.FindProperty("itemIcon").objectReferenceValue = itemIcon;
+            serializedCell.FindProperty("itemCountText").objectReferenceValue = itemCountText;
+            serializedCell.FindProperty("lockLevelText").objectReferenceValue = lockLevelText;
+            serializedCell.FindProperty("cellButton").objectReferenceValue = cellButton;
+            serializedCell.ApplyModifiedProperties();
 
             PrefabUtility.SaveAsPrefabAsset(cell, $"{PREFAB_PATH}/GridCellUI.prefab");
             Object.DestroyImmediate(cell);
+            
+            Debug.Log("[PlaceholderGenerator] GridCellUI预制体创建完成");
         }
 
         private static void CreatePlayerInfoPanelPrefab()
@@ -816,13 +959,13 @@ namespace TestWebGL.Editor
             GameObject levelGO = CreateTextElement("LevelInfo", "等级 1", panel.transform);
 
             // 经验条容器
-            GameObject expContainer = new GameObject("ExperienceBar");
+            GameObject expContainer = new GameObject("ExperienceBar", new System.Type[]{typeof(RectTransform)});
             expContainer.transform.SetParent(panel.transform, false);
-            RectTransform expContainerRect = expContainer.AddComponent<RectTransform>();
+            RectTransform expContainerRect = expContainer.GetComponent<RectTransform>();
             expContainerRect.sizeDelta = new Vector2(280, 20);
 
             // 经验条背景
-            GameObject expBg = new GameObject("Background");
+            GameObject expBg = new GameObject("Background", new System.Type[]{typeof(RectTransform)});
             expBg.transform.SetParent(expContainer.transform, false);
             Image expBgImage = expBg.AddComponent<Image>();
             expBgImage.color = Color.gray;
@@ -833,7 +976,7 @@ namespace TestWebGL.Editor
             expBgRect.offsetMax = Vector2.zero;
 
             // 经验条填充
-            GameObject expFill = new GameObject("Fill");
+            GameObject expFill = new GameObject("Fill", new System.Type[]{typeof(RectTransform)});
             expFill.transform.SetParent(expBg.transform, false);
             Image expFillImage = expFill.AddComponent<Image>();
             expFillImage.color = Color.blue;
@@ -854,13 +997,13 @@ namespace TestWebGL.Editor
             GameObject expTextGO = CreateTextElement("ExperienceText", "经验: 0/100", expContainer.transform);
 
             // 体力条容器
-            GameObject staminaContainer = new GameObject("StaminaBar");
+            GameObject staminaContainer = new GameObject("StaminaBar", new System.Type[]{typeof(RectTransform)});
             staminaContainer.transform.SetParent(panel.transform, false);
-            RectTransform staminaContainerRect = staminaContainer.AddComponent<RectTransform>();
+            RectTransform staminaContainerRect = staminaContainer.GetComponent<RectTransform>();
             staminaContainerRect.sizeDelta = new Vector2(280, 20);
 
             // 体力条背景
-            GameObject staminaBg = new GameObject("Background");
+            GameObject staminaBg = new GameObject("Background", new System.Type[]{typeof(RectTransform)});
             staminaBg.transform.SetParent(staminaContainer.transform, false);
             Image staminaBgImage = staminaBg.AddComponent<Image>();
             staminaBgImage.color = Color.gray;
@@ -871,7 +1014,7 @@ namespace TestWebGL.Editor
             staminaBgRect.offsetMax = Vector2.zero;
 
             // 体力条填充
-            GameObject staminaFill = new GameObject("Fill");
+            GameObject staminaFill = new GameObject("Fill", new System.Type[]{typeof(RectTransform)});
             staminaFill.transform.SetParent(staminaBg.transform, false);
             Image staminaFillImage = staminaFill.AddComponent<Image>();
             staminaFillImage.color = Color.green;
@@ -919,12 +1062,74 @@ namespace TestWebGL.Editor
             Object.DestroyImmediate(panel);
         }
 
+        /// <summary>
+        /// 创建控制面板按钮预制件
+        /// </summary>
+        private static void CreateControlPanelButtonPrefab()
+        {
+            GameObject buttonGO = new GameObject("ControlPanelButton", new System.Type[]{typeof(RectTransform)});
+
+            // 添加RectTransform组件
+            RectTransform buttonRect = buttonGO.GetComponent<RectTransform>();
+            buttonRect.sizeDelta = new Vector2(80, 60);
+
+            // 添加按钮组件
+            Button button = buttonGO.AddComponent<Button>();
+            button.transition = Selectable.Transition.ColorTint;
+
+            ColorBlock colors = button.colors;
+            colors.normalColor = new Color(0.3f, 0.3f, 0.3f);
+            colors.highlightedColor = new Color(0.4f, 0.4f, 0.4f);
+            colors.pressedColor = new Color(0.2f, 0.2f, 0.2f);
+            colors.selectedColor = colors.normalColor;
+            button.colors = colors;
+
+            // 添加背景图片
+            Image background = buttonGO.AddComponent<Image>();
+            background.color = colors.normalColor;
+
+            // 创建文本
+            GameObject textGO = new GameObject("Text", new System.Type[]{typeof(RectTransform)});
+            textGO.transform.SetParent(buttonGO.transform, false);
+
+            TextMeshProUGUI textComponent = textGO.AddComponent<TextMeshProUGUI>();
+            textComponent.font = GetDefaultFontAsset();
+            textComponent.text = "按钮";
+            textComponent.fontSize = 16;
+            textComponent.alignment = TextAlignmentOptions.Center;
+            textComponent.color = Color.white;
+
+            // 设置文本RectTransform
+            RectTransform textRect = textGO.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            // 保存为预制件
+            PrefabUtility.SaveAsPrefabAsset(buttonGO, $"{PREFAB_PATH}/ControlPanelButton.prefab");
+            Object.DestroyImmediate(buttonGO);
+            
+            Debug.Log("[PlaceholderGenerator] ControlPanelButton预制体创建完成");
+        }
+
         private static void CreateControlPanelPrefab()
         {
+            // 先确保ControlPanelButton预制体存在
+            string buttonPrefabPath = $"{PREFAB_PATH}/ControlPanelButton.prefab";
+            GameObject buttonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(buttonPrefabPath);
+            
+            if (buttonPrefab == null)
+            {
+                Debug.LogWarning("[PlaceholderGenerator] ControlPanelButton预制体不存在，先创建它");
+                CreateControlPanelButtonPrefab();
+                buttonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(buttonPrefabPath);
+            }
+
             GameObject panel = CreateBasePanel("ControlPanel", new Vector2(400, 80));
 
             // 按钮容器
-            GameObject container = new GameObject("ButtonContainer");
+            GameObject container = new GameObject("ButtonContainer", new System.Type[]{typeof(RectTransform)});
             container.transform.SetParent(panel.transform);
             HorizontalLayoutGroup layout = container.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 10;
@@ -936,19 +1141,36 @@ namespace TestWebGL.Editor
             containerRect.offsetMin = new Vector2(10, 10);
             containerRect.offsetMax = new Vector2(-10, -10);
 
-            // 创建按钮并获取引用
-            Button exploreButton = CreateButton("ExploreButton", "探索", container.transform).GetComponent<Button>();
-            Button settingsButton = CreateButton("SettingsButton", "设置", container.transform).GetComponent<Button>();
-            Button ordersButton = CreateButton("OrdersButton", "订单", container.transform).GetComponent<Button>();
-            Button achievementsButton = CreateButton("AchievementsButton", "成就", container.transform).GetComponent<Button>();
-            Button saveButton = CreateButton("SaveButton", "保存", container.transform).GetComponent<Button>();
+            // 使用预制件创建按钮
+            GameObject exploreButtonGO = Object.Instantiate(buttonPrefab, container.transform);
+            exploreButtonGO.name = "ExploreButton";
+            Button exploreButton = exploreButtonGO.GetComponent<Button>();
+            TextMeshProUGUI exploreButtonText = exploreButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+            exploreButtonText.text = "探索";
 
-            // 获取按钮文本引用
-            TextMeshProUGUI exploreButtonText = exploreButton.GetComponentInChildren<TextMeshProUGUI>();
-            TextMeshProUGUI settingsButtonText = settingsButton.GetComponentInChildren<TextMeshProUGUI>();
-            TextMeshProUGUI ordersButtonText = ordersButton.GetComponentInChildren<TextMeshProUGUI>();
-            TextMeshProUGUI achievementsButtonText = achievementsButton.GetComponentInChildren<TextMeshProUGUI>();
-            TextMeshProUGUI saveButtonText = saveButton.GetComponentInChildren<TextMeshProUGUI>();
+            GameObject settingsButtonGO = Object.Instantiate(buttonPrefab, container.transform);
+            settingsButtonGO.name = "SettingsButton";
+            Button settingsButton = settingsButtonGO.GetComponent<Button>();
+            TextMeshProUGUI settingsButtonText = settingsButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+            settingsButtonText.text = "设置";
+
+            GameObject ordersButtonGO = Object.Instantiate(buttonPrefab, container.transform);
+            ordersButtonGO.name = "OrdersButton";
+            Button ordersButton = ordersButtonGO.GetComponent<Button>();
+            TextMeshProUGUI ordersButtonText = ordersButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+            ordersButtonText.text = "订单";
+
+            GameObject achievementsButtonGO = Object.Instantiate(buttonPrefab, container.transform);
+            achievementsButtonGO.name = "AchievementsButton";
+            Button achievementsButton = achievementsButtonGO.GetComponent<Button>();
+            TextMeshProUGUI achievementsButtonText = achievementsButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+            achievementsButtonText.text = "成就";
+
+            GameObject saveButtonGO = Object.Instantiate(buttonPrefab, container.transform);
+            saveButtonGO.name = "SaveButton";
+            Button saveButton = saveButtonGO.GetComponent<Button>();
+            TextMeshProUGUI saveButtonText = saveButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+            saveButtonText.text = "保存";
 
             // 添加ControlPanel脚本并设置引用
             TestWebGL.Game.UI.ControlPanel controlPanel = panel.AddComponent<TestWebGL.Game.UI.ControlPanel>();
@@ -969,6 +1191,8 @@ namespace TestWebGL.Editor
 
             PrefabUtility.SaveAsPrefabAsset(panel, $"{PREFAB_PATH}/ControlPanel.prefab");
             Object.DestroyImmediate(panel);
+            
+            Debug.Log("[PlaceholderGenerator] ControlPanel预制体创建完成");
         }
 
         private static void CreateItemDetailPopupPrefab()
@@ -976,7 +1200,7 @@ namespace TestWebGL.Editor
             GameObject popup = CreateBasePanel("ItemDetailPopup", new Vector2(350, 400));
 
             // 物品图标
-            GameObject iconGO = new GameObject("ItemIcon");
+            GameObject iconGO = new GameObject("ItemIcon", new System.Type[]{typeof(RectTransform)});
             iconGO.transform.SetParent(popup.transform);
             Image icon = iconGO.AddComponent<Image>();
             icon.color = Color.white;
@@ -1041,7 +1265,7 @@ namespace TestWebGL.Editor
             GameObject titleGO = CreateTextElement("Title", "游戏设置", panel.transform);
 
             // 音量设置容器
-            GameObject volumeContainer = new GameObject("VolumeSettings");
+            GameObject volumeContainer = new GameObject("VolumeSettings", new System.Type[]{typeof(RectTransform)});
             volumeContainer.transform.SetParent(panel.transform, false);
             VerticalLayoutGroup volumeLayout = volumeContainer.AddComponent<VerticalLayoutGroup>();
             volumeLayout.spacing = 10;
@@ -1062,7 +1286,7 @@ namespace TestWebGL.Editor
             CreateSliderWithText(volumeContainer, "SFXVolume", "音效");
 
             // 显示设置容器
-            GameObject displayContainer = new GameObject("DisplaySettings");
+            GameObject displayContainer = new GameObject("DisplaySettings", new System.Type[]{typeof(RectTransform)});
             displayContainer.transform.SetParent(panel.transform, false);
             VerticalLayoutGroup displayLayout = displayContainer.AddComponent<VerticalLayoutGroup>();
             displayLayout.spacing = 10;
@@ -1080,7 +1304,7 @@ namespace TestWebGL.Editor
             CreateToggleWithText(displayContainer, "VSync", "垂直同步");
 
             // 游戏设置容器
-            GameObject gameContainer = new GameObject("GameSettings");
+            GameObject gameContainer = new GameObject("GameSettings", new System.Type[]{typeof(RectTransform)});
             gameContainer.transform.SetParent(panel.transform, false);
             VerticalLayoutGroup gameLayout = gameContainer.AddComponent<VerticalLayoutGroup>();
             gameLayout.spacing = 10;
@@ -1098,7 +1322,7 @@ namespace TestWebGL.Editor
             CreateToggleWithText(gameContainer, "ShowTips", "显示提示");
 
             // 按钮容器
-            GameObject buttonContainer = new GameObject("ButtonContainer");
+            GameObject buttonContainer = new GameObject("ButtonContainer", new System.Type[]{typeof(RectTransform)});
             buttonContainer.transform.SetParent(panel.transform, false);
             HorizontalLayoutGroup buttonLayout = buttonContainer.AddComponent<HorizontalLayoutGroup>();
             buttonLayout.spacing = 20;
@@ -1145,7 +1369,7 @@ namespace TestWebGL.Editor
         /// </summary>
         private static void CreateSliderWithText(GameObject parent, string name, string label)
         {
-            GameObject container = new GameObject(name + "Container");
+            GameObject container = new GameObject(name + "Container", new System.Type[]{typeof(RectTransform)});
             container.transform.SetParent(parent.transform, false);
 
             HorizontalLayoutGroup layout = container.AddComponent<HorizontalLayoutGroup>();
@@ -1156,7 +1380,7 @@ namespace TestWebGL.Editor
             containerRect.sizeDelta = new Vector2(340, 30);
 
             // 标签
-            GameObject labelGO = new GameObject("Label");
+            GameObject labelGO = new GameObject("Label", new System.Type[]{typeof(RectTransform)});
             labelGO.transform.SetParent(container.transform, false);
 
             TextMeshProUGUI labelText = labelGO.AddComponent<TextMeshProUGUI>();
@@ -1169,7 +1393,7 @@ namespace TestWebGL.Editor
             labelRect.sizeDelta = new Vector2(80, 30);
 
             // 滑块
-            GameObject sliderGO = new GameObject("Slider");
+            GameObject sliderGO = new GameObject("Slider", new System.Type[]{typeof(RectTransform)});
             sliderGO.transform.SetParent(container.transform, false);
 
             Slider slider = sliderGO.AddComponent<Slider>();
@@ -1178,7 +1402,7 @@ namespace TestWebGL.Editor
             slider.value = 0.5f;
 
             // 滑块背景
-            GameObject bgGO = new GameObject("Background");
+            GameObject bgGO = new GameObject("Background", new System.Type[]{typeof(RectTransform)});
             bgGO.transform.SetParent(sliderGO.transform, false);
             Image bgImage = bgGO.AddComponent<Image>();
             bgImage.color = Color.gray;
@@ -1189,7 +1413,7 @@ namespace TestWebGL.Editor
             bgRect.offsetMax = Vector2.zero;
 
             // 滑块填充
-            GameObject fillGO = new GameObject("Fill");
+            GameObject fillGO = new GameObject("Fill", new System.Type[]{typeof(RectTransform)});
             fillGO.transform.SetParent(bgGO.transform, false);
             Image fillImage = fillGO.AddComponent<Image>();
             fillImage.color = Color.green;
@@ -1205,7 +1429,7 @@ namespace TestWebGL.Editor
             sliderRect.sizeDelta = new Vector2(150, 20);
 
             // 数值文本
-            GameObject textGO = new GameObject("Value");
+            GameObject textGO = new GameObject("Value", new System.Type[]{typeof(RectTransform)});
             textGO.transform.SetParent(container.transform, false);
 
             TextMeshProUGUI text = textGO.AddComponent<TextMeshProUGUI>();
@@ -1235,13 +1459,13 @@ namespace TestWebGL.Editor
             containerRect.sizeDelta = new Vector2(340, 30);
 
             // 切换开关
-            GameObject toggleGO = new GameObject("Toggle");
+            GameObject toggleGO = new GameObject("Toggle", new System.Type[]{typeof(RectTransform)});
             toggleGO.transform.SetParent(container.transform, false);
 
             Toggle toggle = toggleGO.AddComponent<Toggle>();
 
             // 背景
-            GameObject bgGO = new GameObject("Background");
+            GameObject bgGO = new GameObject("Background", new System.Type[]{typeof(RectTransform)});
             bgGO.transform.SetParent(toggleGO.transform, false);
             Image bgImage = bgGO.AddComponent<Image>();
             bgImage.color = Color.gray;
@@ -1249,7 +1473,7 @@ namespace TestWebGL.Editor
             bgRect.sizeDelta = new Vector2(20, 20);
 
             // 选中标记
-            GameObject checkmarkGO = new GameObject("Checkmark");
+            GameObject checkmarkGO = new GameObject("Checkmark", new System.Type[]{typeof(RectTransform)});
             checkmarkGO.transform.SetParent(bgGO.transform, false);
             Image checkImage = checkmarkGO.AddComponent<Image>();
             checkImage.color = Color.green;
@@ -1265,7 +1489,7 @@ namespace TestWebGL.Editor
             toggleRect.sizeDelta = new Vector2(30, 30);
 
             // 标签
-            GameObject labelGO = new GameObject("Label");
+            GameObject labelGO = new GameObject("Label", new System.Type[]{typeof(RectTransform)});
             labelGO.transform.SetParent(container.transform, false);
 
             TextMeshProUGUI labelText = labelGO.AddComponent<TextMeshProUGUI>();
@@ -1280,43 +1504,341 @@ namespace TestWebGL.Editor
 
         private static void CreateOrdersPanelPrefab()
         {
-            GameObject panel = CreateBasePanel("OrdersPanel", new Vector2(400, 500));
+            GameObject panel = CreateBasePanel("OrdersPanel", new Vector2(500, 600));
 
             // 获取背景Image组件（CreateBasePanel已添加）
             Image backgroundImage = panel.GetComponent<Image>();
 
+            // 添加垂直布局
+            VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(20, 20, 20, 20);
+            layout.spacing = 10;
+            layout.childAlignment = TextAnchor.UpperCenter;
+
             // 标题
-            GameObject titleGO = CreateTextElement("Title", "订单面板", panel.transform);
-            titleGO.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 220);
-
-            // 订单容器
-            GameObject container = new GameObject("OrdersContainer", typeof(RectTransform));
-            container.transform.SetParent(panel.transform, false);
-
-            RectTransform containerRect = container.GetComponent<RectTransform>();
-            containerRect.sizeDelta = new Vector2(350, 350);
-            containerRect.anchoredPosition = new Vector2(0, 20);
+            GameObject titleGO = CreateTextElement("Title", "订单管理", panel.transform);
+            titleGO.GetComponent<RectTransform>().sizeDelta = new Vector2(460, 40);
 
             // 关闭按钮
-            GameObject closeBtn = CreateButton("CloseButton", "关闭", panel.transform);
-            closeBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -200);
+            GameObject closeGO = new GameObject("CloseButton", new System.Type[]{typeof(RectTransform)});
+            closeGO.transform.SetParent(panel.transform, false);
+
+            Button closeButton = closeGO.AddComponent<Button>();
+            closeButton.onClick.AddListener(() => {
+                // 隐藏面板的逻辑将在OrdersPanel.cs中处理
+            });
+
+            Image closeImage = closeGO.AddComponent<Image>();
+            closeImage.color = new Color(0.8f, 0.2f, 0.2f);
+
+            GameObject closeTextGO = new GameObject("Text", new System.Type[]{typeof(RectTransform)});
+            closeTextGO.transform.SetParent(closeGO.transform, false);
+
+            TextMeshProUGUI closeText = closeTextGO.AddComponent<TextMeshProUGUI>();
+            closeText.text = "×";
+            closeText.fontSize = 24;
+            closeText.alignment = TextAlignmentOptions.Center;
+            closeText.color = Color.white;
+
+            RectTransform closeRect = closeGO.GetComponent<RectTransform>();
+            closeRect.anchorMin = new Vector2(1f, 1f);
+            closeRect.anchorMax = new Vector2(1f, 1f);
+            closeRect.pivot = new Vector2(1f, 1f);
+            closeRect.anchoredPosition = new Vector2(-10, -10);
+            closeRect.sizeDelta = new Vector2(40, 40);
+
+            RectTransform closeTextRect = closeTextGO.GetComponent<RectTransform>();
+            closeTextRect.anchorMin = Vector2.zero;
+            closeTextRect.anchorMax = Vector2.one;
+            closeTextRect.offsetMin = Vector2.zero;
+            closeTextRect.offsetMax = Vector2.zero;
+
+            // 标签页容器
+            GameObject tabsContainer = new GameObject("TabsContainer");
+            tabsContainer.transform.SetParent(panel.transform, false);
+
+            HorizontalLayoutGroup tabsLayout = tabsContainer.AddComponent<HorizontalLayoutGroup>();
+            tabsLayout.spacing = 10;
+            tabsLayout.childAlignment = TextAnchor.MiddleCenter;
+
+            RectTransform tabsRect = tabsContainer.GetComponent<RectTransform>();
+            tabsRect.sizeDelta = new Vector2(460, 50);
+
+            // 活跃订单标签
+            GameObject activeTabGO = new GameObject("ActiveOrdersTab");
+            activeTabGO.transform.SetParent(tabsContainer.transform, false);
+
+            Button activeOrdersTab = activeTabGO.AddComponent<Button>();
+            Image activeTabImage = activeTabGO.AddComponent<Image>();
+            activeTabImage.color = new Color(0.2f, 0.2f, 0.2f);
+
+            GameObject activeTabTextGO = new GameObject("Text");
+            activeTabTextGO.transform.SetParent(activeTabGO.transform, false);
+
+            TextMeshProUGUI activeTabText = activeTabTextGO.AddComponent<TextMeshProUGUI>();
+            activeTabText.text = "活跃订单";
+            activeTabText.fontSize = 16;
+            activeTabText.alignment = TextAlignmentOptions.Center;
+            activeTabText.color = Color.white;
+
+            RectTransform activeTabRect = activeTabGO.GetComponent<RectTransform>();
+            activeTabRect.sizeDelta = new Vector2(120, 40);
+
+            RectTransform activeTabTextRect = activeTabTextGO.GetComponent<RectTransform>();
+            activeTabTextRect.anchorMin = Vector2.zero;
+            activeTabTextRect.anchorMax = Vector2.one;
+            activeTabTextRect.offsetMin = Vector2.zero;
+            activeTabTextRect.offsetMax = Vector2.zero;
+
+            // 活跃订单标签指示器
+            GameObject activeIndicatorGO = new GameObject("ActiveTabIndicator");
+            activeIndicatorGO.transform.SetParent(activeTabGO.transform, false);
+
+            Image activeTabIndicator = activeIndicatorGO.AddComponent<Image>();
+            activeTabIndicator.color = Color.green;
+
+            RectTransform activeIndicatorRect = activeIndicatorGO.GetComponent<RectTransform>();
+            activeIndicatorRect.anchorMin = new Vector2(0f, 0f);
+            activeIndicatorRect.anchorMax = new Vector2(1f, 0f);
+            activeIndicatorRect.pivot = new Vector2(0.5f, 0f);
+            activeIndicatorRect.anchoredPosition = Vector2.zero;
+            activeIndicatorRect.sizeDelta = new Vector2(0, 3);
+
+            // 已完成订单标签
+            GameObject completedTabGO = new GameObject("CompletedOrdersTab");
+            completedTabGO.transform.SetParent(tabsContainer.transform, false);
+
+            Button completedOrdersTab = completedTabGO.AddComponent<Button>();
+            Image completedTabImage = completedTabGO.AddComponent<Image>();
+            completedTabImage.color = new Color(0.2f, 0.2f, 0.2f);
+
+            GameObject completedTabTextGO = new GameObject("Text");
+            completedTabTextGO.transform.SetParent(completedTabGO.transform, false);
+
+            TextMeshProUGUI completedTabText = completedTabTextGO.AddComponent<TextMeshProUGUI>();
+            completedTabText.text = "已完成";
+            completedTabText.fontSize = 16;
+            completedTabText.alignment = TextAlignmentOptions.Center;
+            completedTabText.color = Color.white;
+
+            RectTransform completedTabRect = completedTabGO.GetComponent<RectTransform>();
+            completedTabRect.sizeDelta = new Vector2(120, 40);
+
+            RectTransform completedTabTextRect = completedTabTextGO.GetComponent<RectTransform>();
+            completedTabTextRect.anchorMin = Vector2.zero;
+            completedTabTextRect.anchorMax = Vector2.one;
+            completedTabTextRect.offsetMin = Vector2.zero;
+            completedTabTextRect.offsetMax = Vector2.zero;
+
+            // 已完成订单标签指示器
+            GameObject completedIndicatorGO = new GameObject("CompletedTabIndicator");
+            completedIndicatorGO.transform.SetParent(completedTabGO.transform, false);
+
+            Image completedTabIndicator = completedIndicatorGO.AddComponent<Image>();
+            completedTabIndicator.color = Color.green;
+
+            RectTransform completedIndicatorRect = completedIndicatorGO.GetComponent<RectTransform>();
+            completedIndicatorRect.anchorMin = new Vector2(0f, 0f);
+            completedIndicatorRect.anchorMax = new Vector2(1f, 0f);
+            completedIndicatorRect.pivot = new Vector2(0.5f, 0f);
+            completedIndicatorRect.anchoredPosition = Vector2.zero;
+            completedIndicatorRect.sizeDelta = new Vector2(0, 3);
+
+            // 订单列表区域
+            GameObject listContainer = new GameObject("OrdersList", new System.Type[]{typeof(RectTransform)});
+            listContainer.transform.SetParent(panel.transform, false);
+
+            RectTransform listRect = listContainer.GetComponent<RectTransform>();
+            listRect.sizeDelta = new Vector2(460, 200);
+
+            // 滚动视图
+            GameObject scrollGO = new GameObject("ScrollView");
+            scrollGO.transform.SetParent(listContainer.transform, false);
+
+            ScrollRect ordersScrollRect = scrollGO.AddComponent<ScrollRect>();
+
+            RectTransform scrollRect = scrollGO.GetComponent<RectTransform>();
+            scrollRect.anchorMin = Vector2.zero;
+            scrollRect.anchorMax = Vector2.one;
+            scrollRect.offsetMin = Vector2.zero;
+            scrollRect.offsetMax = Vector2.zero;
+
+            // 视口
+            GameObject viewportGO = new GameObject("Viewport", new System.Type[]{typeof(RectTransform)});
+            viewportGO.transform.SetParent(scrollGO.transform, false);
+
+            Image viewportImage = viewportGO.AddComponent<Image>();
+            viewportImage.color = new Color(0.15f, 0.15f, 0.15f);
+
+            RectTransform viewportRect = viewportGO.GetComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = Vector2.zero;
+            viewportRect.offsetMax = Vector2.zero;
+
+            // 内容区域
+            GameObject contentGO = new GameObject("Content", new System.Type[]{typeof(RectTransform)});
+            contentGO.transform.SetParent(viewportGO.transform, false);
+
+            RectTransform ordersContent = contentGO.GetComponent<RectTransform>();
+            ordersContent.anchorMin = new Vector2(0f, 1f);
+            ordersContent.anchorMax = new Vector2(1f, 1f);
+            ordersContent.pivot = new Vector2(0f, 1f);
+            ordersContent.anchoredPosition = Vector2.zero;
+            ordersContent.sizeDelta = new Vector2(0, 200);
+
+            VerticalLayoutGroup contentLayout = contentGO.AddComponent<VerticalLayoutGroup>();
+            contentLayout.spacing = 5;
+            contentLayout.childAlignment = TextAnchor.UpperCenter;
+
+            // 设置滚动视图引用
+            ordersScrollRect.viewport = viewportRect;
+            ordersScrollRect.content = ordersContent;
+
+            // 订单详情区域
+            GameObject detailsContainer = new GameObject("OrderDetails");
+            detailsContainer.transform.SetParent(panel.transform, false);
+
+            VerticalLayoutGroup detailsLayout = detailsContainer.AddComponent<VerticalLayoutGroup>();
+            detailsLayout.padding = new RectOffset(10, 10, 10, 10);
+            detailsLayout.spacing = 8;
+            detailsLayout.childAlignment = TextAnchor.UpperLeft;
+
+            RectTransform detailsRect = detailsContainer.GetComponent<RectTransform>();
+            detailsRect.sizeDelta = new Vector2(460, 150);
+
+            Image detailsBG = detailsContainer.AddComponent<Image>();
+            detailsBG.color = new Color(0.15f, 0.15f, 0.15f);
+
+            // 订单标题
+            GameObject orderTitleGO = new GameObject("OrderTitle");
+            orderTitleGO.transform.SetParent(detailsContainer.transform, false);
+
+            TextMeshProUGUI orderTitleText = orderTitleGO.AddComponent<TextMeshProUGUI>();
+            orderTitleText.text = "选择订单查看详情";
+            orderTitleText.fontSize = 16;
+            orderTitleText.color = Color.white;
+            orderTitleText.fontStyle = FontStyles.Bold;
+
+            RectTransform orderTitleRect = orderTitleGO.GetComponent<RectTransform>();
+            orderTitleRect.sizeDelta = new Vector2(440, 25);
+
+            // 订单描述
+            GameObject orderDescGO = new GameObject("OrderDescription");
+            orderDescGO.transform.SetParent(detailsContainer.transform, false);
+
+            TextMeshProUGUI orderDescriptionText = orderDescGO.AddComponent<TextMeshProUGUI>();
+            orderDescriptionText.text = "";
+            orderDescriptionText.fontSize = 14;
+            orderDescriptionText.color = Color.gray;
+            orderDescriptionText.enableWordWrapping = true;
+
+            RectTransform orderDescRect = orderDescGO.GetComponent<RectTransform>();
+            orderDescRect.sizeDelta = new Vector2(440, 40);
+
+            // 订单奖励
+            GameObject orderRewardGO = new GameObject("OrderReward");
+            orderRewardGO.transform.SetParent(detailsContainer.transform, false);
+
+            TextMeshProUGUI orderRewardText = orderRewardGO.AddComponent<TextMeshProUGUI>();
+            orderRewardText.text = "";
+            orderRewardText.fontSize = 14;
+            orderRewardText.color = Color.yellow;
+
+            RectTransform orderRewardRect = orderRewardGO.GetComponent<RectTransform>();
+            orderRewardRect.sizeDelta = new Vector2(440, 25);
+
+            // 订单时间和状态容器
+            GameObject timeStatusContainer = new GameObject("TimeStatusContainer");
+            timeStatusContainer.transform.SetParent(detailsContainer.transform, false);
+
+            HorizontalLayoutGroup timeStatusLayout = timeStatusContainer.AddComponent<HorizontalLayoutGroup>();
+            timeStatusLayout.spacing = 20;
+            timeStatusLayout.childAlignment = TextAnchor.MiddleLeft;
+
+            RectTransform timeStatusRect = timeStatusContainer.GetComponent<RectTransform>();
+            timeStatusRect.sizeDelta = new Vector2(440, 25);
+
+            // 时间
+            GameObject orderTimeGO = new GameObject("OrderTime");
+            orderTimeGO.transform.SetParent(timeStatusContainer.transform, false);
+
+            TextMeshProUGUI orderTimeText = orderTimeGO.AddComponent<TextMeshProUGUI>();
+            orderTimeText.text = "";
+            orderTimeText.fontSize = 12;
+            orderTimeText.color = Color.cyan;
+
+            RectTransform orderTimeRect = orderTimeGO.GetComponent<RectTransform>();
+            orderTimeRect.sizeDelta = new Vector2(150, 25);
+
+            // 状态
+            GameObject orderStatusGO = new GameObject("OrderStatus");
+            orderStatusGO.transform.SetParent(timeStatusContainer.transform, false);
+
+            TextMeshProUGUI orderStatusText = orderStatusGO.AddComponent<TextMeshProUGUI>();
+            orderStatusText.text = "";
+            orderStatusText.fontSize = 12;
+            orderStatusText.color = Color.green;
+
+            RectTransform orderStatusRect = orderStatusGO.GetComponent<RectTransform>();
+            orderStatusRect.sizeDelta = new Vector2(100, 25);
+
+            // 完成按钮
+            GameObject buttonGO = new GameObject("CompleteOrderButton");
+            buttonGO.transform.SetParent(detailsContainer.transform, false);
+
+            Button completeOrderButton = buttonGO.AddComponent<Button>();
+            Image buttonImage = buttonGO.AddComponent<Image>();
+            buttonImage.color = new Color(0.3f, 0.6f, 0.3f);
+
+            GameObject buttonTextGO = new GameObject("Text");
+            buttonTextGO.transform.SetParent(buttonGO.transform, false);
+
+            TextMeshProUGUI buttonText = buttonTextGO.AddComponent<TextMeshProUGUI>();
+            buttonText.text = "完成订单";
+            buttonText.fontSize = 14;
+            buttonText.alignment = TextAlignmentOptions.Center;
+            buttonText.color = Color.white;
+
+            RectTransform buttonRect = buttonGO.GetComponent<RectTransform>();
+            buttonRect.sizeDelta = new Vector2(120, 30);
+
+            RectTransform buttonTextRect = buttonTextGO.GetComponent<RectTransform>();
+            buttonTextRect.anchorMin = Vector2.zero;
+            buttonTextRect.anchorMax = Vector2.one;
+            buttonTextRect.offsetMin = Vector2.zero;
+            buttonTextRect.offsetMax = Vector2.zero;
 
             // 获取组件引用
             TextMeshProUGUI titleText = titleGO.GetComponent<TextMeshProUGUI>();
-            Button closeButton = closeBtn.GetComponent<Button>();
 
             // 添加OrdersPanel脚本并设置引用
             TestWebGL.Game.UI.OrdersPanel ordersPanel = panel.AddComponent<TestWebGL.Game.UI.OrdersPanel>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPanel = new SerializedObject(ordersPanel);
+            serializedPanel.FindProperty("panelRect").objectReferenceValue = panel.GetComponent<RectTransform>();
             serializedPanel.FindProperty("backgroundImage").objectReferenceValue = backgroundImage;
             serializedPanel.FindProperty("titleText").objectReferenceValue = titleText;
             serializedPanel.FindProperty("closeButton").objectReferenceValue = closeButton;
+            serializedPanel.FindProperty("ordersScrollRect").objectReferenceValue = ordersScrollRect;
+            serializedPanel.FindProperty("ordersContent").objectReferenceValue = ordersContent;
+            serializedPanel.FindProperty("orderTitleText").objectReferenceValue = orderTitleText;
+            serializedPanel.FindProperty("orderDescriptionText").objectReferenceValue = orderDescriptionText;
+            serializedPanel.FindProperty("orderRewardText").objectReferenceValue = orderRewardText;
+            serializedPanel.FindProperty("orderTimeText").objectReferenceValue = orderTimeText;
+            serializedPanel.FindProperty("orderStatusText").objectReferenceValue = orderStatusText;
+            serializedPanel.FindProperty("completeOrderButton").objectReferenceValue = completeOrderButton;
+            serializedPanel.FindProperty("activeOrdersTab").objectReferenceValue = activeOrdersTab;
+            serializedPanel.FindProperty("completedOrdersTab").objectReferenceValue = completedOrdersTab;
+            serializedPanel.FindProperty("activeTabIndicator").objectReferenceValue = activeTabIndicator;
+            serializedPanel.FindProperty("completedTabIndicator").objectReferenceValue = completedTabIndicator;
             serializedPanel.ApplyModifiedProperties();
 
             PrefabUtility.SaveAsPrefabAsset(panel, $"{PREFAB_PATH}/OrdersPanel.prefab");
             Object.DestroyImmediate(panel);
+            
+            Debug.Log("[PlaceholderGenerator] OrdersPanel预制体创建完成");
         }
 
         private static void CreateAchievementPanelPrefab()
@@ -1372,6 +1894,75 @@ namespace TestWebGL.Editor
 
             PrefabUtility.SaveAsPrefabAsset(panel, $"{PREFAB_PATH}/AchievementPanel.prefab");
             Object.DestroyImmediate(panel);
+        }
+
+        /// <summary>
+        /// 创建订单项目预制件
+        /// </summary>
+        private static void CreateOrderItemPrefab()
+        {
+            GameObject item = new GameObject("OrderItem");
+
+            // 背景
+            Image backgroundImage = item.AddComponent<Image>();
+            backgroundImage.color = new Color(0.2f, 0.2f, 0.2f);
+
+            // 按钮
+            Button button = item.AddComponent<Button>();
+
+            // 水平布局
+            HorizontalLayoutGroup layout = item.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(10, 10, 5, 5);
+            layout.spacing = 10;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+
+            // 设置RectTransform
+            RectTransform itemRect = item.GetComponent<RectTransform>();
+            itemRect.sizeDelta = new Vector2(440, 50);
+
+            // 标题文本
+            GameObject titleGO = new GameObject("Title");
+            titleGO.transform.SetParent(item.transform, false);
+
+            TextMeshProUGUI titleText = titleGO.AddComponent<TextMeshProUGUI>();
+            titleText.font = GetDefaultFontAsset();
+            titleText.text = "订单标题";
+            titleText.fontSize = 14;
+            titleText.color = Color.white;
+
+            RectTransform titleRect = titleGO.GetComponent<RectTransform>();
+            titleRect.sizeDelta = new Vector2(200, 40);
+
+            // 状态文本
+            GameObject statusGO = new GameObject("Status");
+            statusGO.transform.SetParent(item.transform, false);
+
+            TextMeshProUGUI statusText = statusGO.AddComponent<TextMeshProUGUI>();
+            statusText.font = GetDefaultFontAsset();
+            statusText.text = "进行中";
+            statusText.fontSize = 12;
+            statusText.alignment = TextAlignmentOptions.Right;
+            statusText.color = Color.yellow;
+
+            RectTransform statusRect = statusGO.GetComponent<RectTransform>();
+            statusRect.sizeDelta = new Vector2(100, 40);
+
+            // 添加OrderItemUI脚本
+            TestWebGL.Game.UI.OrderItemUI orderItemUI = item.AddComponent<TestWebGL.Game.UI.OrderItemUI>();
+            
+            // 使用SerializedObject设置引用
+            SerializedObject serializedItem = new SerializedObject(orderItemUI);
+            serializedItem.FindProperty("titleText").objectReferenceValue = titleText;
+            serializedItem.FindProperty("statusText").objectReferenceValue = statusText;
+            serializedItem.FindProperty("button").objectReferenceValue = button;
+            serializedItem.FindProperty("background").objectReferenceValue = backgroundImage;
+            serializedItem.ApplyModifiedProperties();
+
+            // 保存为预制件
+            PrefabUtility.SaveAsPrefabAsset(item, $"{PREFAB_PATH}/OrderItem.prefab");
+            Object.DestroyImmediate(item);
+            
+            Debug.Log("[PlaceholderGenerator] OrderItem预制体创建完成");
         }
 
         /// <summary>

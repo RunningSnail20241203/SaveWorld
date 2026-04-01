@@ -308,8 +308,8 @@ namespace TestWebGL.Game.Grid
                 rows = GRID_ROWS,
                 cols = GRID_COLS,
                 totalCells = TOTAL_CELLS,
-                cellSize = 80,  // 像素
-                cellSpacing = 5
+                cellSize = 120,  // 像素 - 适配1080*1920分辨率
+                cellSpacing = 8   // 像素 - 适配1080*1920分辨率
             };
         }
     }

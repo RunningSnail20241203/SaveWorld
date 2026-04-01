@@ -19,8 +19,8 @@ namespace TestWebGL.Game.UI
         public RectTransform gridContainer;
 
         [Header("布局参数")]
-        public Vector2 cellSize = new Vector2(100, 100);
-        public Vector2 spacing = new Vector2(5, 5);
+        public Vector2 cellSize = new Vector2(120, 120);
+        public Vector2 spacing = new Vector2(8, 8);
         public int rows = 9;
         public int cols = 7;
 

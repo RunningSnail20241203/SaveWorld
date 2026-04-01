@@ -26,8 +26,8 @@ namespace TestWebGL.Game.UI
         public TextMeshProUGUI saveButtonText;
 
         [Header("面板设置")]
-        public Vector2 panelSize = new Vector2(400, 100);
-        public Vector2 panelPosition = new Vector2(0, -400);
+        public Vector2 panelSize = new Vector2(500, 120);
+        public Vector2 panelPosition = new Vector2(0, -500);
 
         private GameManager _gameManager;
 
@@ -38,12 +38,12 @@ namespace TestWebGL.Game.UI
         {
             _gameManager = GameManager.Instance;
 
+            // 从预制件加载
             if (GetComponent<RectTransform>() == null)
             {
-                CreatePanel();
+                LoadFromPrefab();
             }
 
-            CreateButtons();
             SetupButtonEvents();
             Refresh();
 
@@ -51,129 +51,39 @@ namespace TestWebGL.Game.UI
         }
 
         /// <summary>
-        /// 创建面板
+        /// 从预制件加载
         /// </summary>
-        private void CreatePanel()
+        private void LoadFromPrefab()
         {
-            RectTransform panelRect = gameObject.AddComponent<RectTransform>();
-
-            // 设置面板位置和大小
-            panelRect.anchorMin = new Vector2(0.5f, 0f);
-            panelRect.anchorMax = new Vector2(0.5f, 0f);
-            panelRect.pivot = new Vector2(0.5f, 0f);
-            panelRect.anchoredPosition = panelPosition;
-            panelRect.sizeDelta = panelSize;
-
-            // 添加背景
-            Image background = gameObject.AddComponent<Image>();
-            background.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
-
-            // 添加水平布局
-            HorizontalLayoutGroup layout = gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 10, 10);
-            layout.spacing = 10;
-            layout.childAlignment = TextAnchor.MiddleCenter;
-        }
-
-        /// <summary>
-        /// 创建按钮
-        /// </summary>
-        private void CreateButtons()
-        {
-            // 探索按钮
-            if (exploreButton == null)
+            GameObject prefab = Resources.Load<GameObject>("Prefabs/UI/ControlPanel");
+            if (prefab != null)
             {
-                exploreButton = CreateButton("ExploreButton", "探索");
+                GameObject instance = Instantiate(prefab, transform);
+                instance.name = "ControlPanel";
+                
+                // 获取组件引用
+                exploreButton = instance.transform.Find("ButtonContainer/ExploreButton")?.GetComponent<Button>();
+                settingsButton = instance.transform.Find("ButtonContainer/SettingsButton")?.GetComponent<Button>();
+                ordersButton = instance.transform.Find("ButtonContainer/OrdersButton")?.GetComponent<Button>();
+                achievementsButton = instance.transform.Find("ButtonContainer/AchievementsButton")?.GetComponent<Button>();
+                saveButton = instance.transform.Find("ButtonContainer/SaveButton")?.GetComponent<Button>();
+                
+                // 获取按钮文本引用
+                if (exploreButton != null)
+                    exploreButtonText = exploreButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (settingsButton != null)
+                    settingsButtonText = settingsButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (ordersButton != null)
+                    ordersButtonText = ordersButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (achievementsButton != null)
+                    achievementsButtonText = achievementsButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (saveButton != null)
+                    saveButtonText = saveButton.GetComponentInChildren<TextMeshProUGUI>();
             }
-
-            // 设置按钮
-            if (settingsButton == null)
+            else
             {
-                settingsButton = CreateButton("SettingsButton", "设置");
+                Debug.LogError("[ControlPanel] 无法加载ControlPanel预制件");
             }
-
-            // 订单按钮
-            if (ordersButton == null)
-            {
-                ordersButton = CreateButton("OrdersButton", "订单");
-            }
-
-            // 成就按钮
-            if (achievementsButton == null)
-            {
-                achievementsButton = CreateButton("AchievementsButton", "成就");
-            }
-
-            // 保存按钮
-            if (saveButton == null)
-            {
-                saveButton = CreateButton("SaveButton", "保存");
-            }
-        }
-
-        /// <summary>
-        /// 创建单个按钮
-        /// </summary>
-        private Button CreateButton(string name, string text)
-        {
-            GameObject buttonGO = new GameObject(name);
-            buttonGO.transform.SetParent(transform, false);
-
-            // 添加RectTransform组件（UI元素必须要有）
-            RectTransform buttonRect = buttonGO.AddComponent<RectTransform>();
-            
-            // 添加按钮组件
-            Button button = buttonGO.AddComponent<Button>();
-            button.transition = Selectable.Transition.ColorTint;
-
-            ColorBlock colors = button.colors;
-            colors.normalColor = new Color(0.3f, 0.3f, 0.3f);
-            colors.highlightedColor = new Color(0.4f, 0.4f, 0.4f);
-            colors.pressedColor = new Color(0.2f, 0.2f, 0.2f);
-            colors.selectedColor = colors.normalColor;
-            button.colors = colors;
-
-            // 设置按钮大小
-            buttonRect.sizeDelta = new Vector2(80, 60);
-
-            // 创建文本
-            GameObject textGO = new GameObject("Text");
-            textGO.transform.SetParent(buttonGO.transform, false);
-
-            TextMeshProUGUI textComponent = textGO.AddComponent<TextMeshProUGUI>();
-            textComponent.text = text;
-            textComponent.fontSize = 16;
-            textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.color = Color.white;
-
-            // 设置文本RectTransform
-            RectTransform textRect = textGO.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            // 根据按钮类型设置对应的文本引用
-            switch (name)
-            {
-                case "ExploreButton":
-                    exploreButtonText = textComponent;
-                    break;
-                case "SettingsButton":
-                    settingsButtonText = textComponent;
-                    break;
-                case "OrdersButton":
-                    ordersButtonText = textComponent;
-                    break;
-                case "AchievementsButton":
-                    achievementsButtonText = textComponent;
-                    break;
-                case "SaveButton":
-                    saveButtonText = textComponent;
-                    break;
-            }
-
-            return button;
         }
 
         /// <summary>
