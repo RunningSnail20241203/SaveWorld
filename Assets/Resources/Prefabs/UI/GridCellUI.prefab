@@ -376,9 +376,10 @@ MonoBehaviour:
   itemCountText: {fileID: 7764987567414188646}
   lockLevelText: {fileID: 6325749241413717261}
   cellButton: {fileID: 6843948446375291727}
-  normalColor: {r: 1, g: 1, b: 1, a: 1}
-  lockedColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.8}
-  filledColor: {r: 1, g: 1, b: 1, a: 0.9}
+  normalColor: {r: 0.247, g: 0.298, b: 0.369, a: 1}
+  lockedColor: {r: 0.157, g: 0.2, b: 0.267, a: 1}
+  filledColor: {r: 1, g: 0.624, b: 0.263, a: 1}
+  highlightColor: {r: 1, g: 0.624, b: 0.263, a: 1}
 --- !u!1 &2360046455985859162
 GameObject:
   m_ObjectHideFlags: 0

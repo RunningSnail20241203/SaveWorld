@@ -47,7 +47,23 @@ namespace TestWebGL.Game.UI
             SetupButtonEvents();
             Refresh();
 
-            Debug.Log("[ControlPanel] 控制面板初始化完成");
+            // 固定在屏幕底部
+            RectTransform rect = GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                // 设置锚点到屏幕底部居中
+                rect.anchorMin = new Vector2(0.5f, 0f);
+                rect.anchorMax = new Vector2(0.5f, 0f);
+                rect.pivot = new Vector2(0.5f, 0f);
+                
+                // 底部边距
+                rect.anchoredPosition = new Vector2(0, 30f);
+                
+                // 设置为最上层渲染
+                rect.SetAsLastSibling();
+            }
+
+            Debug.Log("[ControlPanel] 控制面板初始化完成，已固定在屏幕底部");
         }
 
         /// <summary>

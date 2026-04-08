@@ -54,7 +54,7 @@ namespace TestWebGL.Game.Storage
             // 检查微信环境
             if (!CheckWeChatEnvironment())
             {
-                Debug.LogWarning("[CloudStorage] 非微信环境，云存储功能不可用");
+                Debug.Log("[CloudStorage] 非微信环境，云存储功能将在微信小游戏中启用");
                 return;
             }
             

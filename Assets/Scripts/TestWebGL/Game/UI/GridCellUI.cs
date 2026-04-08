@@ -20,9 +20,10 @@ namespace TestWebGL.Game.UI
         public Button cellButton;
 
         [Header("视觉状态")]
-        public Color normalColor = Color.white;
-        public Color lockedColor = new Color(0.5f, 0.5f, 0.5f, 0.8f);
-        public Color filledColor = new Color(1f, 1f, 1f, 0.9f);
+        public Color normalColor = UIThemeConfig.BorderNormal;
+        public Color lockedColor = UIThemeConfig.BackgroundCard;
+        public Color filledColor = UIThemeConfig.BorderHighlight;
+        public Color highlightColor = UIThemeConfig.BorderHighlight;
 
         // 格子位置
         private int _row;
@@ -130,8 +131,9 @@ namespace TestWebGL.Game.UI
                 cellButton.transition = Selectable.Transition.ColorTint;
                 ColorBlock colors = cellButton.colors;
                 colors.normalColor = Color.white;
-                colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f);
-                colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
+                colors.highlightedColor = new Color(1f, 1f, 1f, 0.9f);
+                colors.pressedColor = new Color(1f, 1f, 1f, 0.7f);
+                colors.fadeDuration = 0.1f;
                 cellButton.colors = colors;
             }
         }
@@ -169,16 +171,27 @@ namespace TestWebGL.Game.UI
         private void SetEmptyDisplay()
         {
             if (backgroundImage != null)
+            {
                 backgroundImage.color = normalColor;
+                backgroundImage.sprite = UIThemeConfig.CreateSolidSprite(UIThemeConfig.BackgroundCard);
+            }
 
             if (itemIcon != null)
                 itemIcon.gameObject.SetActive(false);
 
             if (itemCountText != null)
+            {
                 itemCountText.gameObject.SetActive(false);
+                itemCountText.color = UIThemeConfig.TextPrimary;
+                itemCountText.fontSize = UIThemeConfig.FontSizeNumber;
+            }
 
             if (lockLevelText != null)
+            {
                 lockLevelText.gameObject.SetActive(false);
+                lockLevelText.color = UIThemeConfig.TextSecondary;
+                lockLevelText.fontSize = UIThemeConfig.FontSizeSmall;
+            }
         }
 
         /// <summary>
@@ -187,7 +200,10 @@ namespace TestWebGL.Game.UI
         private void SetLockedDisplay(GridCell cell)
         {
             if (backgroundImage != null)
+            {
                 backgroundImage.color = lockedColor;
+                backgroundImage.sprite = UIThemeConfig.CreateSolidSprite(UIThemeConfig.LockedOverlay);
+            }
 
             if (itemIcon != null)
                 itemIcon.gameObject.SetActive(false);
@@ -198,7 +214,9 @@ namespace TestWebGL.Game.UI
             if (lockLevelText != null)
             {
                 lockLevelText.gameObject.SetActive(true);
-                lockLevelText.text = $"Lv.{cell.LockedItemLevel}";
+                lockLevelText.text = $"锁定Lv.{cell.LockedItemLevel}";
+                lockLevelText.color = UIThemeConfig.TextSecondary;
+                lockLevelText.fontSize = UIThemeConfig.FontSizeSmall;
             }
         }
 
@@ -208,19 +226,23 @@ namespace TestWebGL.Game.UI
         private void SetFilledDisplay(GridCell cell)
         {
             if (backgroundImage != null)
+            {
                 backgroundImage.color = filledColor;
+                backgroundImage.sprite = UIThemeConfig.CreateSolidSprite(UIThemeConfig.BackgroundCard);
+            }
 
             if (itemIcon != null)
             {
                 itemIcon.gameObject.SetActive(true);
-                // TODO: 设置物品图标
-                // itemIcon.sprite = GetItemIcon(cell.ItemType);
+                itemIcon.sprite = GetItemIcon(cell.CurrentItemType);
             }
 
             if (itemCountText != null)
             {
                 itemCountText.gameObject.SetActive(true);
                 itemCountText.text = cell.ItemCount.ToString();
+                itemCountText.color = UIThemeConfig.TextPrimary;
+                itemCountText.fontSize = UIThemeConfig.FontSizeNumber;
             }
 
             if (lockLevelText != null)

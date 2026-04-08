@@ -290,7 +290,7 @@ namespace TestWebGL.Game.UI
             }
             else
             {
-                Debug.LogWarning("[UIManager] 成就面板引用为空");
+                Debug.Log("[UIManager] 成就面板未配置，相关功能将暂时不可用");
             }
         }
 

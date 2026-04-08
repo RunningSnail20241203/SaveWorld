@@ -56,6 +56,12 @@ namespace TestWebGL.Game.UI
             if (playTimeText == null)
                 playTimeText = transform.Find("PlayTime")?.GetComponent<TextMeshProUGUI>();
 
+            // 应用主题样式
+            ApplyTheme();
+            
+            // 自动适配位置
+            AutoLayout();
+
             Refresh();
 
             // 订阅玩家数据变化事件
@@ -64,6 +70,75 @@ namespace TestWebGL.Game.UI
             _playerManager.OnExperienceGained += OnExperienceGained;
 
             Debug.Log("[PlayerInfoPanel] 玩家信息面板初始化完成");
+        }
+
+        /// <summary>
+        /// 应用主题样式
+        /// </summary>
+        private void ApplyTheme()
+        {
+            // 文本样式统一设置
+            if (playerNameText != null)
+            {
+                playerNameText.color = UIThemeConfig.TextPrimary;
+                playerNameText.fontSize = UIThemeConfig.FontSizeTitle;
+            }
+            
+            if (levelText != null)
+            {
+                levelText.color = UIThemeConfig.TextPrimary;
+                levelText.fontSize = UIThemeConfig.FontSizeBody;
+            }
+            
+            if (experienceText != null)
+            {
+                experienceText.color = UIThemeConfig.TextSecondary;
+                experienceText.fontSize = UIThemeConfig.FontSizeSmall;
+            }
+            
+            if (staminaText != null)
+            {
+                staminaText.color = UIThemeConfig.TextSecondary;
+                staminaText.fontSize = UIThemeConfig.FontSizeSmall;
+            }
+
+            // 进度条颜色
+            if (experienceSlider != null)
+            {
+                Image fillImage = experienceSlider.fillRect.GetComponent<Image>();
+                if (fillImage != null)
+                {
+                    fillImage.color = UIThemeConfig.Success;
+                }
+            }
+            
+            if (staminaSlider != null)
+            {
+                Image fillImage = staminaSlider.fillRect.GetComponent<Image>();
+                if (fillImage != null)
+                {
+                    fillImage.color = UIThemeConfig.Warning;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 自动布局定位
+        /// </summary>
+        private void AutoLayout()
+        {
+            if (panelRect != null)
+            {
+                // 固定在屏幕顶部
+                panelRect.anchorMin = new Vector2(0, 1);
+                panelRect.anchorMax = new Vector2(1, 1);
+                panelRect.pivot = new Vector2(0.5f, 1);
+                
+                // 设置高度为屏幕高度的12%
+                float panelHeight = Screen.height * UIThemeConfig.TopBarHeightRatio;
+                panelRect.sizeDelta = new Vector2(-UIThemeConfig.GlobalMargin * 2, panelHeight);
+                panelRect.anchoredPosition = new Vector2(0, -UIThemeConfig.GlobalMargin);
+            }
         }
 
         /// <summary>

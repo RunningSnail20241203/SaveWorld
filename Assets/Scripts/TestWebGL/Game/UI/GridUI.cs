@@ -17,12 +17,13 @@ namespace TestWebGL.Game.UI
         public GridLayoutGroup gridLayout;
         public GameObject cellPrefab;
         public RectTransform gridContainer;
+        public Image backgroundImage;
 
         [Header("布局参数")]
-        public Vector2 cellSize = new Vector2(120, 120);
-        public Vector2 spacing = new Vector2(8, 8);
-        public int rows = 9;
-        public int cols = 7;
+        public Vector2 cellSize = new Vector2(UIThemeConfig.GridCellSize, UIThemeConfig.GridCellSize);
+        public Vector2 spacing = new Vector2(UIThemeConfig.GridCellSpacing, UIThemeConfig.GridCellSpacing);
+        public int rows = UIThemeConfig.GridRows;
+        public int cols = UIThemeConfig.GridColumns;
 
         // 格子UI组件数组
         private GridCellUI[,] _cellUIs;
@@ -81,7 +82,31 @@ namespace TestWebGL.Game.UI
                         }
                     }
                 }
+
+                // 动态创建缺失的格子
+                for (int row = 0; row < rows; row++)
+                {
+                    for (int col = 0; col < cols; col++)
+                    {
+                        if (_cellUIs[row, col] == null && cellPrefab != null && gridContainer != null)
+                        {
+                            GameObject cellObj = Instantiate(cellPrefab, gridContainer);
+                            GridCellUI cellUI = cellObj.GetComponent<GridCellUI>();
+                            if (cellUI != null)
+                            {
+                                cellUI.Initialize(row, col);
+                                _cellUIs[row, col] = cellUI;
+                            }
+                        }
+                    }
+                }
             }
+
+            // 应用主题样式
+            ApplyTheme();
+            
+            // 自动适配屏幕
+            AutoFitToScreen();
 
             Refresh();
 
@@ -90,6 +115,34 @@ namespace TestWebGL.Game.UI
             _gridManager.OnGridUnlocked += OnGridUnlocked;
 
             Debug.Log("[GridUI] 网格UI初始化完成");
+        }
+
+        /// <summary>
+        /// 应用主题样式
+        /// </summary>
+        private void ApplyTheme()
+        {
+            if (backgroundImage != null)
+            {
+                backgroundImage.color = UIThemeConfig.BackgroundCard;
+            }
+
+            if (gridLayout != null)
+            {
+                gridLayout.cellSize = cellSize;
+                gridLayout.spacing = spacing;
+                gridLayout.padding = new RectOffset(8, 8, 8, 8);
+            }
+        }
+
+        /// <summary>
+        /// 自动适配屏幕尺寸
+        /// </summary>
+        private void AutoFitToScreen()
+        {
+            // ✅ 布局由预制件处理，CanvasScaler已经负责屏幕适配
+            // 运行时不再动态修改布局，避免覆盖预制件正确设置
+            Debug.Log("[GridUI] 使用预制件原生布局，跳过动态适配");
         }
 
         /// <summary>

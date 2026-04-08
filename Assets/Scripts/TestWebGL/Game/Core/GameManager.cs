@@ -271,6 +271,11 @@ namespace TestWebGL.Game.Core
                 Debug.Log("[GameManager] 玩家数据加载成功");
                 return data;
             }
+            else if (result == StorageSystem.StorageResult.FileNotFound)
+            {
+                Debug.Log("[GameManager] 未找到玩家存档，将创建新存档");
+                return null;
+            }
             else
             {
                 Debug.LogWarning($"[GameManager] 玩家数据加载失败: {result}");
@@ -351,6 +356,10 @@ namespace TestWebGL.Game.Core
                         _gridManager.SetCell(cellData.row, cellData.col, newCell);
                     }
                     Debug.Log("[GameManager] 网格数据加载成功");
+                }
+                else if (result == StorageSystem.StorageResult.FileNotFound)
+                {
+                    Debug.Log("[GameManager] 未找到网格存档，将使用默认网格布局");
                 }
                 else
                 {

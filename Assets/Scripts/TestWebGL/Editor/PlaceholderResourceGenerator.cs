@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using System.IO;
 using System.Collections.Generic;
+using TestWebGL.Game.UI;
 
 namespace TestWebGL.Editor
 {
@@ -716,10 +717,10 @@ namespace TestWebGL.Editor
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 0;
 
-            // 添加CanvasScaler
+            // 添加CanvasScaler - 使用我们设计的标准分辨率
             CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.referenceResolution = new Vector2(750, 1334);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
 
@@ -773,22 +774,27 @@ namespace TestWebGL.Editor
             GameObject gridUI = new GameObject("GridUI", new System.Type[]{typeof(RectTransform)});
             gridUI.AddComponent<CanvasRenderer>();
 
-            // 添加背景
+            // 添加背景 - 使用主题配色
             Image background = gridUI.AddComponent<Image>();
-            background.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+            background.color = UIThemeConfig.BackgroundCard;
 
             // 添加网格容器
             GameObject container = new GameObject("GridContainer", new System.Type[]{typeof(RectTransform)});
             container.transform.SetParent(gridUI.transform);
             GridLayoutGroup gridLayout = container.AddComponent<GridLayoutGroup>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            gridLayout.constraintCount = 7; // 7列
-            gridLayout.cellSize = new Vector2(60, 60);
-            gridLayout.spacing = new Vector2(2, 2);
+            gridLayout.constraintCount = UIThemeConfig.GridColumns; // 7列
+            gridLayout.cellSize = new Vector2(UIThemeConfig.GridCellSize, UIThemeConfig.GridCellSize);
+            gridLayout.spacing = new Vector2(UIThemeConfig.GridCellSpacing, UIThemeConfig.GridCellSpacing);
+            gridLayout.padding = new RectOffset(8, 8, 8, 8);
+            gridLayout.childAlignment = TextAnchor.MiddleCenter;
 
             // 设置RectTransform
             RectTransform rect = gridUI.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(450, 570); // 7*60 + 6*2 = 450, 9*60 + 8*2 = 570
+            rect.anchorMin = new Vector2(0, 0);
+            rect.anchorMax = new Vector2(1, 1);
+            rect.offsetMin = new Vector2(UIThemeConfig.GlobalMargin, Screen.height * UIThemeConfig.TopBarHeightRatio + UIThemeConfig.GlobalMargin);
+            rect.offsetMax = new Vector2(-UIThemeConfig.GlobalMargin, -Screen.height * UIThemeConfig.BottomBarHeightRatio - UIThemeConfig.GlobalMargin);
 
             // 添加脚本组件
             TestWebGL.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<TestWebGL.Game.UI.GridUI>();
@@ -1731,7 +1737,7 @@ namespace TestWebGL.Editor
             orderDescriptionText.text = "";
             orderDescriptionText.fontSize = 14;
             orderDescriptionText.color = Color.gray;
-            orderDescriptionText.enableWordWrapping = true;
+            orderDescriptionText.textWrappingMode = TMPro.TextWrappingModes.Normal;
 
             RectTransform orderDescRect = orderDescGO.GetComponent<RectTransform>();
             orderDescRect.sizeDelta = new Vector2(440, 40);
