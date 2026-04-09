@@ -19,7 +19,9 @@ namespace SaveWorld.Editor
             HashSet<char> allCharacters = new HashSet<char>();
             
             // 遍历所有字符串表
-            foreach (var table in LocalizationSettings.StringDatabase.AllTables)
+            var tablesOperation = LocalizationSettings.StringDatabase.GetAllTables();
+            tablesOperation.WaitForCompletion();
+            foreach (var table in tablesOperation.Result)
             {
                 foreach (var entry in table.Values)
                 {
@@ -58,7 +60,9 @@ namespace SaveWorld.Editor
             {
                 HashSet<char> allCharacters = new HashSet<char>();
                 
-                foreach (var table in LocalizationSettings.StringDatabase.AllTables)
+                var tablesOperation = LocalizationSettings.StringDatabase.GetAllTables();
+                tablesOperation.WaitForCompletion();
+                foreach (var table in tablesOperation.Result)
                 {
                     foreach (var entry in table.Values)
                     {
