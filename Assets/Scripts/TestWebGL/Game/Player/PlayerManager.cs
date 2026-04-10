@@ -119,6 +119,20 @@ namespace TestWebGL.Game.Player
                 _playerData = playerData;
             else
                 _playerData = new PlayerData();
+            
+            // 注册全局事件监听
+            EventBus.Instance.Listen<ItemCraftedEvent>(OnItemCrafted);
+            EventBus.Instance.Listen<ExperienceGainedEvent>(OnExperienceGained);
+        }
+        
+        private void OnItemCrafted(ItemCraftedEvent e)
+        {
+            RecordItemCollected(e.ItemType);
+        }
+        
+        private void OnExperienceGained(ExperienceGainedEvent e)
+        {
+            GainExperience(e.Amount, e.Source);
         }
 
         /// <summary>

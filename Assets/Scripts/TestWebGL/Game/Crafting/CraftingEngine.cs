@@ -114,9 +114,8 @@ namespace TestWebGL.Game.Crafting
                 return false;
             }
 
-            // 记录已合成的物品（用于图鉴）
-            var gameManager = Core.GameManager.Instance;
-            gameManager.GetPlayerManager().RecordItemCollected(outputItem);
+             // 记录已合成的物品（用于图鉴）
+             Core.EventBus.Instance.Dispatch(new ItemCraftedEvent { ItemType = outputItem });
 
             // 触发成功事件
             OnCraftSuccess?.Invoke(inputItem, inputCount - remainingInput, outputItem, outputCount);
@@ -180,10 +179,13 @@ namespace TestWebGL.Game.Crafting
             
             _gridManager.TryUnlockCell(toRow, toCol);
 
-            // 获得经验奖励（解锁格子奖励：20 × 物品等级）
-            var gameManager = Core.GameManager.Instance;
-            int expReward = 20 * lockedLevel;
-            gameManager.GetPlayerManager().GainExperience(expReward, $"解锁格子（{ItemConfig.GetItemName(lockedItem)}）");
+             // 获得经验奖励（解锁格子奖励：20 × 物品等级）
+             int expReward = 20 * lockedLevel;
+             Core.EventBus.Instance.Dispatch(new ExperienceGainedEvent 
+             { 
+                 Amount = expReward, 
+                 Source = $"解锁格子（{ItemConfig.GetItemName(lockedItem)}）"
+             });
 
             OnCraftSuccess?.Invoke(sourceItem, 2, ItemType.None, 0);
 

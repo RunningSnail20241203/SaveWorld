@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using SaveWorld.Game.Core;
 
 namespace TestWebGL.Game.Audio
 {
@@ -11,19 +12,6 @@ namespace TestWebGL.Game.Audio
     public class AudioManager : MonoBehaviour
     {
         private static AudioManager s_instance;
-        public static AudioManager Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                {
-                    var go = new GameObject("AudioManager");
-                    s_instance = go.AddComponent<AudioManager>();
-                    DontDestroyOnLoad(go);
-                }
-                return s_instance;
-            }
-        }
 
         [Header("音频源")]
         public AudioSource musicSource;      // 背景音乐
@@ -45,10 +33,33 @@ namespace TestWebGL.Game.Audio
         // 初始化状态
         private bool _isInitialized = false;
 
+        private void Awake()
+        {
+            if (s_instance != null && s_instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            
+            s_instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void Start()
+        {
+            Initialize();
+            SubscribeEvents();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeEvents();
+        }
+
         /// <summary>
         /// 初始化音频管理器
         /// </summary>
-        public void Initialize()
+        private void Initialize()
         {
             if (_isInitialized) return;
 
@@ -78,6 +89,39 @@ namespace TestWebGL.Game.Audio
 
             _isInitialized = true;
             Debug.Log("[AudioManager] 音频管理器初始化完成");
+            
+            // 自动播放游戏背景音乐
+            PlayMusic("game_bg");
+        }
+
+        /// <summary>
+        /// 订阅所有游戏事件
+        /// </summary>
+        private void SubscribeEvents()
+        {
+            GameEventBus.Subscribe<MergeCompleteEvent>(OnMergeComplete);
+            GameEventBus.Subscribe<ItemCraftedEvent>(OnItemCrafted);
+            GameEventBus.Subscribe<ExplorationCompleteEvent>(OnExplorationComplete);
+            GameEventBus.Subscribe<OrderSubmittedEvent>(OnOrderSubmitted);
+            GameEventBus.Subscribe<ItemMovedEvent>(OnItemMoved);
+            GameEventBus.Subscribe<ItemSwappedEvent>(OnItemSwapped);
+            GameEventBus.Subscribe<LevelUpEvent>(OnLevelUp);
+            
+            Debug.Log("[AudioManager] 所有事件订阅完成");
+        }
+
+        /// <summary>
+        /// 取消所有事件订阅
+        /// </summary>
+        private void UnsubscribeEvents()
+        {
+            GameEventBus.Unsubscribe<MergeCompleteEvent>(OnMergeComplete);
+            GameEventBus.Unsubscribe<ItemCraftedEvent>(OnItemCrafted);
+            GameEventBus.Unsubscribe<ExplorationCompleteEvent>(OnExplorationComplete);
+            GameEventBus.Unsubscribe<OrderSubmittedEvent>(OnOrderSubmitted);
+            GameEventBus.Unsubscribe<ItemMovedEvent>(OnItemMoved);
+            GameEventBus.Unsubscribe<ItemSwappedEvent>(OnItemSwapped);
+            GameEventBus.Unsubscribe<LevelUpEvent>(OnLevelUp);
         }
 
         /// <summary>
@@ -302,68 +346,39 @@ namespace TestWebGL.Game.Audio
                    $"主音量: {masterVolume:F1}, 音乐音量: {musicVolume:F1}, 音效音量: {sfxVolume:F1}";
         }
 
-        #region 预定义音效播放方法
+        #region 事件处理器
 
-        /// <summary>
-        /// 播放合成成功音效
-        /// </summary>
-        public void PlayCraftSuccess()
+        private void OnMergeComplete(MergeCompleteEvent evt)
         {
             PlaySFX("craft_success");
         }
 
-        /// <summary>
-        /// 播放合成失败音效
-        /// </summary>
-        public void PlayCraftFailure()
+        private void OnItemCrafted(ItemCraftedEvent evt)
         {
-            PlaySFX("craft_failure");
+            PlaySFX("craft_success");
         }
 
-        /// <summary>
-        /// 播放解锁成功音效
-        /// </summary>
-        public void PlayUnlockSuccess()
-        {
-            PlaySFX("unlock_success");
-        }
-
-        /// <summary>
-        /// 播放探索点击音效
-        /// </summary>
-        public void PlayExploreClick()
+        private void OnExplorationComplete(ExplorationCompleteEvent evt)
         {
             PlaySFX("explore_click");
         }
 
-        /// <summary>
-        /// 播放订单完成音效
-        /// </summary>
-        public void PlayOrderComplete()
+        private void OnOrderSubmitted(OrderSubmittedEvent evt)
         {
             PlaySFX("order_complete");
         }
 
-        /// <summary>
-        /// 播放满格提示音效
-        /// </summary>
-        public void PlayGridFull()
+        private void OnItemMoved(ItemMovedEvent evt)
         {
-            PlaySFX("grid_full");
+            PlaySFX("button_click", 0.5f);
         }
 
-        /// <summary>
-        /// 播放按钮点击音效
-        /// </summary>
-        public void PlayButtonClick()
+        private void OnItemSwapped(ItemSwappedEvent evt)
         {
-            PlaySFX("button_click");
+            PlaySFX("button_click", 0.5f);
         }
 
-        /// <summary>
-        /// 播放成就解锁音效
-        /// </summary>
-        public void PlayAchievementUnlock()
+        private void OnLevelUp(LevelUpEvent evt)
         {
             PlaySFX("achievement_unlock");
         }

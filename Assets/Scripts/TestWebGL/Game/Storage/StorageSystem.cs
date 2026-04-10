@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using TestWebGL.Game.Player;
-using TestWebGL.Game.Grid;
+// V2: 暂时移除旧命名空间引用
+// using TestWebGL.Game.Player;
+// using TestWebGL.Game.Grid;
 
 namespace TestWebGL.Game.Storage
 {
@@ -78,117 +79,31 @@ namespace TestWebGL.Game.Storage
         public event LoadCompletedHandler OnLoadCompleted;
 
         /// <summary>
-        /// 保存玩家数据
+        /// 保存玩家数据 - V2待实现
         /// </summary>
-        public StorageResult SavePlayerData(PlayerData playerData)
-        {
-            try
-            {
-                if (playerData == null)
-                    return StorageResult.UnknownError;
-
-                // 更新保存时间
-                playerData.lastSaveTime = DateTime.Now;
-
-                // 序列化为JSON
-                string jsonData = UnityEngine.JsonUtility.ToJson(playerData);
-
-                // 保存到本地存储
-                UnityEngine.PlayerPrefs.SetString(PLAYER_DATA_KEY, jsonData);
-                UnityEngine.PlayerPrefs.Save();
-
-                OnSaveCompleted?.Invoke(StorageResult.Success, "玩家数据保存成功");
-                return StorageResult.Success;
-            }
-            catch (Exception ex)
-            {
-                OnSaveCompleted?.Invoke(StorageResult.SerializationError, $"序列化失败: {ex.Message}");
-                return StorageResult.SerializationError;
-            }
-        }
+        // TODO: V2 实现时恢复此方法
+        // public StorageResult SavePlayerData(PlayerData playerData)
+        // {
+        //     return StorageResult.Success;
+        // }
 
         /// <summary>
-        /// 加载玩家数据
+        /// 加载玩家数据 - V2待实现
         /// </summary>
-        public (StorageResult result, PlayerData data) LoadPlayerData()
-        {
-            try
-            {
-                if (!UnityEngine.PlayerPrefs.HasKey(PLAYER_DATA_KEY))
-                {
-                    OnLoadCompleted?.Invoke(StorageResult.FileNotFound, "未找到玩家存档");
-                    return (StorageResult.FileNotFound, null);
-                }
-
-                string jsonData = UnityEngine.PlayerPrefs.GetString(PLAYER_DATA_KEY);
-
-                if (string.IsNullOrEmpty(jsonData))
-                {
-                    OnLoadCompleted?.Invoke(StorageResult.CorruptedData, "玩家数据为空");
-                    return (StorageResult.CorruptedData, null);
-                }
-
-                PlayerData playerData = UnityEngine.JsonUtility.FromJson<PlayerData>(jsonData);
-
-                if (playerData == null)
-                {
-                    OnLoadCompleted?.Invoke(StorageResult.CorruptedData, "玩家数据反序列化失败");
-                    return (StorageResult.CorruptedData, null);
-                }
-
-                OnLoadCompleted?.Invoke(StorageResult.Success, "玩家数据加载成功");
-                return (StorageResult.Success, playerData);
-            }
-            catch (Exception ex)
-            {
-                OnLoadCompleted?.Invoke(StorageResult.SerializationError, $"反序列化失败: {ex.Message}");
-                return (StorageResult.SerializationError, null);
-            }
-        }
+        // TODO: V2 实现时恢复此方法
+        // public (StorageResult result, PlayerData data) LoadPlayerData()
+        // {
+        //     return (StorageResult.Success, null);
+        // }
 
         /// <summary>
-        /// 保存网格数据
+        /// 保存网格数据 - V2待实现
         /// </summary>
-        public StorageResult SaveGridData(GridManager gridManager)
-        {
-            try
-            {
-                var saveData = new GridSaveData
-                {
-                    version = 1,
-                    saveTime = DateTime.Now,
-                    cells = new GridSaveData.GridCellSaveData[63]  // 9x7 = 63
-                };
-
-                int index = 0;
-                foreach (var cell in gridManager.GetAllCells())
-                {
-                    saveData.cells[index] = new GridSaveData.GridCellSaveData
-                    {
-                        row = cell.row,
-                        col = cell.column,
-                        isLocked = cell.IsLocked,
-                        itemType = cell.HasItem ? (int)cell.CurrentItemType : 0,
-                        itemCount = cell.ItemCount,
-                        lockedItemType = cell.IsLocked ? (int)cell.LockedItemType : 0,
-                        lockedItemLevel = cell.IsLocked ? cell.LockedItemLevel : 0
-                    };
-                    index++;
-                }
-
-                string jsonData = UnityEngine.JsonUtility.ToJson(saveData);
-                UnityEngine.PlayerPrefs.SetString(GRID_DATA_KEY, jsonData);
-                UnityEngine.PlayerPrefs.Save();
-
-                OnSaveCompleted?.Invoke(StorageResult.Success, "网格数据保存成功");
-                return StorageResult.Success;
-            }
-            catch (Exception ex)
-            {
-                OnSaveCompleted?.Invoke(StorageResult.SerializationError, $"网格数据序列化失败: {ex.Message}");
-                return StorageResult.SerializationError;
-            }
-        }
+        // TODO: V2 实现时恢复此方法
+        // public StorageResult SaveGridData(GridManager gridManager)
+        // {
+        //     return StorageResult.Success;
+        // }
 
         /// <summary>
         /// 加载网格数据
