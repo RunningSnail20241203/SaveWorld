@@ -313,5 +313,28 @@ namespace TestWebGL.Game.Items
             var data = GetItemData(itemType);
             return data != null ? data.description : "未知物品描述";
         }
+
+        /// <summary>
+        /// 获取下一级合成物品
+        /// 规则：同生产线等级+1
+        /// </summary>
+        public static ItemType GetNextLevelItem(ItemType itemType)
+        {
+            var data = GetItemData(itemType);
+            if (data == null || data.level == 0 || data.level >= 10)
+                return ItemType.None;
+            
+            // 计算下一级物品ID: xxx_Ln → xxx_L(n+1)
+            int baseId = ((int)itemType / 1000) * 1000;
+            int nextLevel = data.level + 1;
+            int nextItemId = baseId + nextLevel;
+            
+            if (System.Enum.IsDefined(typeof(ItemType), nextItemId))
+            {
+                return (ItemType)nextItemId;
+            }
+            
+            return ItemType.None;
+        }
     }
 }

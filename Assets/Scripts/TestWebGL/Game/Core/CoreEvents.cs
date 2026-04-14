@@ -132,13 +132,24 @@ namespace SaveWorld.Game.Core
 
     public class ItemCraftedEvent : IGameEvent
     {
-        public ItemType ItemType { get; set; }
+        public ItemType ItemType { get; }
+
+        public ItemCraftedEvent(ItemType itemType)
+        {
+            ItemType = itemType;
+        }
     }
 
     public class ExperienceGainedEvent : IGameEvent
     {
-        public int Amount { get; set; }
-        public string Source { get; set; }
+        public int Amount { get; }
+        public string Source { get; }
+
+        public ExperienceGainedEvent(int amount, string source)
+        {
+            Amount = amount;
+            Source = source;
+        }
     }
 
     #endregion

@@ -99,13 +99,13 @@ namespace TestWebGL.Game.Audio
         /// </summary>
         private void SubscribeEvents()
         {
-            GameEventBus.Subscribe<MergeCompleteEvent>(OnMergeComplete);
-            GameEventBus.Subscribe<ItemCraftedEvent>(OnItemCrafted);
-            GameEventBus.Subscribe<ExplorationCompleteEvent>(OnExplorationComplete);
-            GameEventBus.Subscribe<OrderSubmittedEvent>(OnOrderSubmitted);
-            GameEventBus.Subscribe<ItemMovedEvent>(OnItemMoved);
-            GameEventBus.Subscribe<ItemSwappedEvent>(OnItemSwapped);
-            GameEventBus.Subscribe<LevelUpEvent>(OnLevelUp);
+            GameLoop.Instance.EventBus.Listen<MergeCompleteEvent>(OnMergeComplete);
+            GameLoop.Instance.EventBus.Listen<ItemCraftedEvent>(OnItemCrafted);
+            GameLoop.Instance.EventBus.Listen<ExplorationCompleteEvent>(OnExplorationComplete);
+            GameLoop.Instance.EventBus.Listen<OrderSubmittedEvent>(OnOrderSubmitted);
+            GameLoop.Instance.EventBus.Listen<ItemMovedEvent>(OnItemMoved);
+            GameLoop.Instance.EventBus.Listen<ItemSwappedEvent>(OnItemSwapped);
+            GameLoop.Instance.EventBus.Listen<LevelUpEvent>(OnLevelUp);
             
             Debug.Log("[AudioManager] 所有事件订阅完成");
         }
@@ -115,13 +115,8 @@ namespace TestWebGL.Game.Audio
         /// </summary>
         private void UnsubscribeEvents()
         {
-            GameEventBus.Unsubscribe<MergeCompleteEvent>(OnMergeComplete);
-            GameEventBus.Unsubscribe<ItemCraftedEvent>(OnItemCrafted);
-            GameEventBus.Unsubscribe<ExplorationCompleteEvent>(OnExplorationComplete);
-            GameEventBus.Unsubscribe<OrderSubmittedEvent>(OnOrderSubmitted);
-            GameEventBus.Unsubscribe<ItemMovedEvent>(OnItemMoved);
-            GameEventBus.Unsubscribe<ItemSwappedEvent>(OnItemSwapped);
-            GameEventBus.Unsubscribe<LevelUpEvent>(OnLevelUp);
+            // V2 EventBus 不支持主动取消订阅
+            Debug.Log("[AudioManager] 事件取消订阅在V2架构中自动处理");
         }
 
         /// <summary>

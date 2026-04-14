@@ -1,6 +1,7 @@
 using System;
 using TestWebGL.Game.Grid;
 using TestWebGL.Game.Items;
+using SaveWorld.Game.Core;
 
 namespace TestWebGL.Game.Crafting
 {
@@ -11,7 +12,6 @@ namespace TestWebGL.Game.Crafting
     public class CraftingEngine
     {
         private GridManager _gridManager;
-        private CraftingSystem _craftingSystem;
 
         // 合成事件
         public delegate void CraftSuccessHandler(ItemType inputItem, int inputCount, ItemType outputItem, int outputCount);
@@ -30,10 +30,9 @@ namespace TestWebGL.Game.Crafting
         /// <summary>
         /// 初始化合成引擎
         /// </summary>
-        public void Initialize(GridManager gridManager, CraftingSystem craftingSystem)
+        public void Initialize(GridManager gridManager)
         {
             _gridManager = gridManager;
-            _craftingSystem = craftingSystem;
 
             UnityEngine.Debug.Log("[CraftingEngine] 合成引擎已初始化");
         }
@@ -50,7 +49,7 @@ namespace TestWebGL.Game.Crafting
         public bool TryDoubleTapCraft(int row, int col)
         {
             var cell = _gridManager.GetCell(row, col);
-            if (cell == null || cell.IsLocked || !cell.HasItem)
+            if (cell == null || _gridManager.IsCellLocked(row, col) || !cell.HasItem)
             {
                 OnCraftFailure?.Invoke("格子无法合成");
                 return false;
@@ -59,23 +58,24 @@ namespace TestWebGL.Game.Crafting
             ItemType inputItem = cell.CurrentItemType;
             int inputCount = cell.ItemCount;
 
-            // 检查是否可合成
-            if (!_craftingSystem.CanCraft(inputItem, inputCount))
+            // 检查是否可合成 (需要至少2个相同物品)
+            if (inputCount < 2)
             {
                 OnCraftFailure?.Invoke($"{ItemConfig.GetItemName(inputItem)} 数量不足（需要2个）");
                 return false;
             }
 
-            // 获取输出物品
-            ItemType outputItem = _craftingSystem.GetOutputItem(inputItem);
+            // 获取输出物品（下一级物品）
+            ItemType outputItem = ItemConfig.GetNextLevelItem(inputItem);
             if (outputItem == ItemType.None)
             {
                 OnCraftFailure?.Invoke("未找到合成规则");
                 return false;
             }
 
-            // 执行合成计算
-            var (outputType, outputCount) = _craftingSystem.Craft(inputItem, inputCount);
+            // 执行合成计算：2个合成1个
+            ItemType outputType = outputItem;
+            int outputCount = 1;
 
             // 计算合成后的输入物品剩余数量
             int remainingInput = inputCount % 2;
@@ -115,7 +115,7 @@ namespace TestWebGL.Game.Crafting
             }
 
              // 记录已合成的物品（用于图鉴）
-             Core.EventBus.Instance.Dispatch(new ItemCraftedEvent { ItemType = outputItem });
+             GameLoop.Instance.EventBus.Dispatch(new ItemCraftedEvent(outputItem));
 
             // 触发成功事件
             OnCraftSuccess?.Invoke(inputItem, inputCount - remainingInput, outputItem, outputCount);
@@ -134,7 +134,7 @@ namespace TestWebGL.Game.Crafting
         {
             // 检查来源格子
             var sourceCell = _gridManager.GetCell(fromRow, fromCol);
-            if (sourceCell == null || sourceCell.IsLocked || !sourceCell.HasItem || sourceCell.ItemCount < 1)
+            if (sourceCell == null || _gridManager.IsCellLocked(fromRow, fromCol) || !sourceCell.HasItem || sourceCell.ItemCount < 1)
             {
                 OnCraftFailure?.Invoke("来源格子无效");
                 return false;
@@ -142,7 +142,7 @@ namespace TestWebGL.Game.Crafting
 
             // 检查目标格子（必须是锁定的）
             var targetCell = _gridManager.GetCell(toRow, toCol);
-            if (targetCell == null || !targetCell.IsLocked)
+            if (targetCell == null || !_gridManager.IsCellLocked(toRow, toCol))
             {
                 OnCraftFailure?.Invoke("目标格子不是锁定格子");
                 return false;
@@ -150,8 +150,8 @@ namespace TestWebGL.Game.Crafting
 
             ItemType sourceItem = sourceCell.CurrentItemType;
             int sourceCount = sourceCell.ItemCount;
-            ItemType lockedItem = targetCell.LockedItemType;
-            int lockedLevel = targetCell.LockedItemLevel;
+            ItemType lockedItem = _gridManager.GetLockedItemType(toRow, toCol);
+            int lockedLevel = _gridManager.GetLockedItemLevel(toRow, toCol);
 
             // 检查是否匹配：同类型、同等级、数量足够（需要2个）
             if (sourceItem != lockedItem || ItemConfig.GetItemLevel(sourceItem) != lockedLevel || sourceCount < 2)
@@ -181,11 +181,7 @@ namespace TestWebGL.Game.Crafting
 
              // 获得经验奖励（解锁格子奖励：20 × 物品等级）
              int expReward = 20 * lockedLevel;
-             Core.EventBus.Instance.Dispatch(new ExperienceGainedEvent 
-             { 
-                 Amount = expReward, 
-                 Source = $"解锁格子（{ItemConfig.GetItemName(lockedItem)}）"
-             });
+             GameLoop.Instance.EventBus.Dispatch(new ExperienceGainedEvent(expReward, $"解锁格子（{ItemConfig.GetItemName(lockedItem)}）"));
 
             OnCraftSuccess?.Invoke(sourceItem, 2, ItemType.None, 0);
 
@@ -203,7 +199,7 @@ namespace TestWebGL.Game.Crafting
         {
             foreach (var cell in _gridManager.GetAllCells())
             {
-                if (!cell.IsLocked && !cell.HasItem)
+                if (!_gridManager.IsCellLocked(cell.row, cell.column) && !cell.HasItem)
                 {
                     emptyRow = cell.row;
                     emptyCol = cell.column;
@@ -224,7 +220,7 @@ namespace TestWebGL.Game.Crafting
         {
             foreach (var cell in _gridManager.GetAllCells())
             {
-                if (!cell.IsLocked && !cell.HasItem)
+                if (!_gridManager.IsCellLocked(cell.row, cell.column) && !cell.HasItem)
                     return false;
             }
             return true;
@@ -238,7 +234,7 @@ namespace TestWebGL.Game.Crafting
             int count = 0;
             foreach (var cell in _gridManager.GetAllCells())
             {
-                if (!cell.IsLocked && !cell.HasItem)
+                if (!_gridManager.IsCellLocked(cell.row, cell.column) && !cell.HasItem)
                     count++;
             }
             return count;
@@ -252,7 +248,7 @@ namespace TestWebGL.Game.Crafting
             int count = 0;
             foreach (var cell in _gridManager.GetAllCells())
             {
-                if (!cell.IsLocked && cell.HasItem)
+                if (!_gridManager.IsCellLocked(cell.row, cell.column) && cell.HasItem)
                     count++;
             }
             return count;

@@ -5,7 +5,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using System.IO;
 using System.Collections.Generic;
-using TestWebGL.Game.UI;
+// UI命名空间暂时注释，待UI代码创建后恢复
+// using TestWebGL.Game.UI;
 
 namespace TestWebGL.Editor
 {
@@ -671,11 +672,11 @@ namespace TestWebGL.Editor
             string mainScenePath = "Assets/Scenes/main.unity";
             EditorSceneManager.OpenScene(mainScenePath);
 
-            // 查找SceneSetup组件
-            TestWebGL.Game.Core.SceneSetup sceneSetup = Object.FindAnyObjectByType<TestWebGL.Game.Core.SceneSetup>();
-            if (sceneSetup == null)
+            // 查找GameLoop组件 (V2架构)
+            SaveWorld.Game.Core.GameLoop gameLoop = Object.FindAnyObjectByType<SaveWorld.Game.Core.GameLoop>();
+            if (gameLoop == null)
             {
-                Debug.LogWarning("[PlaceholderGenerator] SceneSetup组件不存在，跳过设置");
+                Debug.LogWarning("[PlaceholderGenerator] GameLoop组件不存在，跳过设置");
                 return;
             }
 
@@ -774,18 +775,18 @@ namespace TestWebGL.Editor
             GameObject gridUI = new GameObject("GridUI", new System.Type[]{typeof(RectTransform)});
             gridUI.AddComponent<CanvasRenderer>();
 
-            // 添加背景 - 使用主题配色
+            // 添加背景 - 使用默认配色 (临时配色
             Image background = gridUI.AddComponent<Image>();
-            background.color = UIThemeConfig.BackgroundCard;
+            background.color = new Color(0.12f, 0.12f, 0.12f, 1f);
 
             // 添加网格容器
             GameObject container = new GameObject("GridContainer", new System.Type[]{typeof(RectTransform)});
             container.transform.SetParent(gridUI.transform);
             GridLayoutGroup gridLayout = container.AddComponent<GridLayoutGroup>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            gridLayout.constraintCount = UIThemeConfig.GridColumns; // 7列
-            gridLayout.cellSize = new Vector2(UIThemeConfig.GridCellSize, UIThemeConfig.GridCellSize);
-            gridLayout.spacing = new Vector2(UIThemeConfig.GridCellSpacing, UIThemeConfig.GridCellSpacing);
+            gridLayout.constraintCount = 7; // 7列
+            gridLayout.cellSize = new Vector2(96, 96);
+            gridLayout.spacing = new Vector2(8, 8);
             gridLayout.padding = new RectOffset(8, 8, 8, 8);
             gridLayout.childAlignment = TextAnchor.MiddleCenter;
 
@@ -793,11 +794,11 @@ namespace TestWebGL.Editor
             RectTransform rect = gridUI.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0, 0);
             rect.anchorMax = new Vector2(1, 1);
-            rect.offsetMin = new Vector2(UIThemeConfig.GlobalMargin, Screen.height * UIThemeConfig.TopBarHeightRatio + UIThemeConfig.GlobalMargin);
-            rect.offsetMax = new Vector2(-UIThemeConfig.GlobalMargin, -Screen.height * UIThemeConfig.BottomBarHeightRatio - UIThemeConfig.GlobalMargin);
+            rect.offsetMin = new Vector2(16, Screen.height * 0.08f + 16);
+            rect.offsetMax = new Vector2(-16, -Screen.height * 0.12f - 16);
 
-            // 添加脚本组件
-            TestWebGL.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<TestWebGL.Game.UI.GridUI>();
+            // GridUI组件在V2架构中还未实现，暂时跳过添加脚本
+            // TestWebGL.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<TestWebGL.Game.UI.GridUI>();
             
             // 使用SerializedObject设置cellPrefab引用
             SerializedObject serializedGridUI = new SerializedObject(gridUIComponent);

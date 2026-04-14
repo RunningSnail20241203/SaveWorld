@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TestWebGL.Game.Items;
+using SaveWorld.Game.Core;
 
 namespace TestWebGL.Game.Player
 {
@@ -121,8 +122,8 @@ namespace TestWebGL.Game.Player
                 _playerData = new PlayerData();
             
             // 注册全局事件监听
-            EventBus.Instance.Listen<ItemCraftedEvent>(OnItemCrafted);
-            EventBus.Instance.Listen<ExperienceGainedEvent>(OnExperienceGained);
+            GameLoop.Instance.EventBus.Listen<ItemCraftedEvent>(OnItemCrafted);
+            GameLoop.Instance.EventBus.Listen<ExperienceGainedEvent>(HandleExperienceGainedEvent);
         }
         
         private void OnItemCrafted(ItemCraftedEvent e)
@@ -130,7 +131,7 @@ namespace TestWebGL.Game.Player
             RecordItemCollected(e.ItemType);
         }
         
-        private void OnExperienceGained(ExperienceGainedEvent e)
+        private void HandleExperienceGainedEvent(ExperienceGainedEvent e)
         {
             GainExperience(e.Amount, e.Source);
         }
