@@ -6,6 +6,11 @@ namespace TestWebGL.Game.Grid
     /// <summary>
     /// 格子系统管理器
     /// 管理9×7 = 63个格子，包括锁定、解锁、物品管理等
+    /// 
+    /// 【重构 v2.0】
+    /// 锁定机制与格子数据完全分离
+    /// GridCell 只负责持有物品，GridManager 统一管理锁定状态
+    /// 锁定是正交的外部机制，可以动态添加任何类型的锁定
     /// </summary>
     public class GridManager
     {
@@ -17,8 +22,13 @@ namespace TestWebGL.Game.Grid
         private const int UNLOCKED_CENTER_SIZE = 3;  // 初始解锁3×3 = 9格
         private const int UNLOCKED_CENTER_START = 3; // 中心开始行列（从0计数，则中心是3,4,5）
 
-        // 格子二维数组
+        // 格子二维数组 - 只存物品数据
         private GridCell[,] _gridCells;
+        
+        // 🔒 外部锁定机制 - 与格子数据完全分离
+        private bool[,] _isLocked;                  // 锁定状态
+        private ItemType[,] _lockedItemType;        // 解锁需要的物品类型
+        private int[,] _lockedItemLevel;            // 解锁需要的物品等级
 
         // 格子状态变化事件
         public delegate void GridCellChangedHandler(int row, int col, GridCell cell);
@@ -33,19 +43,22 @@ namespace TestWebGL.Game.Grid
         public void Initialize()
         {
             _gridCells = new GridCell[GRID_ROWS, GRID_COLS];
+            _isLocked = new bool[GRID_ROWS, GRID_COLS];
+            _lockedItemType = new ItemType[GRID_ROWS, GRID_COLS];
+            _lockedItemLevel = new int[GRID_ROWS, GRID_COLS];
 
-            // 1. 先创建所有格子（初始状态为锁定）
+            // 1. 创建所有空格子
             InitializeAllCells();
 
             // 2. 设置初始解锁的中心3×3区域
             UnlockCenterArea();
 
-            // 3. 应用锁格分布表
-            ApplyLockedGridDistribution();
+            // 3. 应用初始锁定机制
+            ApplyInitialLockingMechanism();
         }
 
         /// <summary>
-        /// 初始化所有格子为未解锁空格
+        /// 初始化所有格子为空格子
         /// </summary>
         private void InitializeAllCells()
         {
@@ -53,7 +66,10 @@ namespace TestWebGL.Game.Grid
             {
                 for (int col = 0; col < GRID_COLS; col++)
                 {
-                    _gridCells[row, col] = GridCell.CreateLockedCell(row, col, ItemType.None, 0);
+                    _gridCells[row, col] = GridCell.CreateEmpty(row, col);
+                    _isLocked[row, col] = true;
+                    _lockedItemType[row, col] = ItemType.None;
+                    _lockedItemLevel[row, col] = 0;
                 }
             }
         }
@@ -68,16 +84,17 @@ namespace TestWebGL.Game.Grid
             {
                 for (int col = UNLOCKED_CENTER_START; col < UNLOCKED_CENTER_START + UNLOCKED_CENTER_SIZE; col++)
                 {
-                    _gridCells[row, col] = GridCell.CreateUnlockedCell(row, col);
+                    _isLocked[row, col] = false;
                 }
             }
         }
 
         /// <summary>
-        /// 应用锁格分布表
+        /// 应用初始锁定机制
         /// 根据设计规范中的3.2节分配锁格
+        /// 这只是其中一种锁定机制，以后可以添加更多
         /// </summary>
-        private void ApplyLockedGridDistribution()
+        private void ApplyInitialLockingMechanism()
         {
             var lockedGridConfig = new[,]
             {
@@ -108,17 +125,14 @@ namespace TestWebGL.Game.Grid
                 {
                     ItemType lockedItemType = lockedGridConfig[row, col];
 
-                    // 如果是None或中心区域，应该已经解锁，不需要修改
-                    if (lockedItemType == ItemType.None)
+                    // 如果是None或中心区域，保持解锁状态
+                    if (lockedItemType == ItemType.None || IsInCenterArea(row, col))
                         continue;
 
-                    // 如果在中心区域，跳过（保持已解锁状态）
-                    if (IsInCenterArea(row, col))
-                        continue;
-
-                    // 否则，设置为锁定格子
-                    int level = ItemConfig.GetItemLevel(lockedItemType);
-                    _gridCells[row, col] = GridCell.CreateLockedCell(row, col, lockedItemType, level);
+                    // 应用锁定
+                    _isLocked[row, col] = true;
+                    _lockedItemType[row, col] = lockedItemType;
+                    _lockedItemLevel[row, col] = ItemConfig.GetItemLevel(lockedItemType);
                 }
             }
         }
@@ -130,6 +144,71 @@ namespace TestWebGL.Game.Grid
         {
             return row >= UNLOCKED_CENTER_START && row < UNLOCKED_CENTER_START + UNLOCKED_CENTER_SIZE &&
                    col >= UNLOCKED_CENTER_START && col < UNLOCKED_CENTER_START + UNLOCKED_CENTER_SIZE;
+        }
+
+        /// <summary>
+        /// 查询格子是否被锁定
+        /// 🔒 这是唯一的锁定查询入口
+        /// </summary>
+        public bool IsCellLocked(int row, int col)
+        {
+            if (!IsValidPosition(row, col))
+                return false;
+            
+            return _isLocked[row, col];
+        }
+
+        /// <summary>
+        /// 获取锁定格子需要的解锁物品
+        /// </summary>
+        public ItemType GetLockedItemType(int row, int col)
+        {
+            if (!IsValidPosition(row, col))
+                return ItemType.None;
+            
+            return _lockedItemType[row, col];
+        }
+
+        /// <summary>
+        /// 获取锁定格子需要的解锁物品等级
+        /// </summary>
+        public int GetLockedItemLevel(int row, int col)
+        {
+            if (!IsValidPosition(row, col))
+                return 0;
+            
+            return _lockedItemLevel[row, col];
+        }
+
+        /// <summary>
+        /// 锁定一个格子
+        /// </summary>
+        public void LockCell(int row, int col, ItemType requiredItem = ItemType.None, int requiredLevel = 0)
+        {
+            if (!IsValidPosition(row, col))
+                return;
+
+            _isLocked[row, col] = true;
+            _lockedItemType[row, col] = requiredItem;
+            _lockedItemLevel[row, col] = requiredLevel;
+            
+            OnCellChanged?.Invoke(row, col, _gridCells[row, col]);
+        }
+
+        /// <summary>
+        /// 解锁一个格子
+        /// </summary>
+        public void UnlockCell(int row, int col)
+        {
+            if (!IsValidPosition(row, col))
+                return;
+
+            _isLocked[row, col] = false;
+            _lockedItemType[row, col] = ItemType.None;
+            _lockedItemLevel[row, col] = 0;
+            
+            OnGridUnlocked?.Invoke(row, col, _gridCells[row, col]);
+            OnCellChanged?.Invoke(row, col, _gridCells[row, col]);
         }
 
         /// <summary>
@@ -174,11 +253,11 @@ namespace TestWebGL.Game.Grid
             if (!IsValidPosition(row, col))
                 return (false, PlacementErrorCode.InvalidPosition);
 
-            GridCell cell = _gridCells[row, col];
-
-            // 检查是否被锁定
-            if (cell.IsLocked)
+            // 🔒 锁定检查 - 统一在这里做
+            if (IsCellLocked(row, col))
                 return (false, PlacementErrorCode.CellLocked);
+
+            GridCell cell = _gridCells[row, col];
 
             // 尝试堆叠
             if (cell.CurrentItemType == itemType)
@@ -221,6 +300,10 @@ namespace TestWebGL.Game.Grid
             if (!IsValidPosition(row, col))
                 return (false, RemovalErrorCode.InvalidPosition);
 
+            // 🔒 锁定检查 - 统一在这里做
+            if (IsCellLocked(row, col))
+                return (false, RemovalErrorCode.CellLocked);
+
             GridCell cell = _gridCells[row, col];
             
             if (!cell.HasItem)
@@ -254,20 +337,17 @@ namespace TestWebGL.Game.Grid
         }
 
         /// <summary>
-        /// 解锁格子
+        /// 尝试解锁格子
         /// </summary>
         public bool TryUnlockCell(int row, int col)
         {
             if (!IsValidPosition(row, col))
                 return false;
 
-            GridCell cell = _gridCells[row, col];
-            if (!cell.IsLocked)
+            if (!IsCellLocked(row, col))
                 return false;
 
-            cell.Unlock();
-            OnGridUnlocked?.Invoke(row, col, cell);
-            OnCellChanged?.Invoke(row, col, cell);
+            UnlockCell(row, col);
             return true;
         }
 
@@ -283,7 +363,7 @@ namespace TestWebGL.Game.Grid
                 for (int col = 0; col < GRID_COLS; col++)
                 {
                     GridCell cell = _gridCells[row, col];
-                    if (cell.IsLocked)
+                    if (IsCellLocked(row, col))
                         stats.lockedCellCount++;
                     else if (cell.HasItem)
                         stats.filledCellCount++;
@@ -360,8 +440,9 @@ namespace TestWebGL.Game.Grid
     {
         None = 0,
         InvalidPosition = 1,    // 位置无效
-        CellEmpty = 2,          // 格子无物品
-        InsufficientItems = 3,  // 物品数量不足
-        RemovalFailed = 4,      // 移除操作异常
+        CellLocked = 2,         // 格子被锁定
+        CellEmpty = 3,          // 格子无物品
+        InsufficientItems = 4,  // 物品数量不足
+        RemovalFailed = 5,      // 移除操作异常
     }
 }

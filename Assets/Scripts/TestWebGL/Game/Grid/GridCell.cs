@@ -5,6 +5,10 @@ namespace TestWebGL.Game.Grid
     /// <summary>
     /// 单个格子的数据模型
     /// 表示9×7网格中的一个格子状态
+    /// 
+    /// 【重构 v2.0】
+    /// 本类只负责持有物品数据，不再包含锁定状态
+    /// 锁定是外部正交机制，由 GridManager 统一管理
     /// </summary>
     [System.Serializable]
     public class GridCell
@@ -13,18 +17,7 @@ namespace TestWebGL.Game.Grid
         public int row;
         public int column;
 
-        // 锁定状态
-        [UnityEngine.SerializeField]
-        private bool _isLocked;
-
-        // 当格子被锁定时，显示要解锁的物品信息
-        [UnityEngine.SerializeField]
-        private ItemType _lockedItemType;
-
-        [UnityEngine.SerializeField]
-        private int _lockedItemLevel;
-
-        // 已解锁格子中的物品
+        // 格子中的物品
         [UnityEngine.SerializeField]
         private ItemType _currentItemType;
 
@@ -32,70 +25,44 @@ namespace TestWebGL.Game.Grid
         private int _itemCount;  // 堆叠数量，1-99
 
         // 属性 - 只读访问
-        public bool IsLocked => _isLocked;
-        public ItemType LockedItemType => _lockedItemType;
-        public int LockedItemLevel => _lockedItemLevel;
         public ItemType CurrentItemType => _currentItemType;
         public int ItemCount => _itemCount;
         public bool HasItem => _currentItemType != ItemType.None && _itemCount > 0;
 
         /// <summary>
-        /// 创建锁定格子
+        /// 创建空格子
         /// </summary>
-        public static GridCell CreateLockedCell(int row, int column, ItemType lockedItemType, int level)
+        public static GridCell CreateEmpty(int row, int column)
         {
             return new GridCell
             {
                 row = row,
                 column = column,
-                _isLocked = true,
-                _lockedItemType = lockedItemType,
-                _lockedItemLevel = level,
                 _currentItemType = ItemType.None,
                 _itemCount = 0
             };
         }
 
         /// <summary>
-        /// 创建已解锁空格子
+        /// 创建有物品的格子
         /// </summary>
-        public static GridCell CreateUnlockedCell(int row, int column)
+        public static GridCell CreateFilled(int row, int column, ItemType itemType, int count = 1)
         {
             return new GridCell
             {
                 row = row,
                 column = column,
-                _isLocked = false,
-                _lockedItemType = ItemType.None,
-                _lockedItemLevel = 0,
-                _currentItemType = ItemType.None,
-                _itemCount = 0
-            };
-        }
-
-        /// <summary>
-        /// 创建已解锁有物品的格子
-        /// </summary>
-        public static GridCell CreateFilledCell(int row, int column, ItemType itemType, int count = 1)
-        {
-            return new GridCell
-            {
-                row = row,
-                column = column,
-                _isLocked = false,
-                _lockedItemType = ItemType.None,
-                _lockedItemLevel = 0,
                 _currentItemType = itemType,
                 _itemCount = count > 99 ? 99 : count
             };
         }
 
         /// <summary>
-        /// 放置物品到该格子（格子必须已解锁且为空）
+        /// 放置物品到该格子（格子必须为空）
         /// </summary>
         public bool TryPlaceItem(ItemType itemType, int count = 1)
         {
-            if (_isLocked || _currentItemType != ItemType.None)
+            if (_currentItemType != ItemType.None)
                 return false;
 
             _currentItemType = itemType;
@@ -108,7 +75,7 @@ namespace TestWebGL.Game.Grid
         /// </summary>
         public bool TryStackItem(ItemType itemType, int addCount = 1)
         {
-            if (_isLocked || _currentItemType != itemType)
+            if (_currentItemType != itemType)
                 return false;
 
             int newCount = _itemCount + addCount;
@@ -121,7 +88,7 @@ namespace TestWebGL.Game.Grid
         /// </summary>
         public bool TryRemoveItem(int removeCount)
         {
-            if (_isLocked || _currentItemType == ItemType.None)
+            if (_currentItemType == ItemType.None)
                 return false;
 
             _itemCount -= removeCount;
@@ -134,25 +101,12 @@ namespace TestWebGL.Game.Grid
         }
 
         /// <summary>
-        /// 清空格子中的物品（不可锁定格子）
+        /// 清空格子中的物品
         /// </summary>
         public void ClearItem()
         {
-            if (!_isLocked)
-            {
-                _currentItemType = ItemType.None;
-                _itemCount = 0;
-            }
-        }
-
-        /// <summary>
-        /// 解锁格子（从锁定状态变为已解锁空格）
-        /// </summary>
-        public void Unlock()
-        {
-            _isLocked = false;
-            _lockedItemType = ItemType.None;
-            _lockedItemLevel = 0;
+            _currentItemType = ItemType.None;
+            _itemCount = 0;
         }
 
         /// <summary>
@@ -160,11 +114,6 @@ namespace TestWebGL.Game.Grid
         /// </summary>
         public string GetDisplayName()
         {
-            if (_isLocked)
-            {
-                return ItemConfig.GetItemName(_lockedItemType);
-            }
-
             if (_currentItemType != ItemType.None)
             {
                 return ItemConfig.GetItemName(_currentItemType);
