@@ -18,14 +18,25 @@ namespace SaveWorld.Game.Core
         // 玩家状态
         public readonly PlayerState Player;
         
+        // 订单数据
+        public readonly IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> Orders;
+        
+        // 上次订单重置日期
+        public readonly DateTime LastOrderResetDate;
+        
         // 元数据扩展字典，所有机制可以在这里存放自己的数据
         public readonly IReadOnlyDictionary<string, object> Metadata;
 
-        internal GameState(int version, CellState[] cells, PlayerState player, IReadOnlyDictionary<string, object> metadata)
+        internal GameState(int version, CellState[] cells, PlayerState player, 
+                          IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> orders, 
+                          DateTime lastOrderResetDate,
+                          IReadOnlyDictionary<string, object> metadata)
         {
             Version = version;
             Cells = cells;
             Player = player;
+            Orders = orders;
+            LastOrderResetDate = lastOrderResetDate;
             Metadata = metadata;
         }
 
@@ -41,8 +52,22 @@ namespace SaveWorld.Game.Core
                 version: 0,
                 cells: cells,
                 player: PlayerState.CreateInitial(),
+                orders: new Dictionary<int, SaveWorld.Game.Order.OrderData>(),
+                lastOrderResetDate: DateTime.MinValue,
                 metadata: new Dictionary<string, object>()
             );
+        }
+
+        /// <summary>
+        /// 计算离线体力恢复
+        /// </summary>
+        public int CalculateOfflineRecoveredStamina(int maxStamina, int recoverIntervalSeconds)
+        {
+            var offlineSeconds = (int)(DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds(Player.LastOfflineTime).UtcDateTime).TotalSeconds;
+            if (offlineSeconds <= 0) return 0;
+            
+            int recovered = offlineSeconds / recoverIntervalSeconds;
+            return Math.Min(recovered, maxStamina - Player.Stamina);
         }
     }
 

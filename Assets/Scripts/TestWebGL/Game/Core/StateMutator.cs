@@ -105,16 +105,58 @@ namespace SaveWorld.Game.Core
             UpdateState(_currentState.Cells, newPlayer);
         }
 
+        /// <summary>
+        /// 更新状态（格子+玩家）
+        /// </summary>
         private void UpdateState(CellState[] newCells, PlayerState newPlayer)
         {
             _currentState = new GameState(
                 version: _currentState.Version + 1,
                 cells: newCells,
                 player: newPlayer,
+                orders: _currentState.Orders,
+                lastOrderResetDate: _currentState.LastOrderResetDate,
                 metadata: _currentState.Metadata
             );
 
             // 自动保存检查
+            CheckAutoSave();
+        }
+
+        /// <summary>
+        /// 更新状态（格子+玩家+订单）
+        /// </summary>
+        internal void UpdateState(CellState[] newCells, PlayerState newPlayer, 
+                                  IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> newOrders)
+        {
+            _currentState = new GameState(
+                version: _currentState.Version + 1,
+                cells: newCells,
+                player: newPlayer,
+                orders: newOrders,
+                lastOrderResetDate: _currentState.LastOrderResetDate,
+                metadata: _currentState.Metadata
+            );
+
+            CheckAutoSave();
+        }
+
+        /// <summary>
+        /// 更新状态（全字段）
+        /// </summary>
+        internal void UpdateState(CellState[] cells, PlayerState player, 
+                                  IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> orders,
+                                  DateTime lastOrderResetDate)
+        {
+            _currentState = new GameState(
+                version: _currentState.Version + 1,
+                cells: cells,
+                player: player,
+                orders: orders,
+                lastOrderResetDate: lastOrderResetDate,
+                metadata: _currentState.Metadata
+            );
+
             CheckAutoSave();
         }
 
