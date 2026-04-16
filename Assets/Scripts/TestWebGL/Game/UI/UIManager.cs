@@ -1,173 +1,180 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using SaveWorld.Game.Core;
 
 namespace SaveWorld.Game.UI
 {
     /// <summary>
-    /// UI层管理器
-    /// 遵循MVC架构，只监听事件，不直接调用业务逻辑
+    /// UI管理器
+    /// 监听游戏事件 响应状态变化 更新UI
     /// </summary>
-    public class UIManager : MonoBehaviour
+    public class UIManager
     {
-        private static UIManager _instance;
-        public static UIManager Instance => _instance;
+        private readonly EventBus _eventBus;
+        private readonly StateMutator _stateMutator;
 
-        [Header("UI页面引用")]
-        public GameObject MainPanel;
-        public GameObject BackpackPanel;
-        public GameObject CraftingPanel;
-        public GameObject ExplorationPanel;
-        public GameObject OrderPanel;
-        public GameObject PlayerInfoPanel;
-
-        private Dictionary<Type, UIPanelBase> _panels = new Dictionary<Type, UIPanelBase>();
-
-        private void Awake()
+        public UIManager(EventBus eventBus, StateMutator stateMutator)
         {
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
+            _eventBus = eventBus;
+            _stateMutator = stateMutator;
+            
+            RegisterEventHandlers();
         }
 
-        private void Start()
+        private void RegisterEventHandlers()
         {
-            InitializePanels();
-            RegisterEventListeners();
-            UnityEngine.Debug.Log("[UIManager] UI系统初始化完成");
-        }
-
-        private void InitializePanels()
-        {
-            foreach (var panel in GetComponentsInChildren<UIPanelBase>(true))
+            // 监听所有游戏事件更新UI
+            _eventBus.Listen<MergeCompleteEvent>(_ => RefreshGridUI());
+            _eventBus.Listen<ItemMovedEvent>(_ => RefreshGridUI());
+            _eventBus.Listen<ExplorationCompleteEvent>(_ => 
             {
-                _panels[panel.GetType()] = panel;
-                panel.Initialize();
-            }
-        }
-
-        private void RegisterEventListeners()
-        {
-            // 监听所有游戏事件，只做UI响应
-            var eventBus = GameLoop.Instance.EventBus;
-
-            // 物品事件
-            eventBus.Listen<ItemMovedEvent>(OnItemMoved);
-            eventBus.Listen<ItemSwappedEvent>(OnItemSwapped);
-            eventBus.Listen<MergeCompleteEvent>(OnMergeComplete);
-            eventBus.Listen<ItemCraftedEvent>(OnItemCrafted);
-
-            // 探索事件
-            eventBus.Listen<ExplorationCompleteEvent>(OnExplorationComplete);
-
-            // 订单事件
-            eventBus.Listen<OrderSubmittedEvent>(OnOrderSubmitted);
-
-            // 玩家事件
-            eventBus.Listen<LevelUpEvent>(OnLevelUp);
-            eventBus.Listen<ExperienceGainedEvent>(OnExperienceGained);
+                RefreshGridUI();
+                RefreshPlayerUI();
+            });
+            _eventBus.Listen<OrderSubmittedEvent>(_ => 
+            {
+                RefreshGridUI();
+                RefreshPlayerUI();
+                RefreshOrdersUI();
+            });
+            _eventBus.Listen<AchievementUnlockedEvent>(e => ShowAchievementPopup(e));
+            _eventBus.Listen<LevelUpEvent>(e => ShowLevelUpPopup(e));
+            _eventBus.Listen<StaminaClaimedEvent>(_ => RefreshPlayerUI());
+            _eventBus.Listen<CloudSyncStartedEvent>(_ => ShowSyncIndicator());
+            _eventBus.Listen<CloudSyncCompletedEvent>(_ => HideSyncIndicator());
+            _eventBus.Listen<SFXPlayedEvent>(_ => PlayButtonAnimation());
         }
 
         /// <summary>
-        /// 显示指定面板
+        /// 刷新格子UI
         /// </summary>
-        public void ShowPanel<T>() where T : UIPanelBase
+        public void RefreshGridUI()
         {
-            if (_panels.TryGetValue(typeof(T), out var panel))
+            var state = _stateMutator.CurrentState;
+            
+            for (int i = 0; i < state.Cells.Length; i++)
             {
-                panel.Show();
+                UpdateCellUI(i, state.Cells[i]);
             }
+            
+            _eventBus.Publish(new GridUIRefreshedEvent());
         }
 
         /// <summary>
-        /// 隐藏指定面板
+        /// 刷新玩家信息UI
         /// </summary>
-        public void HidePanel<T>() where T : UIPanelBase
+        public void RefreshPlayerUI()
         {
-            if (_panels.TryGetValue(typeof(T), out var panel))
-            {
-                panel.Hide();
-            }
+            var state = _stateMutator.CurrentState;
+            
+            UpdatePlayerLevel(state.Player.Level);
+            UpdatePlayerStamina(state.Player.Stamina, state.Player.MaxStamina);
+            UpdatePlayerGold(state.Player.Gold);
+            UpdatePlayerExp(state.Player.Exp, state.Player.ExpToNextLevel);
+            
+            _eventBus.Publish(new PlayerUIRefreshedEvent());
         }
 
         /// <summary>
-        /// 获取面板实例
+        /// 刷新订单UI
         /// </summary>
-        public T GetPanel<T>() where T : UIPanelBase
+        public void RefreshOrdersUI()
         {
-            return _panels.TryGetValue(typeof(T), out var panel) ? (T)panel : null;
-        }
-
-        #region 事件响应方法 - 纯UI逻辑
-        private void OnItemMoved(ItemMovedEvent e)
-        {
-            GetPanel<BackpackUI>()?.RefreshCell(e.FromCellId);
-            GetPanel<BackpackUI>()?.RefreshCell(e.ToCellId);
-        }
-
-        private void OnItemSwapped(ItemSwappedEvent e)
-        {
-            GetPanel<BackpackUI>()?.RefreshCell(e.CellIdA);
-            GetPanel<BackpackUI>()?.RefreshCell(e.CellIdB);
-        }
-
-        private void OnMergeComplete(MergeCompleteEvent e)
-        {
-            GetPanel<BackpackUI>()?.PlayMergeAnimation(e.CellId);
-        }
-
-        private void OnItemCrafted(ItemCraftedEvent e)
-        {
-            GetPanel<CollectionUI>()?.UpdateCollection(e.ItemType);
-        }
-
-        private void OnExplorationComplete(ExplorationCompleteEvent e)
-        {
-            GetPanel<ExplorationUI>()?.ShowExploreResult(e.GeneratedCellIds);
-            foreach (var cellId in e.GeneratedCellIds)
+            var state = _stateMutator.CurrentState;
+            
+            foreach (var order in state.Orders)
             {
-                GetPanel<BackpackUI>()?.RefreshCell(cellId);
+                UpdateOrderUI(order.Key, order.Value);
             }
+            
+            _eventBus.Publish(new OrdersUIRefreshedEvent());
         }
 
-        private void OnOrderSubmitted(OrderSubmittedEvent e)
+        /// <summary>
+        /// 显示成就解锁弹窗
+        /// </summary>
+        public void ShowAchievementPopup(AchievementUnlockedEvent e)
         {
-            GetPanel<OrderUI>()?.RefreshOrders();
-            ShowRewardPopup(e.RewardExp, e.RewardGold);
+            _eventBus.Publish(new AchievementPopupShownEvent
+            {
+                AchievementId = e.AchievementId,
+                AchievementName = e.AchievementName
+            });
         }
 
-        private void OnLevelUp(LevelUpEvent e)
+        /// <summary>
+        /// 显示升级弹窗
+        /// </summary>
+        public void ShowLevelUpPopup(LevelUpEvent e)
         {
-            ShowLevelUpAnimation(e.OldLevel, e.NewLevel);
+            _eventBus.Publish(new LevelUpPopupShownEvent
+            {
+                NewLevel = e.NewLevel
+            });
         }
 
-        private void OnExperienceGained(ExperienceGainedEvent e)
+        private void UpdateCellUI(int cellId, CellState cell)
         {
-            GetPanel<PlayerInfoUI>()?.UpdateExperience();
+            // TODO: 实际Unity UI更新
         }
 
-        private void ShowRewardPopup(int exp, int gold)
+        private void UpdatePlayerLevel(int level)
         {
-            // TODO: 通用奖励弹窗
-            UnityEngine.Debug.Log($"获得奖励: 经验+{exp} 金币+{gold}");
         }
 
-        private void ShowLevelUpAnimation(int oldLevel, int newLevel)
+        private void UpdatePlayerStamina(int current, int max)
         {
-            // TODO: 升级动画
-            UnityEngine.Debug.Log($"升级! Lv{oldLevel} -> Lv{newLevel}");
         }
-        #endregion
+
+        private void UpdatePlayerGold(long gold)
+        {
+        }
+
+        private void UpdatePlayerExp(int current, int max)
+        {
+        }
+
+        private void UpdateOrderUI(int orderId, SaveWorld.Game.Order.OrderData order)
+        {
+        }
+
+        private void ShowSyncIndicator()
+        {
+        }
+
+        private void HideSyncIndicator()
+        {
+        }
+
+        private void PlayButtonAnimation()
+        {
+        }
     }
 
-    /// <summary>
-    /// UI面板基类
-    /// </summary>
-    public abstract class UIPanelBase : MonoBehaviour
+    #region UI事件定义
+
+    public class GridUIRefreshedEvent : GameEvent
     {
-        public virtual void Initialize() { }
-        public virtual void Show() => gameObject.SetActive(true);
-        public virtual void Hide() => gameObject.SetActive(false);
-        public virtual void Refresh() { }
     }
+
+    public class PlayerUIRefreshedEvent : GameEvent
+    {
+    }
+
+    public class OrdersUIRefreshedEvent : GameEvent
+    {
+    }
+
+    public class AchievementPopupShownEvent : GameEvent
+    {
+        public int AchievementId;
+        public string AchievementName;
+    }
+
+    public class LevelUpPopupShownEvent : GameEvent
+    {
+        public int NewLevel;
+    }
+
+    #endregion
 }
