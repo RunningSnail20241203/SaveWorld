@@ -1,11 +1,10 @@
 using System;
-using TestWebGL.Game.Items;
 
 namespace SaveWorld.Game.Core
 {
     #region 游戏事件
 
-    public class ItemDragStartEvent : IGameEvent
+    public class ItemDragStartEvent : GameEvent
     {
         public int CellId { get; }
 
@@ -15,7 +14,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ItemDropEvent : IGameEvent
+    public class ItemDropEvent : GameEvent
     {
         public int SourceCellId { get; }
         public int TargetCellId { get; }
@@ -27,7 +26,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class MergeRequestEvent : IGameEvent
+    public class MergeRequestEvent : GameEvent
     {
         public int CellIdA { get; }
         public int CellIdB { get; }
@@ -41,12 +40,12 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ExplorationRequestEvent : IGameEvent
+    public class ExplorationRequestEvent : GameEvent
     {
         public int StaminaCost { get; set; } = 5;
     }
 
-    public class MergeCompleteEvent : IGameEvent
+    public class MergeCompleteEvent : GameEvent
     {
         public int CellId { get; }
         public int OldItemId { get; }
@@ -62,7 +61,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ItemMovedEvent : IGameEvent
+    public class ItemMovedEvent : GameEvent
     {
         public int FromCellId { get; }
         public int ToCellId { get; }
@@ -76,7 +75,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ItemSwappedEvent : IGameEvent
+    public class ItemSwappedEvent : GameEvent
     {
         public int CellIdA { get; }
         public int CellIdB { get; }
@@ -92,7 +91,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ExplorationCompleteEvent : IGameEvent
+    public class ExplorationCompleteEvent : GameEvent
     {
         public int[] GeneratedCellIds { get; }
         public int StaminaUsed { get; }
@@ -104,7 +103,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class OrderSubmittedEvent : IGameEvent
+    public class OrderSubmittedEvent : GameEvent
     {
         public int OrderId { get; }
         public long RewardGold { get; }
@@ -118,7 +117,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class LevelUpEvent : IGameEvent
+    public class LevelUpEvent : GameEvent
     {
         public int OldLevel { get; }
         public int NewLevel { get; }
@@ -130,7 +129,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ItemCraftedEvent : IGameEvent
+    public class ItemCraftedEvent : GameEvent
     {
         public ItemType ItemType { get; }
 
@@ -140,7 +139,7 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    public class ExperienceGainedEvent : IGameEvent
+    public class ExperienceGainedEvent : GameEvent
     {
         public int Amount { get; }
         public string Source { get; }
