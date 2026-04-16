@@ -23,6 +23,9 @@ namespace SaveWorld.Game.Core
         
         // 上次订单重置日期
         public readonly DateTime LastOrderResetDate;
+
+        // 成就数据
+        public readonly IReadOnlyDictionary<int, SaveWorld.Game.Achievement.AchievementData> Achievements;
         
         // 元数据扩展字典，所有机制可以在这里存放自己的数据
         public readonly IReadOnlyDictionary<string, object> Metadata;
@@ -30,6 +33,7 @@ namespace SaveWorld.Game.Core
         internal GameState(int version, CellState[] cells, PlayerState player, 
                           IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> orders, 
                           DateTime lastOrderResetDate,
+                          IReadOnlyDictionary<int, SaveWorld.Game.Achievement.AchievementData> achievements,
                           IReadOnlyDictionary<string, object> metadata)
         {
             Version = version;
@@ -37,6 +41,7 @@ namespace SaveWorld.Game.Core
             Player = player;
             Orders = orders;
             LastOrderResetDate = lastOrderResetDate;
+            Achievements = achievements;
             Metadata = metadata;
         }
 
@@ -54,6 +59,7 @@ namespace SaveWorld.Game.Core
                 player: PlayerState.CreateInitial(),
                 orders: new Dictionary<int, SaveWorld.Game.Order.OrderData>(),
                 lastOrderResetDate: DateTime.MinValue,
+                achievements: new Dictionary<int, SaveWorld.Game.Achievement.AchievementData>(),
                 metadata: new Dictionary<string, object>()
             );
         }

@@ -142,11 +142,32 @@ namespace SaveWorld.Game.Core
         }
 
         /// <summary>
+        /// 更新状态（格子+玩家+订单+成就）
+        /// </summary>
+        internal void UpdateState(CellState[] cells, PlayerState player, 
+                                  IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> orders,
+                                  IReadOnlyDictionary<int, SaveWorld.Game.Achievement.AchievementData> achievements)
+        {
+            _currentState = new GameState(
+                version: _currentState.Version + 1,
+                cells: cells,
+                player: player,
+                orders: orders,
+                lastOrderResetDate: _currentState.LastOrderResetDate,
+                achievements: achievements,
+                metadata: _currentState.Metadata
+            );
+
+            CheckAutoSave();
+        }
+
+        /// <summary>
         /// 更新状态（全字段）
         /// </summary>
         internal void UpdateState(CellState[] cells, PlayerState player, 
                                   IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> orders,
-                                  DateTime lastOrderResetDate)
+                                  DateTime lastOrderResetDate,
+                                  IReadOnlyDictionary<int, SaveWorld.Game.Achievement.AchievementData> achievements)
         {
             _currentState = new GameState(
                 version: _currentState.Version + 1,
@@ -154,6 +175,7 @@ namespace SaveWorld.Game.Core
                 player: player,
                 orders: orders,
                 lastOrderResetDate: lastOrderResetDate,
+                achievements: achievements,
                 metadata: _currentState.Metadata
             );
 
