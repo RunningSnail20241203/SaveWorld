@@ -11,13 +11,18 @@ namespace SaveWorld.Game.Core
     {
         private readonly EventBus _eventBus;
         private GameState _currentState;
+        private SaveWorld.Game.Storage.StorageSystem _storageSystem;
+        private DateTime _lastAutoSaveTime;
+        private const int AUTO_SAVE_INTERVAL_SECONDS = 300; // 5分钟自动保存
 
         public GameState CurrentState => _currentState;
 
-        public StateMutator(EventBus eventBus, GameState initialState)
+        public StateMutator(EventBus eventBus, GameState initialState, SaveWorld.Game.Storage.StorageSystem storageSystem)
         {
             _eventBus = eventBus;
             _currentState = initialState;
+            _storageSystem = storageSystem;
+            _lastAutoSaveTime = DateTime.UtcNow;
             
             RegisterDefaultHandlers();
         }
@@ -108,6 +113,62 @@ namespace SaveWorld.Game.Core
                 player: newPlayer,
                 metadata: _currentState.Metadata
             );
+
+            // 自动保存检查
+            CheckAutoSave();
+        }
+
+        /// <summary>
+        /// 检查是否需要自动保存
+        /// </summary>
+        private void CheckAutoSave()
+        {
+            var now = DateTime.UtcNow;
+            if ((now - _lastAutoSaveTime).TotalSeconds >= AUTO_SAVE_INTERVAL_SECONDS)
+            {
+                SaveCurrentState();
+                _lastAutoSaveTime = now;
+            }
+        }
+
+        /// <summary>
+        /// 立即保存当前状态
+        /// </summary>
+        public void SaveCurrentState()
+        {
+            _storageSystem.SaveGameState(_currentState);
+        }
+
+        /// <summary>
+        /// 加载存档状态
+        /// </summary>
+        public bool LoadSavedState()
+        {
+            var (result, saveData) = _storageSystem.LoadGameState();
+            if (result == SaveWorld.Game.Storage.StorageResult.Success && saveData != null)
+            {
+                _currentState = new GameState(
+                    version: saveData.versionNumber,
+                    cells: saveData.cells,
+                    player: saveData.player,
+                    metadata: saveData.metadata
+                );
+
+                // 计算离线体力恢复
+                int offlineSeconds = (int)(DateTime.UtcNow - saveData.saveTime).TotalSeconds;
+                int recoveredStamina = _currentState.CalculateOfflineRecoveredStamina(_currentState.Player.MaxStamina, 300);
+                
+                if (recoveredStamina > 0)
+                {
+                    var newPlayer = _currentState.Player;
+                    newPlayer.Stamina = Math.Min(newPlayer.MaxStamina, newPlayer.Stamina + recoveredStamina);
+                    _currentState = new GameState(_currentState.Version, _currentState.Cells, newPlayer, _currentState.Metadata);
+                }
+
+                _eventBus.Publish(new GameStateLoadedEvent { LoadedState = _currentState });
+                return true;
+            }
+            return false;
         }
     }
 }

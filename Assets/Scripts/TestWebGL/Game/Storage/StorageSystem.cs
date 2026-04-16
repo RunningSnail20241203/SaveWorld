@@ -4,7 +4,9 @@ using System.Collections.Generic;
 // using TestWebGL.Game.Player;
 // using TestWebGL.Game.Grid;
 
-namespace TestWebGL.Game.Storage
+using SaveWorld.Game.Core;
+
+namespace SaveWorld.Game.Storage
 {
     /// <summary>
     /// 本地存储系统
@@ -79,31 +81,94 @@ namespace TestWebGL.Game.Storage
         public event LoadCompletedHandler OnLoadCompleted;
 
         /// <summary>
-        /// 保存玩家数据 - V2待实现
+        /// 保存完整游戏状态
         /// </summary>
-        // TODO: V2 实现时恢复此方法
-        // public StorageResult SavePlayerData(PlayerData playerData)
-        // {
-        //     return StorageResult.Success;
-        // }
+        public StorageResult SaveGameState(GameState gameState)
+        {
+            try
+            {
+                var saveData = new GameStateSaveData
+                {
+                    version = 1,
+                    saveTime = DateTime.UtcNow,
+                    versionNumber = gameState.Version,
+                    player = gameState.Player,
+                    cells = gameState.Cells,
+                    metadata = gameState.Metadata
+                };
+
+                string jsonData = UnityEngine.JsonUtility.ToJson(saveData);
+                UnityEngine.PlayerPrefs.SetString(PLAYER_DATA_KEY, jsonData);
+                UnityEngine.PlayerPrefs.Save();
+
+                OnSaveCompleted?.Invoke(StorageResult.Success, $"游戏状态保存成功 版本:{gameState.Version}");
+                return StorageResult.Success;
+            }
+            catch (Exception ex)
+            {
+                OnSaveCompleted?.Invoke(StorageResult.SerializationError, $"保存失败: {ex.Message}");
+                return StorageResult.SerializationError;
+            }
+        }
 
         /// <summary>
-        /// 加载玩家数据 - V2待实现
+        /// 加载完整游戏状态
         /// </summary>
-        // TODO: V2 实现时恢复此方法
-        // public (StorageResult result, PlayerData data) LoadPlayerData()
-        // {
-        //     return (StorageResult.Success, null);
-        // }
+        public (StorageResult result, GameStateSaveData data) LoadGameState()
+        {
+            try
+            {
+                if (!UnityEngine.PlayerPrefs.HasKey(PLAYER_DATA_KEY))
+                {
+                    OnLoadCompleted?.Invoke(StorageResult.FileNotFound, "未找到游戏存档");
+                    return (StorageResult.FileNotFound, null);
+                }
+
+                string jsonData = UnityEngine.PlayerPrefs.GetString(PLAYER_DATA_KEY);
+
+                if (string.IsNullOrEmpty(jsonData))
+                {
+                    OnLoadCompleted?.Invoke(StorageResult.CorruptedData, "存档数据为空");
+                    return (StorageResult.CorruptedData, null);
+                }
+
+                GameStateSaveData saveData = UnityEngine.JsonUtility.FromJson<GameStateSaveData>(jsonData);
+
+                if (saveData == null)
+                {
+                    OnLoadCompleted?.Invoke(StorageResult.CorruptedData, "存档反序列化失败");
+                    return (StorageResult.CorruptedData, null);
+                }
+
+                if (saveData.version != 1)
+                {
+                    OnLoadCompleted?.Invoke(StorageResult.VersionMismatch, $"存档版本不匹配: {saveData.version}");
+                    return (StorageResult.VersionMismatch, null);
+                }
+
+                OnLoadCompleted?.Invoke(StorageResult.Success, $"游戏存档加载成功 版本:{saveData.versionNumber} 保存时间:{saveData.saveTime}");
+                return (StorageResult.Success, saveData);
+            }
+            catch (Exception ex)
+            {
+                OnLoadCompleted?.Invoke(StorageResult.SerializationError, $"加载失败: {ex.Message}");
+                return (StorageResult.SerializationError, null);
+            }
+        }
 
         /// <summary>
-        /// 保存网格数据 - V2待实现
+        /// 游戏状态存档数据结构
         /// </summary>
-        // TODO: V2 实现时恢复此方法
-        // public StorageResult SaveGridData(GridManager gridManager)
-        // {
-        //     return StorageResult.Success;
-        // }
+        [System.Serializable]
+        public class GameStateSaveData
+        {
+            public int version;
+            public DateTime saveTime;
+            public int versionNumber;
+            public PlayerState player;
+            public CellState[] cells;
+            public Dictionary<string, string> metadata;
+        }
 
         /// <summary>
         /// 加载网格数据
