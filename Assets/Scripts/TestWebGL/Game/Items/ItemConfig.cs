@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TestWebGL.Game.Items
+namespace SaveWorld.Game.Items
 {
     /// <summary>
     /// 物品类型枚举 - 共116种

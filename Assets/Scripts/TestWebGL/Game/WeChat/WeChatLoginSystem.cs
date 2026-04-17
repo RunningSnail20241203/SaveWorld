@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace TestWebGL.Game.WeChat
+namespace SaveWorld.Game.WeChat
 {
     /// <summary>
     /// 微信登录系统

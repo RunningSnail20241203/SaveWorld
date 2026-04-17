@@ -103,6 +103,7 @@ namespace SaveWorld.Game.Core
         public static CellState Create(int index, int itemId, int count) => new CellState(index, itemId, count, false);
 
         public bool IsEmpty() => ItemId == 0;
+        public bool HasItem() => ItemId > 0;
     }
 
     /// <summary>
@@ -116,7 +117,7 @@ namespace SaveWorld.Game.Core
         public readonly long Gold;
         public readonly long LastOfflineTime;
 
-        private PlayerState(int level, int stamina, long gold, long lastOfflineTime)
+        internal PlayerState(int level, int stamina, long gold, long lastOfflineTime)
         {
             Level = level;
             Stamina = stamina;

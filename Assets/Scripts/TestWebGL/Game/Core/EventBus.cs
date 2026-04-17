@@ -41,6 +41,21 @@ namespace SaveWorld.Game.Core
         }
 
         /// <summary>
+        /// 发布事件 (别名，兼容旧代码)
+        /// </summary>
+        public void Dispatch<T>(T eventData) where T : GameEvent
+        {
+            Type eventType = typeof(T);
+            if (_handlers.TryGetValue(eventType, out var handlers))
+            {
+                foreach (var handler in handlers)
+                {
+                    ((Action<T>)handler)(eventData);
+                }
+            }
+        }
+
+        /// <summary>
         /// 取消订阅
         /// </summary>
         public void Unsubscribe<T>(Action<T> handler) where T : GameEvent

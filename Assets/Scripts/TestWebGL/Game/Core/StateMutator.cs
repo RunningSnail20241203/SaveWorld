@@ -119,6 +119,7 @@ namespace SaveWorld.Game.Core
                 player: newPlayer,
                 orders: _currentState.Orders,
                 lastOrderResetDate: _currentState.LastOrderResetDate,
+                achievements: _currentState.Achievements,
                 metadata: _currentState.Metadata
             );
 
@@ -138,6 +139,7 @@ namespace SaveWorld.Game.Core
                 player: newPlayer,
                 orders: newOrders,
                 lastOrderResetDate: _currentState.LastOrderResetDate,
+                achievements: _currentState.Achievements,
                 metadata: _currentState.Metadata
             );
 
@@ -212,27 +214,46 @@ namespace SaveWorld.Game.Core
         public bool LoadSavedState()
         {
             var (result, saveData) = _storageSystem.LoadGameState();
+            // StorageSystem 旧版本不包含 orders/achievements 字段，加载时使用默认值
             if (result == SaveWorld.Game.Storage.StorageResult.Success && saveData != null)
             {
                 _currentState = new GameState(
                     version: saveData.versionNumber,
                     cells: saveData.cells,
                     player: saveData.player,
+                    orders: saveData.orders ?? new Dictionary<int, SaveWorld.Game.Order.OrderData>(),
+                    lastOrderResetDate: saveData.lastOrderResetDate,
+                    achievements: saveData.achievements ?? new Dictionary<int, SaveWorld.Game.Achievement.AchievementData>(),
                     metadata: saveData.metadata
                 );
 
                 // 计算离线体力恢复
+                const int MAX_STAMINA = 100;
                 int offlineSeconds = (int)(DateTime.UtcNow - saveData.saveTime).TotalSeconds;
-                int recoveredStamina = _currentState.CalculateOfflineRecoveredStamina(_currentState.Player.MaxStamina, 300);
+                int recoveredStamina = _currentState.CalculateOfflineRecoveredStamina(MAX_STAMINA, 300);
                 
                 if (recoveredStamina > 0)
                 {
-                    var newPlayer = _currentState.Player;
-                    newPlayer.Stamina = Math.Min(newPlayer.MaxStamina, newPlayer.Stamina + recoveredStamina);
-                    _currentState = new GameState(_currentState.Version, _currentState.Cells, newPlayer, _currentState.Metadata);
+                    var newPlayer = new PlayerState(
+                        level: _currentState.Player.Level,
+                        stamina: Math.Min(MAX_STAMINA, _currentState.Player.Stamina + recoveredStamina),
+                        gold: _currentState.Player.Gold,
+                        lastOfflineTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    );
+                    
+                    _currentState = new GameState(
+                        _currentState.Version, 
+                        _currentState.Cells, 
+                        newPlayer, 
+                        _currentState.Orders,
+                        _currentState.LastOrderResetDate,
+                        _currentState.Achievements,
+                        _currentState.Metadata
+                    );
                 }
 
-                _eventBus.Publish(new GameStateLoadedEvent { LoadedState = _currentState });
+                // TODO: GameStateLoadedEvent 事件待实现
+                // _eventBus.Publish(new GameStateLoadedEvent { LoadedState = _currentState });
                 return true;
             }
             return false;

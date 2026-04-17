@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TestWebGL.Game.WeChat
+namespace SaveWorld.Game.WeChat
 {
     /// <summary>
     /// 微信存储系统

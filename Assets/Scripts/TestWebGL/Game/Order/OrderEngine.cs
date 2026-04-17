@@ -48,7 +48,7 @@ namespace SaveWorld.Game.Order
             }
 
             // 返回成功结果
-            return OrderResult.Success(
+            return OrderResult.CreateSuccess(
                 orderId,
                 itemCellId,
                 order.RewardGold,
@@ -90,7 +90,7 @@ namespace SaveWorld.Game.Order
         /// <summary>
         /// 查找订单
         /// </summary>
-        private static OrderData FindOrder(GameState state, int orderId)
+        private static OrderData? FindOrder(GameState state, int orderId)
         {
             foreach (var order in state.Orders)
             {
@@ -142,7 +142,7 @@ namespace SaveWorld.Game.Order
             FailReason = failReason;
         }
 
-        public static OrderResult Success(int orderId, int consumedCellId, int rewardGold, int rewardExp)
+        public static OrderResult CreateSuccess(int orderId, int consumedCellId, int rewardGold, int rewardExp)
         {
             return new OrderResult(true, orderId, consumedCellId, rewardGold, rewardExp, null);
         }

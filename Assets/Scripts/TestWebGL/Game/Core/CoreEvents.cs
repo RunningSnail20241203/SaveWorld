@@ -1,7 +1,77 @@
 using System;
+using SaveWorld.Game.Items;
 
 namespace SaveWorld.Game.Core
 {
+    #region UI事件
+
+    /// <summary>
+    /// 格子点击事件
+    /// </summary>
+    public class CellClickEvent : GameEvent
+    {
+        public int CellId { get; }
+
+        public CellClickEvent(int cellId)
+        {
+            CellId = cellId;
+        }
+    }
+
+    /// <summary>
+    /// 格子双击事件
+    /// </summary>
+    public class CellDoubleClickEvent : GameEvent
+    {
+        public int CellId { get; }
+
+        public CellDoubleClickEvent(int cellId)
+        {
+            CellId = cellId;
+        }
+    }
+
+    /// <summary>
+    /// 格子拖拽开始事件
+    /// </summary>
+    public class CellDragStartEvent : GameEvent
+    {
+        public int CellId { get; }
+
+        public CellDragStartEvent(int cellId)
+        {
+            CellId = cellId;
+        }
+    }
+
+    /// <summary>
+    /// 格子拖拽结束事件
+    /// </summary>
+    public class CellDragEndEvent : GameEvent
+    {
+        public int CellId { get; }
+
+        public CellDragEndEvent(int cellId)
+        {
+            CellId = cellId;
+        }
+    }
+
+    /// <summary>
+    /// 体力恢复事件
+    /// </summary>
+    public class StaminaRecoverEvent : GameEvent
+    {
+        public int Amount { get; }
+
+        public StaminaRecoverEvent(int amount)
+        {
+            Amount = amount;
+        }
+    }
+
+    #endregion
+
     #region 游戏事件
 
     public class ItemDragStartEvent : GameEvent
@@ -148,6 +218,16 @@ namespace SaveWorld.Game.Core
         {
             Amount = amount;
             Source = source;
+        }
+    }
+
+    public class AchievementUnlockedEvent : GameEvent
+    {
+        public int AchievementId { get; }
+
+        public AchievementUnlockedEvent(int achievementId)
+        {
+            AchievementId = achievementId;
         }
     }
 

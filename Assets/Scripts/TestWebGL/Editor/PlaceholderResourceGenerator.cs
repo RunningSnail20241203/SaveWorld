@@ -6,9 +6,9 @@ using UnityEditor.SceneManagement;
 using System.IO;
 using System.Collections.Generic;
 // UI命名空间暂时注释，待UI代码创建后恢复
-// using TestWebGL.Game.UI;
+// using SaveWorld.Game.UI;
 
-namespace TestWebGL.Editor
+namespace SaveWorld.Editor
 {
     /// <summary>
     /// 占位资源生成器
@@ -798,7 +798,7 @@ namespace TestWebGL.Editor
             rect.offsetMax = new Vector2(-16, -Screen.height * 0.12f - 16);
 
             // GridUI组件在V2架构中还未实现，暂时跳过添加脚本
-            // TestWebGL.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<TestWebGL.Game.UI.GridUI>();
+            // SaveWorld.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<SaveWorld.Game.UI.GridUI>();
             
             // 使用SerializedObject设置cellPrefab引用
             SerializedObject serializedGridUI = new SerializedObject(gridUIComponent);
@@ -932,7 +932,7 @@ namespace TestWebGL.Editor
             cellButton.colors = colors;
 
             // 添加GridCellUI脚本并设置引用
-            TestWebGL.Game.UI.GridCellUI gridCellUI = cell.AddComponent<TestWebGL.Game.UI.GridCellUI>();
+            SaveWorld.Game.UI.GridCellUI gridCellUI = cell.AddComponent<SaveWorld.Game.UI.GridCellUI>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedCell = new SerializedObject(gridCellUI);
@@ -1052,7 +1052,7 @@ namespace TestWebGL.Editor
             TextMeshProUGUI playTimeText = playTimeGO.GetComponent<TextMeshProUGUI>();
 
             // 添加PlayerInfoPanel脚本并设置引用
-            TestWebGL.Game.UI.PlayerInfoPanel playerInfoPanel = panel.AddComponent<TestWebGL.Game.UI.PlayerInfoPanel>();
+            SaveWorld.Game.UI.PlayerInfoPanel playerInfoPanel = panel.AddComponent<SaveWorld.Game.UI.PlayerInfoPanel>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPanel = new SerializedObject(playerInfoPanel);
@@ -1180,7 +1180,7 @@ namespace TestWebGL.Editor
             saveButtonText.text = "保存";
 
             // 添加ControlPanel脚本并设置引用
-            TestWebGL.Game.UI.ControlPanel controlPanel = panel.AddComponent<TestWebGL.Game.UI.ControlPanel>();
+            SaveWorld.Game.UI.ControlPanel controlPanel = panel.AddComponent<SaveWorld.Game.UI.ControlPanel>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPanel = new SerializedObject(controlPanel);
@@ -1242,7 +1242,7 @@ namespace TestWebGL.Editor
             Button closeButton = closeBtn.GetComponent<Button>();
 
             // 添加ItemDetailPopup脚本并设置引用
-            TestWebGL.Game.UI.ItemDetailPopup itemDetailPopup = popup.AddComponent<TestWebGL.Game.UI.ItemDetailPopup>();
+            SaveWorld.Game.UI.ItemDetailPopup itemDetailPopup = popup.AddComponent<SaveWorld.Game.UI.ItemDetailPopup>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPopup = new SerializedObject(itemDetailPopup);
@@ -1355,7 +1355,7 @@ namespace TestWebGL.Editor
             Button closeButton = closeBtn.GetComponent<Button>();
 
             // 添加SettingsPanel脚本并设置引用
-            TestWebGL.Game.UI.SettingsPanel settingsPanel = panel.AddComponent<TestWebGL.Game.UI.SettingsPanel>();
+            SaveWorld.Game.UI.SettingsPanel settingsPanel = panel.AddComponent<SaveWorld.Game.UI.SettingsPanel>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPanel = new SerializedObject(settingsPanel);
@@ -1820,7 +1820,7 @@ namespace TestWebGL.Editor
             TextMeshProUGUI titleText = titleGO.GetComponent<TextMeshProUGUI>();
 
             // 添加OrdersPanel脚本并设置引用
-            TestWebGL.Game.UI.OrdersPanel ordersPanel = panel.AddComponent<TestWebGL.Game.UI.OrdersPanel>();
+            SaveWorld.Game.UI.OrdersPanel ordersPanel = panel.AddComponent<SaveWorld.Game.UI.OrdersPanel>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPanel = new SerializedObject(ordersPanel);
@@ -1889,7 +1889,7 @@ namespace TestWebGL.Editor
             Button closeButton = closeBtn.GetComponent<Button>();
 
             // 添加AchievementPanel脚本并设置引用
-            TestWebGL.Game.UI.AchievementPanel achievementPanel = panel.AddComponent<TestWebGL.Game.UI.AchievementPanel>();
+            SaveWorld.Game.UI.AchievementPanel achievementPanel = panel.AddComponent<SaveWorld.Game.UI.AchievementPanel>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedPanel = new SerializedObject(achievementPanel);
@@ -1955,7 +1955,7 @@ namespace TestWebGL.Editor
             statusRect.sizeDelta = new Vector2(100, 40);
 
             // 添加OrderItemUI脚本
-            TestWebGL.Game.UI.OrderItemUI orderItemUI = item.AddComponent<TestWebGL.Game.UI.OrderItemUI>();
+            SaveWorld.Game.UI.OrderItemUI orderItemUI = item.AddComponent<SaveWorld.Game.UI.OrderItemUI>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedItem = new SerializedObject(orderItemUI);

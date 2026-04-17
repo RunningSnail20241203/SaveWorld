@@ -87,5 +87,10 @@ namespace SaveWorld.Game.UI
         {
             ResultPopup.SetActive(false);
         }
+
+        public override void Refresh()
+        {
+            UpdateStaminaDisplay();
+        }
     }
 }

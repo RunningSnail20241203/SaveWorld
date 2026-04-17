@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TestWebGL.Game.Items
+namespace SaveWorld.Game.Items
 {
     /// <summary>
     /// 物品图标管理器

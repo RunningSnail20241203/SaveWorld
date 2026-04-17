@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using TestWebGL.Game.Items;
+using SaveWorld.Game.Items;
 
-namespace TestWebGL.Game.Exploration
+namespace SaveWorld.Game.Exploration
 {
     /// <summary>
     /// 探索系统 - 管理玩家的探索行为和获得物品

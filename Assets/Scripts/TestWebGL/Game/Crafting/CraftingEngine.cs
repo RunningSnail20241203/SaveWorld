@@ -1,9 +1,11 @@
 using System;
-using TestWebGL.Game.Grid;
-using TestWebGL.Game.Items;
 using SaveWorld.Game.Core;
+using SaveWorld.Game.Grid;
 
-namespace TestWebGL.Game.Crafting
+using SaveWorld.Game.Items;
+using SaveWorld.Game.Grid;
+
+namespace SaveWorld.Game.Crafting
 {
     /// <summary>
     /// 合成引擎 - 处理游戏中的合成操作
@@ -252,6 +254,157 @@ namespace TestWebGL.Game.Crafting
                     count++;
             }
             return count;
+        }
+
+        /// <summary>
+        /// 拖拽合并 - 将一个格子的物品拖拽到另一个格子进行合并
+        /// 规则：
+        /// 1. 相同类型物品可以堆叠
+        /// 2. 堆叠后如果数量≥2，自动触发合成
+        /// 3. 支持跨格子合成
+        /// </summary>
+        public bool TryDragMerge(int fromRow, int fromCol, int toRow, int toCol)
+        {
+            // 相同格子直接返回
+            if (fromRow == toRow && fromCol == toCol)
+                return false;
+
+            // 检查来源格子
+            var sourceCell = _gridManager.GetCell(fromRow, fromCol);
+            if (sourceCell == null || _gridManager.IsCellLocked(fromRow, fromCol) || !sourceCell.HasItem)
+            {
+                OnCraftFailure?.Invoke("来源格子无效");
+                return false;
+            }
+
+            // 检查目标格子
+            var targetCell = _gridManager.GetCell(toRow, toCol);
+            if (targetCell == null || _gridManager.IsCellLocked(toRow, toCol))
+            {
+                OnCraftFailure?.Invoke("目标格子无效");
+                return false;
+            }
+
+            ItemType sourceItem = sourceCell.CurrentItemType;
+            int sourceCount = sourceCell.ItemCount;
+
+            // 目标格子为空：直接移动
+            if (!targetCell.HasItem)
+            {
+                var (moveSuccess, moveError) = _gridManager.TryMoveItem(fromRow, fromCol, toRow, toCol);
+                if (!moveSuccess)
+                {
+                    OnCraftFailure?.Invoke($"移动物品失败 ({moveError})");
+                    return false;
+                }
+                
+                UnityEngine.Debug.Log($"[CraftingEngine] 物品移动成功: {ItemConfig.GetItemName(sourceItem)} ×{sourceCount} 从 [{fromRow},{fromCol}] → [{toRow},{toCol}]");
+                return true;
+            }
+
+            // 目标格子有物品：检查是否同类型
+            ItemType targetItem = targetCell.CurrentItemType;
+            if (sourceItem != targetItem)
+            {
+                OnCraftFailure?.Invoke("不同类型物品无法合并");
+                return false;
+            }
+
+            int totalCount = sourceCount + targetCell.ItemCount;
+            
+            // 移除两个格子的所有物品
+            _gridManager.TryRemoveItem(fromRow, fromCol, sourceCount);
+            _gridManager.TryRemoveItem(toRow, toCol, targetCell.ItemCount);
+
+            // 计算可以合成多少次
+            int craftCount = totalCount / 2;
+            int remainingCount = totalCount % 2;
+
+            ItemType outputItem = ItemConfig.GetNextLevelItem(sourceItem);
+            
+            // 有可以合成的
+            if (craftCount > 0 && outputItem != ItemType.None)
+            {
+                // 放置合成产物
+                if (FindEmptyCell(out int emptyRow, out int emptyCol))
+                {
+                    _gridManager.TryPlaceItem(emptyRow, emptyCol, outputItem, craftCount);
+                    
+                    // 派发合成事件
+                    GameLoop.Instance.EventBus.Dispatch(new ItemCraftedEvent(outputItem));
+                    OnCraftSuccess?.Invoke(sourceItem, craftCount * 2, outputItem, craftCount);
+                    
+                    UnityEngine.Debug.Log($"[CraftingEngine] 拖拽合成成功: {ItemConfig.GetItemName(sourceItem)} ×{craftCount * 2} → {ItemConfig.GetItemName(outputItem)} ×{craftCount}");
+                }
+                else
+                {
+                    // 没有空格子，还原物品
+                    _gridManager.TryPlaceItem(fromRow, fromCol, sourceItem, sourceCount);
+                    _gridManager.TryPlaceItem(toRow, toCol, targetItem, targetCell.ItemCount);
+                    
+                    OnFullGridFeedback?.Invoke();
+                    OnCraftFailure?.Invoke("没有空格子放置合成结果");
+                    return false;
+                }
+            }
+
+            // 放置剩余物品
+            if (remainingCount > 0)
+            {
+                _gridManager.TryPlaceItem(toRow, toCol, sourceItem, remainingCount);
+            }
+            else
+            {
+                targetCell.ClearItem();
+            }
+
+            sourceCell.ClearItem();
+
+            return true;
+        }
+
+        /// <summary>
+        /// 一键全合成 - 自动扫描背包中所有可合成物品，全部合成到不能合成为止
+        /// 返回合成总次数
+        /// </summary>
+        public int TryAutoCraftAll()
+        {
+            int totalCrafted = 0;
+            bool hasCrafted;
+
+            do
+            {
+                hasCrafted = false;
+                
+                // 从低等级到高等级遍历所有格子
+                foreach (var cell in _gridManager.GetAllCells().OrderBy(c => ItemConfig.GetItemLevel(c.CurrentItemType)))
+                {
+                    if (_gridManager.IsCellLocked(cell.row, cell.column) || !cell.HasItem)
+                        continue;
+                    
+                    if (cell.ItemCount >= 2 && ItemConfig.GetNextLevelItem(cell.CurrentItemType) != ItemType.None)
+                    {
+                        if (TryDoubleTapCraft(cell.row, cell.column))
+                        {
+                            totalCrafted++;
+                            hasCrafted = true;
+                            break; // 合成后重新扫描，因为物品位置变化了
+                        }
+                    }
+                }
+
+            } while (hasCrafted);
+
+            if (totalCrafted > 0)
+            {
+                UnityEngine.Debug.Log($"[CraftingEngine] 一键全合成完成，共合成 {totalCrafted} 次");
+            }
+            else
+            {
+                OnCraftFailure?.Invoke("没有可以合成的物品");
+            }
+
+            return totalCrafted;
         }
     }
 }

@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace TestWebGL.Game.WeChat
+namespace SaveWorld.Game.WeChat
 {
     /// <summary>
     /// 微信API基础封装类

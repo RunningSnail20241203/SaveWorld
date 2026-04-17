@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
-using TestWebGL.Game.Items;
+using SaveWorld.Game.Items;
 
-namespace TestWebGL.Game
+namespace SaveWorld.Game
 {
     /// <summary>
     /// 本地化管理器

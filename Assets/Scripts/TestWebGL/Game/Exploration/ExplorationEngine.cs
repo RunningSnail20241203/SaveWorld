@@ -26,7 +26,7 @@ namespace SaveWorld.Game.Exploration
             }
 
             // 2. 检查背包空间
-            int emptyCount = Crafting.CraftingEngine.GetEmptyCellCount(state);
+            int emptyCount = Crafting.CraftingEngine.GetEmptyCellCount();
             if (emptyCount == 0)
             {
                 return ExplorationResult.Fail("背包已满");
@@ -52,7 +52,7 @@ namespace SaveWorld.Game.Exploration
             }
 
             // 返回成功结果
-            return ExplorationResult.Success(cellIds, itemIds, 1, exp);
+            return ExplorationResult.CreateSuccess(cellIds, itemIds, 1, exp);
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace SaveWorld.Game.Exploration
             FailReason = failReason;
         }
 
-        public static ExplorationResult Success(int[] cellIds, int[] itemIds, int staminaCost, int experienceGain)
+        public static ExplorationResult CreateSuccess(int[] cellIds, int[] itemIds, int staminaCost, int experienceGain)
         {
             return new ExplorationResult(true, cellIds, itemIds, staminaCost, experienceGain, null);
         }

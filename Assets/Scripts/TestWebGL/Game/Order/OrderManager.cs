@@ -1,27 +1,11 @@
 using System;
 using System.Collections.Generic;
+
 using SaveWorld.Game.Items;
 using SaveWorld.Game.Core;
-using SaveWorld.Game.Player;
 
 namespace SaveWorld.Game.Order
 {
-    /// <summary>
-    /// 订单数据
-    /// </summary>
-    [Serializable]
-    public class OrderData
-    {
-        public int OrderId;
-        public ItemType RequireItem;
-        public int RewardExp;
-        public int RewardGold;
-        public DateTime CreateTime;
-        public DateTime ExpireTime;
-        public bool IsCompleted;
-        public bool IsClaimed;
-    }
-
     /// <summary>
     /// 订单管理器
     /// 管理订单生成、刷新、提交
