@@ -48,7 +48,7 @@ if (emptyCount == 0)
             int exp = 0;
             foreach (int itemId in itemIds)
             {
-                exp += 5 * ItemConfig.GetItemLevel(itemId);
+                exp += 5 * ItemConfig.GetItemLevel((ItemType)itemId);
             }
 
             // 返回成功结果

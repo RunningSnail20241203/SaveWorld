@@ -86,17 +86,14 @@ namespace SaveWorld.Game.Order
             );
         }
 
-        /// <summary>
+         /// <summary>
         /// 查找订单
         /// </summary>
         private static OrderData? FindOrder(GameState state, int orderId)
         {
-            foreach (var order in state.Orders)
+            if (state.Orders.TryGetValue(orderId, out var order))
             {
-                if (order.OrderId == orderId)
-                {
-                    return order;
-                }
+                return order;
             }
             return null;
         }
@@ -104,18 +101,22 @@ namespace SaveWorld.Game.Order
         /// <summary>
         /// 在背包中查找物品
         /// </summary>
-        private static int FindItemInBackpack(GameState state, int itemId)
-        {
-            for (int i = 0; i < 63; i++)
-            {
-                ref var cell = ref state.Cells[i];
-                if (!cell.IsLocked && cell.HasItem && cell.ItemId == itemId)
+                  /// <summary>
+                /// 在背包中查找物品
+                /// </summary>
+                private static int FindItemInBackpack(GameState state, int itemId)
                 {
-                    return i;
+                    for (int i = 0; i < 63; i++)
+                    {
+                        ref var cell = ref state.Cells[i];
+                        if (!cell.IsLocked && cell.HasItem() && cell.ItemId == itemId)
+                        {
+                            return i;
+                        }
+                    }
+                    return -1;
                 }
-            }
-            return -1;
-        }
+
     }
 
     /// <summary>
