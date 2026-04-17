@@ -84,14 +84,14 @@ namespace SaveWorld.Game.Achievement
         private void UpdateAchievementProgress(AchievementType type, int value)
         {
             var state = _stateMutator.CurrentState;
-            
+    
             if (!state.Achievements.ContainsKey((int)type))
             {
                 return;
             }
 
             var achievement = state.Achievements[(int)type];
-            
+    
             if (achievement.IsUnlocked)
             {
                 return;
@@ -107,9 +107,18 @@ namespace SaveWorld.Game.Achievement
                 achievement.UnlockTime = DateTime.UtcNow;
 
                 // 发放奖励
-                var newPlayer = state.Player;
-                newPlayer.Exp += achievement.ExpReward;
-                newPlayer.Gold += achievement.CoinReward;
+                var oldPlayer = state.Player;
+                var newPlayer = new PlayerState(
+                    oldPlayer.Level,
+                    oldPlayer.Stamina,
+                    oldPlayer.MaxStamina,
+                    oldPlayer.Gold + achievement.CoinReward,
+                    oldPlayer.Coins,
+                    oldPlayer.Exp + achievement.ExpReward,
+                    oldPlayer.Experience,
+                    oldPlayer.ExpToNextLevel,
+                    oldPlayer.LastOfflineTime
+                );
 
                 var newAchievements = new Dictionary<int, AchievementData>(state.Achievements);
                 newAchievements[(int)type] = achievement;
@@ -128,10 +137,11 @@ namespace SaveWorld.Game.Achievement
             {
                 var newAchievements = new Dictionary<int, AchievementData>(state.Achievements);
                 newAchievements[(int)type] = achievement;
-                
+        
                 _stateMutator.UpdateState(state.Cells, state.Player, state.Orders, newAchievements);
             }
         }
+
 
         private bool IsAchievementUnlocked(int achievementId)
         {
@@ -151,32 +161,41 @@ namespace SaveWorld.Game.Achievement
             var achievement = state.Achievements[achievementId];
             return achievement.Progress >= achievement.RequiredProgress && !achievement.IsUnlocked;
         }
+private void UnlockAchievement(int achievementId)
+{
+    var state = _stateMutator.CurrentState;
+    var achievement = state.Achievements[achievementId];
+    
+    achievement.IsUnlocked = true;
+    achievement.UnlockTime = DateTime.UtcNow;
 
-        private void UnlockAchievement(int achievementId)
-        {
-            var state = _stateMutator.CurrentState;
-            var achievement = state.Achievements[achievementId];
-            
-            achievement.IsUnlocked = true;
-            achievement.UnlockTime = DateTime.UtcNow;
+    var oldPlayer = state.Player;
+    var newPlayer = new PlayerState(
+        oldPlayer.Level,
+        oldPlayer.Stamina,
+        oldPlayer.MaxStamina,
+        oldPlayer.Gold + achievement.CoinReward,
+        oldPlayer.Coins,
+        oldPlayer.Exp + achievement.ExpReward,
+        oldPlayer.Experience,
+        oldPlayer.ExpToNextLevel,
+        oldPlayer.LastOfflineTime
+    );
 
-            var newPlayer = state.Player;
-            newPlayer.Exp += achievement.ExpReward;
-            newPlayer.Gold += achievement.CoinReward;
+    var newAchievements = new Dictionary<int, AchievementData>(state.Achievements);
+    newAchievements[achievementId] = achievement;
 
-            var newAchievements = new Dictionary<int, AchievementData>(state.Achievements);
-            newAchievements[achievementId] = achievement;
+    _stateMutator.UpdateState(state.Cells, newPlayer, state.Orders, newAchievements);
 
-            _stateMutator.UpdateState(state.Cells, newPlayer, state.Orders, newAchievements);
+    _eventBus.Publish(new AchievementUnlockedEvent
+    {
+        AchievementId = achievementId,
+        AchievementName = achievement.Name,
+        ExpReward = achievement.ExpReward,
+        CoinReward = achievement.CoinReward
+    });
+}
 
-            _eventBus.Publish(new AchievementUnlockedEvent
-            {
-                AchievementId = achievementId,
-                AchievementName = achievement.Name,
-                ExpReward = achievement.ExpReward,
-                CoinReward = achievement.CoinReward
-            });
-        }
 
         /// <summary>
         /// 初始化所有成就配置
