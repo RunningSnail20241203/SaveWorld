@@ -29,18 +29,18 @@ namespace SaveWorld.Game.Order
                 return OrderResult.Fail("订单不存在");
             }
 
-            if (order.IsCompleted)
+            if (order.Value.IsCompleted)
             {
                 return OrderResult.Fail("订单已完成");
             }
 
-            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > order.ExpireTime)
+            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > order.Value.ExpireTime)
             {
                 return OrderResult.Fail("订单已过期");
             }
 
             // 检查背包是否有需要的物品
-            int itemCellId = FindItemInBackpack(state, order.RequireItemId);
+            int itemCellId = FindItemInBackpack(state, order.Value.RequireItemId);
             
             if (itemCellId == -1)
             {
@@ -51,8 +51,8 @@ namespace SaveWorld.Game.Order
             return OrderResult.CreateSuccess(
                 orderId,
                 itemCellId,
-                order.RewardGold,
-                order.RewardExp
+                order.Value.RewardGold,
+                order.Value.RewardExp
             );
         }
 
@@ -75,16 +75,15 @@ namespace SaveWorld.Game.Order
 
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             
-            return new OrderData
-            {
-                OrderId = Guid.NewGuid().GetHashCode(),
-                RequireItemId = itemId,
-                RewardExp = baseExp,
-                RewardGold = baseGold,
-                CreateTime = now,
-                ExpireTime = now + ORDER_EXPIRE_HOURS * 3600,
-                IsCompleted = false
-            };
+            return new OrderData(
+                Guid.NewGuid().GetHashCode(),
+                itemId,
+                baseExp,
+                baseGold,
+                now,
+                now + ORDER_EXPIRE_HOURS * 3600,
+                false
+            );
         }
 
         /// <summary>
