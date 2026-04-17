@@ -12,6 +12,7 @@ namespace SaveWorld.Game.Core
 
         public EventBus EventBus { get; private set; }
         public GameState CurrentState { get; private set; }
+        public StateMutator StateMutator { get; private set; }
 
         private void Awake()
         {
@@ -27,6 +28,10 @@ namespace SaveWorld.Game.Core
             // 初始化核心系统
             EventBus = new EventBus();
             CurrentState = GameState.CreateInitial();
+            
+            // 初始化 StorageSystem
+            var storageSystem = new SaveWorld.Game.Storage.StorageSystem();
+            StateMutator = new StateMutator(EventBus, CurrentState, storageSystem);
 
             Debug.Log("✅ Game Loop 初始化完成");
         }
