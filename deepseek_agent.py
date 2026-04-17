@@ -54,123 +54,160 @@ def execute_tool(tool_call: dict, workspace: str) -> str:
 
     if tool == "read_file":
         path = tool_call.get("path", "")
-        # 修复路径分隔符
         path = path.replace('\\', '/')
         full = os.path.join(workspace, path) if not os.path.isabs(path) else path
-        full = os.path.normpath(full)  # 规范化路径
+        full = os.path.normpath(full)
         
         try:
             with open(full, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
-            # 返回时也使用 Base64 编码
-            content_b64 = base64.b64encode(content.encode('utf-8')).decode('ascii')
+            
+            # 直接返回可读文本，不需要 Base64
             truncated = content[:15000]
             suffix = f"\n...(截断，共{len(content)}字符)" if len(content) > 15000 else ""
-            return f"文件内容 [{path}] (Base64):\n{content_b64}\n\n文本预览:\n```\n{truncated}{suffix}\n```"
+            
+            # 添加行号便于 AI 定位
+            lines = truncated.split('\n')
+            numbered_lines = [f"{i+1:4d}| {line}" for i, line in enumerate(lines)]
+            numbered_content = '\n'.join(numbered_lines)
+            
+            return f"文件内容 [{path}] (共{len(content)}字符):\n```\n{numbered_content}{suffix}\n```"
         except Exception as e:
             return f"读取文件失败 [{path}]: {e}"
 
     elif tool == "write_file":
         path = tool_call.get("path", "")
-        content_b64 = tool_call.get("content_b64", tool_call.get("content", ""))
+        # 支持两种格式：content_b64 (Base64) 或 content (纯文本)
+        content_b64 = tool_call.get("content_b64", "")
+        content = tool_call.get("content", "")
+        
         path = path.replace('\\', '/')
         full = os.path.join(workspace, path) if not os.path.isabs(path) else path
         full = os.path.normpath(full)
         
-        # 安全检查
         if not os.path.abspath(full).startswith(os.path.abspath(workspace)):
-            return f"写入失败：路径 [{path}] 不在工作区内，出于安全考虑拒绝操作"
+            return f"写入失败：路径 [{path}] 不在工作区内"
         
         try:
-            # 解码 Base64
-            content = base64.b64decode(content_b64).decode('utf-8')
+            # 优先使用 Base64，否则使用纯文本
+            if content_b64:
+                final_content = base64.b64decode(content_b64).decode('utf-8')
+            else:
+                final_content = content
             
-            # 创建目录
             os.makedirs(os.path.dirname(full) or '.', exist_ok=True)
             
             with open(full, "w", encoding="utf-8") as f:
-                f.write(content)
+                f.write(final_content)
             
             size = os.path.getsize(full)
-            return f"文件写入成功 [{path}]，大小: {size} 字节"
+            lines = final_content.count('\n') + 1
+            return f"✓ 文件写入成功 [{path}]\n  大小: {size} 字节, {lines} 行"
         except Exception as e:
             return f"写入文件失败 [{path}]: {e}"
 
     elif tool == "replace_in_file":
         path = tool_call.get("path", "")
-        old_b64 = tool_call.get("old_b64", tool_call.get("old_str", ""))
-        new_b64 = tool_call.get("new_b64", tool_call.get("new_str", ""))
+        old_b64 = tool_call.get("old_b64", "")
+        old_str = tool_call.get("old_str", "")
+        new_b64 = tool_call.get("new_b64", "")
+        new_str = tool_call.get("new_str", "")
+        
         path = path.replace('\\', '/')
         full = os.path.join(workspace, path) if not os.path.isabs(path) else path
         full = os.path.normpath(full)
         
-        # 安全检查
         if not os.path.abspath(full).startswith(os.path.abspath(workspace)):
-            return f"替换失败：路径 [{path}] 不在工作区内，出于安全考虑拒绝操作"
+            return f"替换失败：路径 [{path}] 不在工作区内"
         
         try:
-            # 解码 Base64
-            old_str = base64.b64decode(old_b64).decode('utf-8')
-            new_str = base64.b64decode(new_b64).decode('utf-8')
+            # 解码内容
+            if old_b64:
+                final_old = base64.b64decode(old_b64).decode('utf-8')
+            else:
+                final_old = old_str
+                
+            if new_b64:
+                final_new = base64.b64decode(new_b64).decode('utf-8')
+            else:
+                final_new = new_str
             
-            # 读取原文件
             with open(full, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
             
-            # 检查 old_str 是否存在
-            if old_str not in content:
-                return f"替换失败 [{path}]：未找到要替换的内容。\n提示：请确保 old_str 与文件内容完全一致"
+            if final_old not in content:
+                # 显示部分内容帮助调试
+                preview = final_old[:100] + "..." if len(final_old) > 100 else final_old
+                return f"✗ 替换失败 [{path}]：未找到要替换的内容\n  查找的内容: {preview}"
             
-            # 计算出现次数并替换
-            occurrences = content.count(old_str)
-            new_content = content.replace(old_str, new_str, 1)
+            occurrences = content.count(final_old)
+            new_content = content.replace(final_old, final_new, 1)
             
-            # 写入文件
             with open(full, "w", encoding="utf-8") as f:
                 f.write(new_content)
             
             if occurrences > 1:
-                return f"替换成功 [{path}]：已替换第 1 处匹配（共 {occurrences} 处）"
+                return f"✓ 替换成功 [{path}]：已替换第 1 处匹配（共 {occurrences} 处）"
             else:
-                return f"替换成功 [{path}]"
+                return f"✓ 替换成功 [{path}]"
                 
         except Exception as e:
             return f"替换文件失败 [{path}]: {e}"
 
     elif tool == "run_bash":
-        command_b64 = tool_call.get("command_b64", tool_call.get("command", ""))
+        command_b64 = tool_call.get("command_b64", "")
+        command = tool_call.get("command", "")
+        
         try:
-            # 如果是 Base64 就解码，否则直接使用
-            try:
-                command = base64.b64decode(command_b64).decode('utf-8')
-            except:
-                command = command_b64
+            if command_b64:
+                final_command = base64.b64decode(command_b64).decode('utf-8')
+            else:
+                final_command = command
                 
-            print(f"  [bash] {command}")
+            print(f"  [bash] {final_command}")
             result = subprocess.run(
-                command, shell=True, cwd=workspace,
+                final_command, shell=True, cwd=workspace,
                 capture_output=True, text=True, timeout=30,
                 encoding="utf-8", errors="replace"
             )
             output = result.stdout + result.stderr
+            
+            if not output:
+                return f"命令执行成功 [{final_command}]（无输出）"
+            
             truncated = output[:8000]
-            suffix = f"\n...(截断)" if len(output) > 8000 else ""
-            return f"命令输出 [{command[:50]}...]:\n```\n{truncated}{suffix}\n```"
+            suffix = f"\n...(截断，共{len(output)}字符)" if len(output) > 8000 else ""
+            return f"命令输出 [{final_command}]:\n```\n{truncated}{suffix}\n```"
         except subprocess.TimeoutExpired:
-            return f"命令超时 [{command}]"
+            return f"命令超时 [{final_command}]"
         except Exception as e:
             return f"命令执行失败: {e}"
 
     elif tool == "list_files":
         pattern = tool_call.get("pattern", "*")
-        directory = tool_call.get("directory")
+        directory = tool_call.get("directory", "")
+        directory = directory.replace('\\', '/') if directory else ""
+        
         root = os.path.join(workspace, directory) if directory else workspace
         root = os.path.normpath(root)
+        
         try:
-            matches = glob.glob(pattern, root_dir=root, recursive=True)
+            # 使用 pathlib 更可靠
+            from pathlib import Path
+            matches = list(Path(root).glob(pattern))
+            
             if not matches:
-                return f"没有匹配 [{pattern}] 的文件"
-            return f"匹配 [{pattern}] 的文件 ({len(matches)} 个):\n" + "\n".join(matches[:300])
+                return f"未找到匹配 [{pattern}] 的文件"
+            
+            # 格式化输出
+            files = []
+            for m in matches[:300]:
+                rel_path = m.relative_to(workspace)
+                size = m.stat().st_size if m.is_file() else 0
+                type_indicator = "/" if m.is_dir() else ""
+                files.append(f"  {rel_path}{type_indicator} ({size} bytes)")
+            
+            return f"找到 {len(matches)} 个匹配 [{pattern}] 的文件:\n" + "\n".join(files)
         except Exception as e:
             return f"列文件失败: {e}"
 

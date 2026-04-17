@@ -223,7 +223,7 @@ namespace SaveWorld.Game.Achievement
     #region 成就数据结构
 
     [Serializable]
-    public struct AchievementData
+    public class AchievementData
     {
         public int Id;
         public string Name;
