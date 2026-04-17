@@ -25,12 +25,12 @@ namespace SaveWorld.Game.Exploration
                 return ExplorationResult.Fail("体力不足");
             }
 
-            // 2. 检查背包空间
-            int emptyCount = Crafting.CraftingEngine.GetEmptyCellCount();
-            if (emptyCount == 0)
-            {
-                return ExplorationResult.Fail("背包已满");
-            }
+// 2. 检查背包空间
+int emptyCount = FindEmptyCells(state, 0, new Random()).Length;
+if (emptyCount == 0)
+{
+    return ExplorationResult.Fail("背包已满");
+}
 
             var random = new Random(randomSeed);
 

@@ -114,14 +114,24 @@ namespace SaveWorld.Game.Core
     {
         public readonly int Level;
         public readonly int Stamina;
+        public readonly int MaxStamina;
         public readonly long Gold;
+        public readonly long Coins;
+        public readonly int Exp;
+        public readonly int Experience;
+        public readonly int ExpToNextLevel;
         public readonly long LastOfflineTime;
 
-        internal PlayerState(int level, int stamina, long gold, long lastOfflineTime)
+        internal PlayerState(int level, int stamina, int maxStamina, long gold, long coins, int exp, int experience, int expToNextLevel, long lastOfflineTime)
         {
             Level = level;
             Stamina = stamina;
+            MaxStamina = maxStamina;
             Gold = gold;
+            Coins = coins;
+            Exp = exp;
+            Experience = experience;
+            ExpToNextLevel = expToNextLevel;
             LastOfflineTime = lastOfflineTime;
         }
 
@@ -130,7 +140,12 @@ namespace SaveWorld.Game.Core
             return new PlayerState(
                 level: 1,
                 stamina: 20,
+                maxStamina: 100,
                 gold: 0,
+                coins: 0,
+                exp: 0,
+                experience: 0,
+                expToNextLevel: 100,
                 lastOfflineTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             );
         }

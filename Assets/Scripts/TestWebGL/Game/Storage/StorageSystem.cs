@@ -167,7 +167,7 @@ namespace SaveWorld.Game.Storage
             public int versionNumber;
             public PlayerState player;
             public CellState[] cells;
-            public Dictionary<string, string> metadata;
+            public IReadOnlyDictionary<string, object> metadata;
         }
 
         /// <summary>

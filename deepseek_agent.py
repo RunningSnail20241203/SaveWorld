@@ -20,23 +20,22 @@ from playwright.async_api import async_playwright, Page
 # ── 工具定义 ──────────────────────────────────────────────────────────────────
 
 TOOL_DESCRIPTIONS = r"""
-你是一个代码助手，可以使用以下工具读取文件和执行命令。
+你是一个代码助手，可以使用以下工具读取文件、执行命令和修改文件。
 
 当需要使用工具时，**单独一行**输出（不要加其他内容）：
   TOOL_CALL: {{"tool": "read_file", "path": "相对路径或绝对路径"}}
+  TOOL_CALL: {{"tool": "write_file", "path": "相对路径或绝对路径", "content": "要写入的完整内容"}}
+  TOOL_CALL: {{"tool": "replace_in_file", "path": "相对路径或绝对路径", "old_str": "要替换的内容", "new_str": "替换后的内容"}}
   TOOL_CALL: {{"tool": "run_bash", "command": "shell命令，如 grep -r 'xxx' ."}}
   TOOL_CALL: {{"tool": "list_files", "pattern": "**/*.lua", "directory": "可选子目录"}}
 
-**重要**：路径中的反斜杠 \ 必须写为 \\，例如：
-  错误：{{"tool": "read_file", "path": "Assets\Scripts\file.cs"}}
-  正确：{{"tool": "read_file", "path": "Assets\\Scripts\\file.cs"}}
-  或者直接使用正斜杠：{{"tool": "read_file", "path": "Assets/Scripts/file.cs"}}
-
-规则：
+**重要**：
+- 路径中的反斜杠 \ 必须写为 \\，例如：Assets\\Scripts\\file.cs
+- 或者直接使用正斜杠：Assets/Scripts/file.cs
+- write_file 会覆盖整个文件，请谨慎使用
+- replace_in_file 的 old_str 必须精确匹配（包括空格、换行），建议先用 read_file 确认内容
 - 每次只输出 TOOL_CALL 行，不要附加说明文字
 - 输出 TOOL_CALL 后停止，等待工具结果返回
-- 收到工具结果后继续分析，直到能给出最终答案
-- 最终答案不包含任何 TOOL_CALL 行
 
 工作区根目录: {workspace}
 """
@@ -56,6 +55,65 @@ def execute_tool(tool_call: dict, workspace: str) -> str:
             return f"文件内容 [{path}]:\n```\n{truncated}{suffix}\n```"
         except Exception as e:
             return f"读取文件失败 [{path}]: {e}"
+
+    elif tool == "write_file":
+        path = tool_call.get("path", "")
+        content = tool_call.get("content", "")
+        full = os.path.join(workspace, path) if not os.path.isabs(path) else path
+        
+        # 安全检查：确认路径在工作区内
+        if not os.path.abspath(full).startswith(os.path.abspath(workspace)):
+            return f"写入失败：路径 [{path}] 不在工作区内，出于安全考虑拒绝操作"
+        
+        try:
+            # 创建目录（如果不存在）
+            os.makedirs(os.path.dirname(full) or '.', exist_ok=True)
+            
+            with open(full, "w", encoding="utf-8") as f:
+                f.write(content)
+            
+            # 获取文件大小
+            size = os.path.getsize(full)
+            return f"文件写入成功 [{path}]，大小: {size} 字节"
+        except Exception as e:
+            return f"写入文件失败 [{path}]: {e}"
+
+    elif tool == "replace_in_file":
+        path = tool_call.get("path", "")
+        old_str = tool_call.get("old_str", "")
+        new_str = tool_call.get("new_str", "")
+        full = os.path.join(workspace, path) if not os.path.isabs(path) else path
+        
+        # 安全检查
+        if not os.path.abspath(full).startswith(os.path.abspath(workspace)):
+            return f"替换失败：路径 [{path}] 不在工作区内，出于安全考虑拒绝操作"
+        
+        try:
+            # 读取原文件
+            with open(full, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+            
+            # 检查 old_str 是否存在
+            if old_str not in content:
+                return f"替换失败 [{path}]：未找到要替换的内容。\n提示：请确保 old_str 与文件内容完全一致（包括空格和换行）"
+            
+            # 计算出现次数
+            occurrences = content.count(old_str)
+            
+            # 执行替换（只替换第一次出现）
+            new_content = content.replace(old_str, new_str, 1)
+            
+            # 写入文件
+            with open(full, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            
+            if occurrences > 1:
+                return f"替换成功 [{path}]：已替换第 1 处匹配（共 {occurrences} 处）。如需替换全部，请多次调用此工具。"
+            else:
+                return f"替换成功 [{path}]"
+                
+        except Exception as e:
+            return f"替换文件失败 [{path}]: {e}"
 
     elif tool == "run_bash":
         command = tool_call.get("command", "")
@@ -87,7 +145,8 @@ def execute_tool(tool_call: dict, workspace: str) -> str:
         except Exception as e:
             return f"列文件失败: {e}"
 
-    return f"未知工具: {tool}"
+    else:
+        return f"未知工具: {tool}"
 
 
 def parse_tool_calls(text: str) -> list[dict]:
