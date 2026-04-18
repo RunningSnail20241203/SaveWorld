@@ -66,7 +66,7 @@ if (emptyCount == 0)
 
             for (int i = 0; i < 63; i++)
             {
-                if (!state.Cells[i].IsLocked && !state.Cells[i].HasItem)
+                if (!state.Cells[i].IsLocked && !state.Cells[i].HasItem())
                 {
                     emptyCells[emptyCount++] = i;
                 }

@@ -153,29 +153,32 @@ namespace SaveWorld.Game.Order
         }
     }
 
-    /// <summary>
-    /// 订单数据
-    /// 不可变 纯数据
-    /// </summary>
-    public readonly struct OrderData
-    {
-        public int OrderId { get; }
-        public int RequireItemId { get; }
-        public int RewardExp { get; }
-        public int RewardGold { get; }
-        public long CreateTime { get; }
-        public long ExpireTime { get; }
-        public bool IsCompleted { get; }
-
-        public OrderData(int orderId, int requireItemId, int rewardExp, int rewardGold, long createTime, long expireTime, bool isCompleted)
-        {
-            OrderId = orderId;
-            RequireItemId = requireItemId;
-            RewardExp = rewardExp;
-            RewardGold = rewardGold;
-            CreateTime = createTime;
-            ExpireTime = expireTime;
-            IsCompleted = isCompleted;
-        }
-    }
+     /// <summary>
+    /// 订销数据
+    /// 不可变 纯数据
+    /// </summary>
+    public readonly struct OrderData
+    {
+        public int OrderId { get; }
+        public int RequireItemId { get; }
+        public ItemType RequireItem => (ItemType)RequireItemId;
+        public int RewardExp { get; }
+        public int RewardGold { get; }
+        public long CreateTime { get; }
+        public long ExpireTime { get; }
+        public bool IsCompleted { get; }
+        public bool IsClaimed { get; }
+
+        public OrderData(int orderId, int requireItemId, int rewardExp, int rewardGold, long createTime, long expireTime, bool isCompleted, bool isClaimed = false)
+        {
+            OrderId = orderId;
+            RequireItemId = requireItemId;
+            RewardExp = rewardExp;
+            RewardGold = rewardGold;
+            CreateTime = createTime;
+            ExpireTime = expireTime;
+            IsCompleted = isCompleted;
+            IsClaimed = isClaimed;
+        }
+    }
 }
