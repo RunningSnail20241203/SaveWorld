@@ -10,6 +10,18 @@ namespace SaveWorld.Game.Exploration
     /// </summary>
     public class ExplorationSystem
     {
+        // 单例
+        private static ExplorationSystem _instance;
+        public static ExplorationSystem Instance 
+        { 
+            get 
+            {
+                if (_instance == null)
+                    _instance = new ExplorationSystem();
+                return _instance;
+            }
+        }
+
         // 随机数生成器
         private Random _random = new Random();
 
@@ -200,6 +212,35 @@ namespace SaveWorld.Game.Exploration
             return _l1ItemPool[0].itemType;
         }
 
+
+        /// <summary>
+        /// 尝试探索
+        /// 返回是否成功，并实际探索过程
+        /// </summary>
+        public bool TryExplore()
+        {
+            // 检查体力是否兩足
+            int currentStamina = Player.PlayerManager.Instance.GetCurrentStamina();
+            int cost = GetExploreCost();
+            
+            if (currentStamina < cost)
+            {
+                OnExploreFailure?.Invoke("体力不足");
+                return false;
+            }
+
+            // 消息体创
+            Player.PlayerManager.Instance.UseStamina(cost);
+
+            // 执行探索
+            int playerLevel = Player.PlayerManager.Instance.GetLevel();
+            ItemType[] items = Explore(playerLevel);
+
+            // 后续处理：处理协议中的牉铁渐斾
+            // 这里可以添加到实际的格子管理器中
+            
+            return true;
+        }
         /// <summary>
         /// 获取探索消耗的体力
         /// </summary>

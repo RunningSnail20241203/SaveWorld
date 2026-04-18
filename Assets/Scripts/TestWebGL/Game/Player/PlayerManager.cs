@@ -56,7 +56,31 @@ namespace SaveWorld.Game.Player
     /// 管理玩家的等级、经验、体力等系统
     /// </summary>
     public class PlayerManager
+
     {
+
+        // 单例模式
+
+        private static PlayerManager _instance;
+
+        public static PlayerManager Instance 
+
+        { 
+
+            get 
+
+            {
+
+                if (_instance == null)
+
+                    _instance = new PlayerManager();
+
+                return _instance;
+
+            }
+
+        }
+
         private PlayerData _playerData;
 
         // 等级经验配置（来自设计规范6.2）

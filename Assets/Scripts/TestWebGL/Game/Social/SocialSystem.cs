@@ -50,8 +50,20 @@ namespace SaveWorld.Game.Social
             var state = _stateMutator.CurrentState;
             int claimAmount = 5;
             
-            var newPlayer = state.Player;
-            newPlayer.Stamina = Math.Min(newPlayer.MaxStamina, newPlayer.Stamina + claimAmount);
+            var oldPlayer = state.Player;
+            int newStamina = Math.Min(oldPlayer.MaxStamina, oldPlayer.Stamina + claimAmount);
+            
+            var newPlayer = new PlayerState(
+                level: oldPlayer.Level,
+                stamina: newStamina,
+                maxStamina: oldPlayer.MaxStamina,
+                gold: oldPlayer.Gold,
+                coins: oldPlayer.Coins,
+                exp: oldPlayer.Exp,
+                experience: oldPlayer.Experience,
+                expToNextLevel: oldPlayer.ExpToNextLevel,
+                lastOfflineTime: oldPlayer.LastOfflineTime
+            );
             
             _stateMutator.UpdateState(state.Cells, newPlayer);
             
@@ -60,7 +72,7 @@ namespace SaveWorld.Game.Social
             _eventBus.Publish(new StaminaClaimedEvent
             {
                 Amount = claimAmount,
-                NewStamina = newPlayer.Stamina
+                NewStamina = newStamina
             });
         }
 
@@ -70,14 +82,25 @@ namespace SaveWorld.Game.Social
             {
                 {"share_type", e.ShareType.ToString()}
             });
-            
+    
             // 分享奖励
             var state = _stateMutator.CurrentState;
-            var newPlayer = state.Player;
-            newPlayer.Coins += 100;
-            
+            var oldPlayer = state.Player;
+    
+            var newPlayer = new PlayerState(
+                level: oldPlayer.Level,
+                stamina: oldPlayer.Stamina,
+                maxStamina: oldPlayer.MaxStamina,
+                gold: oldPlayer.Gold,
+                coins: oldPlayer.Coins + 100,
+                exp: oldPlayer.Exp,
+                experience: oldPlayer.Experience,
+                expToNextLevel: oldPlayer.ExpToNextLevel,
+                lastOfflineTime: oldPlayer.LastOfflineTime
+            );
+    
             _stateMutator.UpdateState(state.Cells, newPlayer);
-            
+    
             _eventBus.Publish(new GameSharedEvent
             {
                 ShareType = e.ShareType,

@@ -21,7 +21,8 @@ namespace SaveWorld.Game.UI
 
         public override void Initialize()
         {
-            base.Initialize();
+
+
 
             ExploreButton.onClick.AddListener(OnExploreClicked);
             StaminaCostText.text = ExplorationSystem.Instance.GetExploreCost().ToString();
