@@ -1,0 +1,144 @@
+{
+  "elements": [
+    {
+      "type": "button",
+      "name": "主按钮",
+      "description": "游戏主界面主要操作按钮",
+      "color": "暖色调",
+      "size": "128x48"
+    },
+    {
+      "type": "button",
+      "name": "次按钮",
+      "description": "次要操作按钮",
+      "color": "冷色调",
+      "size": "96x36"
+    },
+    {
+      "type": "button",
+      "name": "确认按钮",
+      "description": "确认操作按钮",
+      "color": "绿色",
+      "size": "128x48"
+    },
+    {
+      "type": "button",
+      "name": "取消按钮",
+      "description": "取消操作按钮",
+      "color": "红色",
+      "size": "96x36"
+    },
+    {
+      "type": "panel",
+      "name": "主面板",
+      "description": "游戏主界面面板背景",
+      "color": "深色半透明",
+      "size": "400x600"
+    },
+    {
+      "type": "panel",
+      "name": "背包面板",
+      "description": "背包界面面板",
+      "color": "深色半透明",
+      "size": "500x400"
+    },
+    {
+      "type": "panel",
+      "name": "合成面板",
+      "description": "合成界面面板",
+      "color": "深色半透明",
+      "size": "450x350"
+    },
+    {
+      "type": "progressBar",
+      "name": "体力条",
+      "description": "玩家体力进度条",
+      "color": "绿色",
+      "size": "200x20"
+    },
+    {
+      "type": "progressBar",
+      "name": "经验条",
+      "description": "玩家经验进度条",
+      "color": "蓝色",
+      "size": "200x20"
+    },
+    {
+      "type": "progressBar",
+      "name": "冷却条",
+      "description": "技能冷却进度条",
+      "color": "橙色",
+      "size": "100x10"
+    },
+    {
+      "type": "background",
+      "name": "主界面背景",
+      "description": "游戏主界面背景纹理",
+      "color": "深色调",
+      "size": "1920x1080"
+    },
+    {
+      "type": "background",
+      "name": "探索背景",
+      "description": "探索场景背景",
+      "color": "户外色调",
+      "size": "1920x1080"
+    },
+    {
+      "type": "icon",
+      "name": "金币图标",
+      "description": "货币图标",
+      "color": "金色",
+      "size": "32x32"
+    },
+    {
+      "type": "icon",
+      "name": "钻石图标",
+      "description": "高级货币图标",
+      "color": "蓝色",
+      "size": "32x32"
+    },
+    {
+      "type": "icon",
+      "name": "体力图标",
+      "description": "体力值图标",
+      "color": "绿色",
+      "size": "32x32"
+    },
+    {
+      "type": "icon",
+      "name": "等级图标",
+      "description": "等级显示图标",
+      "color": "金色",
+      "size": "24x24"
+    },
+    {
+      "type": "border",
+      "name": "物品边框",
+      "description": "物品格子边框",
+      "color": "金属灰",
+      "size": "88x88"
+    },
+    {
+      "type": "border",
+      "name": "稀有边框",
+      "description": "稀有物品边框",
+      "color": "金色",
+      "size": "88x88"
+    },
+    {
+      "type": "border",
+      "name": "史诗边框",
+      "description": "史诗物品边框",
+      "color": "紫色",
+      "size": "88x88"
+    },
+    {
+      "type": "border",
+      "name": "传说边框",
+      "description": "传说物品边框",
+      "color": "橙色",
+      "size": "88x88"
+    }
+  ]
+}

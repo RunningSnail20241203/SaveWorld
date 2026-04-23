@@ -1,0 +1,168 @@
+{
+  "lines": {
+    "水源": {
+      "name": "水源",
+      "theme": "水、净化、生命维持",
+      "items": [
+        { "id": "water_1", "name": "净水", "level": 1, "description": "清澈的饮用水" },
+        { "id": "water_2", "name": "净水片", "level": 2, "description": "净水药片" },
+        { "id": "water_3", "name": "简易净水器", "level": 3, "description": "手工制作的净水装置" },
+        { "id": "water_4", "name": "净水器", "level": 4, "description": "家用水净化设备" },
+        { "id": "water_5", "name": "净水站", "level": 5, "description": "社区级供水设施" },
+        { "id": "water_6", "name": "供水中心", "level": 6, "description": "城市级供水系统" },
+        { "id": "water_7", "name": "净水网络", "level": 7, "description": "区域供水网络" },
+        { "id": "water_8", "name": "净水系统", "level": 8, "description": "大型净水系统" },
+        { "id": "water_9", "name": "净水工厂", "level": 9, "description": "工业级净水工厂" },
+        { "id": "water_10", "name": "永动供水站", "level": 10, "description": "永恒运行的供水站" }
+      ]
+    },
+    "食物": {
+      "name": "食物",
+      "theme": "食物、餐饮、生存",
+      "items": [
+        { "id": "food_1", "name": "罐头", "level": 1, "description": "密封食品罐头" },
+        { "id": "food_2", "name": "加热罐头", "level": 2, "description": "加热后的罐头食品" },
+        { "id": "food_3", "name": "简易厨房", "level": 3, "description": "简单烹饪设施" },
+        { "id": "food_4", "name": "厨房套装", "level": 4, "description": "完整厨房设备" },
+        { "id": "food_5", "name": "食堂", "level": 5, "description": "社区食堂" },
+        { "id": "food_6", "name": "食品加工站", "level": 6, "description": "食品加工设施" },
+        { "id": "food_7", "name": "保鲜仓库", "level": 7, "description": "大型冷藏仓库" },
+        { "id": "food_8", "name": "食品工厂", "level": 8, "description": "食品加工厂" },
+        { "id": "food_9", "name": "食物合成机", "level": 9, "description": "合成食物的机器" },
+        { "id": "food_10", "name": "永动食物机", "level": 10, "description": "永恒产生食物的机器" }
+      ]
+    },
+    "工具": {
+      "name": "工具",
+      "theme": "工具、机械、建造",
+      "items": [
+        { "id": "tool_1", "name": "零件", "level": 1, "description": "机械零件" },
+        { "id": "tool_2", "name": "简易工具", "level": 2, "description": "基础工具" },
+        { "id": "tool_3", "name": "工具箱", "level": 3, "description": "工具箱套装" },
+        { "id": "tool_4", "name": "修理站", "level": 4, "description": "维修设施" },
+        { "id": "tool_5", "name": "工坊", "level": 5, "description": "手工艺作坊" },
+        { "id": "tool_6", "name": "机械车间", "level": 6, "description": "机械加工车间" },
+        { "id": "tool_7", "name": "自动化流水线", "level": 7, "description": "自动化生产线" },
+        { "id": "tool_8", "name": "机器人组装线", "level": 8, "description": "机器人组装设施" },
+        { "id": "tool_9", "name": "智能工厂", "level": 9, "description": "智能制造工厂" },
+        { "id": "tool_10", "name": "自动化工坊", "level": 10, "description": "全自动化工坊" }
+      ]
+    },
+    "住所": {
+      "name": "住所",
+      "theme": "建筑、住所、安全",
+      "items": [
+        { "id": "home_1", "name": "木材", "level": 1, "description": "建筑木材" },
+        { "id": "home_2", "name": "木料", "level": 2, "description": "加工木材" },
+        { "id": "home_3", "name": "简易帐篷", "level": 3, "description": "临时庇护所" },
+        { "id": "home_4", "name": "帐篷", "level": 4, "description": "改进型帐篷" },
+        { "id": "home_5", "name": "木屋", "level": 5, "description": "木质小屋" },
+        { "id": "home_6", "name": "石头房子", "level": 6, "description": "石质建筑" },
+        { "id": "home_7", "name": "瞭望塔", "level": 7, "description": "瞭望防御塔" },
+        { "id": "home_8", "name": "堡垒", "level": 8, "description": "坚固堡垒" },
+        { "id": "home_9", "name": "避难所", "level": 9, "description": "大型避难所" },
+        { "id": "home_10", "name": "末日堡垒", "level": 10, "description": "终极安全堡垒" }
+      ]
+    },
+    "医疗": {
+      "name": "医疗",
+      "theme": "医疗、健康、救治",
+      "items": [
+        { "id": "medical_1", "name": "草药", "level": 1, "description": "野生草药" },
+        { "id": "medical_2", "name": "绷带", "level": 2, "description": "医疗绷带" },
+        { "id": "medical_3", "name": "急救包", "level": 3, "description": "基础急救用品" },
+        { "id": "medical_4", "name": "医疗箱", "level": 4, "description": "完整医疗箱" },
+        { "id": "medical_5", "name": "医疗站", "level": 5, "description": "社区医疗点" },
+        { "id": "medical_6", "name": "简易诊所", "level": 6, "description": "简易诊所" },
+        { "id": "medical_7", "name": "诊所", "level": 7, "description": "正规诊所" },
+        { "id": "medical_8", "name": "医院", "level": 8, "description": "综合医院" },
+        { "id": "medical_9", "name": "医疗中心", "level": 9, "description": "医疗中心" },
+        { "id": "medical_10", "name": "全自动医疗舱", "level": 10, "description": "全自动医疗舱" }
+      ]
+    },
+    "能源": {
+      "name": "能源",
+      "theme": "能源、电力、动力",
+      "items": [
+        { "id": "energy_1", "name": "电池", "level": 1, "description": "干电池" },
+        { "id": "energy_2", "name": "充电宝", "level": 2, "description": "移动电源" },
+        { "id": "energy_3", "name": "手摇发电机", "level": 3, "description": "手摇发电装置" },
+        { "id": "energy_4", "name": "太阳能板", "level": 4, "description": "太阳能发电板" },
+        { "id": "energy_5", "name": "发电机", "level": 5, "description": "燃油发电机" },
+        { "id": "energy_6", "name": "电力站", "level": 6, "description": "小型电站" },
+        { "id": "energy_7", "name": "电网", "level": 7, "description": "区域电网" },
+        { "id": "energy_8", "name": "能源中心", "level": 8, "description": "能源枢纽" },
+        { "id": "energy_9", "name": "核聚变核心", "level": 9, "description": "核聚变反应堆" },
+        { "id": "energy_10", "name": "永恒能源核心", "level": 10, "description": "永恒能源装置" }
+      ]
+    },
+    "知识": {
+      "name": "知识",
+      "theme": "知识、教育、文化",
+      "items": [
+        { "id": "book_1", "name": "旧书", "level": 1, "description": "旧书籍" },
+        { "id": "book_2", "name": "书堆", "level": 2, "description": "书籍堆叠" },
+        { "id": "book_3", "name": "小图书馆", "level": 3, "description": "小型图书室" },
+        { "id": "book_4", "name": "图书馆", "level": 4, "description": "社区图书馆" },
+        { "id": "book_5", "name": "读书会", "level": 5, "description": "知识交流场所" },
+        { "id": "book_6", "name": "学校", "level": 6, "description": "教育机构" },
+        { "id": "book_7", "name": "学院", "level": 7, "description": "专业学院" },
+        { "id": "book_8", "name": "大学", "level": 8, "description": "高等教育机构" },
+        { "id": "book_9", "name": "科研中心", "level": 9, "description": "研究中心" },
+        { "id": "book_10", "name": "文明复兴中心", "level": 10, "description": "文明传承之地" }
+      ]
+    },
+    "希望": {
+      "name": "希望",
+      "theme": "生命、自然、希望",
+      "items": [
+        { "id": "seed_1", "name": "种子", "level": 1, "description": "植物种子" },
+        { "id": "seed_2", "name": "幼苗", "level": 2, "description": "植物幼苗" },
+        { "id": "seed_3", "name": "小花园", "level": 3, "description": "小型花园" },
+        { "id": "seed_4", "name": "花园", "level": 4, "description": "庭院花园" },
+        { "id": "seed_5", "name": "菜园", "level": 5, "description": "蔬菜种植园" },
+        { "id": "seed_6", "name": "农场", "level": 6, "description": "农业农场" },
+        { "id": "seed_7", "name": "温室", "level": 7, "description": "温室大棚" },
+        { "id": "seed_8", "name": "生态圈", "level": 8, "description": "生态循环系统" },
+        { "id": "seed_9", "name": "植物园", "level": 9, "description": "大型植物园" },
+        { "id": "seed_10", "name": "基因库", "level": 10, "description": "基因保存库" }
+      ]
+    },
+    "探索": {
+      "name": "探索",
+      "theme": "探索、旅行、发现",
+      "items": [
+        { "id": "explore_1", "name": "地图碎片", "level": 1, "description": "残缺地图" },
+        { "id": "explore_2", "name": "简易地图", "level": 2, "description": "简单地图" },
+        { "id": "explore_3", "name": "指南针", "level": 3, "description": "定向仪器" },
+        { "id": "explore_4", "name": "望远镜", "level": 4, "description": "观测设备" },
+        { "id": "explore_5", "name": "对讲机", "level": 5, "description": "通讯设备" },
+        { "id": "explore_6", "name": "探测仪", "level": 6, "description": "探测设备" },
+        { "id": "explore_7", "name": "越野车", "level": 7, "description": "越野车辆" },
+        { "id": "explore_8", "name": "无人机", "level": 8, "description": "侦察无人机" },
+        { "id": "explore_9", "name": "卫星通讯", "level": 9, "description": "卫星通讯系统" },
+        { "id": "explore_10", "name": "全息探测仪", "level": 10, "description": "全息探测设备" }
+      ]
+    }
+  },
+  "specialItems": [
+    { "id": "special_1", "name": "布料", "level": 1, "description": "医疗用布料", "category": "特殊" },
+    { "id": "special_2", "name": "燃油", "level": 2, "description": "发动机燃料", "category": "特殊" },
+    { "id": "special_3", "name": "发动机", "level": 4, "description": "汽车发动机", "category": "特殊" },
+    { "id": "special_4", "name": "能量饮料", "level": 1, "description": "恢复体力饮料", "category": "消耗品" },
+    { "id": "special_5", "name": "大能量饮料", "level": 2, "description": "大量恢复体力", "category": "消耗品" },
+    { "id": "special_6", "name": "探索加速券", "level": 1, "description": "免费探索一次", "category": "道具" },
+    { "id": "special_7", "name": "双倍探索券", "level": 1, "description": "双倍产出", "category": "道具" },
+    { "id": "special_8", "name": "旧世界手机", "level": 1, "description": "收藏品", "category": "收藏" },
+    { "id": "special_9", "name": "幸存者照片", "level": 1, "description": "珍贵照片", "category": "收藏" }
+  ],
+  "crossLineItems": [
+    { "id": "cross_1", "name": "医疗帐篷", "level": 5, "description": "野外医疗点" },
+    { "id": "cross_2", "name": "急救工具包", "level": 6, "description": "便携急救装备" },
+    { "id": "cross_3", "name": "智能温室", "level": 7, "description": "自动化农场" },
+    { "id": "cross_4", "name": "知识堡垒", "level": 8, "description": "知识防御建筑" },
+    { "id": "cross_5", "name": "水电站", "level": 8, "description": "水力发电站" },
+    { "id": "cross_6", "name": "健康学校", "level": 7, "description": "医疗教育机构" },
+    { "id": "cross_7", "name": "永动生命维持系统", "level": 10, "description": "永恒生命保障" }
+  ]
+}

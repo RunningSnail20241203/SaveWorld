@@ -1,77 +1,55 @@
-# AGENTS.md - 《末世生存合成》项目指南
+# AGENTS.md - 文档索引
 
-## 项目概述
-**项目名称**: 末世生存合成 (SaveWorld)  
-**项目类型**: Unity微信小游戏  
-**开发引擎**: Unity 2022.3 LTS  
-**目标平台**: 微信小游戏  
-**项目状态**: 🚧 V2重构进行中  
-**架构版本**: 三层洋葱架构 v2.0  
-**当前代码量**: ~7000行  
+**最后更新**: 2026-04-23
+**文档版本**: v2.2
+
+> 项目详细文档均位于 `docs/` 目录。需要查什么，先来这里定位文档。
 
 ---
 
-## 🎯 V2 重构进度
+## 快速查询指南
 
-✅ **已完成系统**
-- ✅ 核心三层架构 (状态层/事件层/行为层)
-- ✅ Grid格子系统 63格背包
-- ✅ Crafting合成引擎
-- ✅ Exploration探索系统
-- ✅ Storage本地存储系统
-- ✅ 自动保存系统
-- ✅ 离线体力恢复
-- ✅ Order订单系统 (每日5个动态订单)
-- ✅ 跨天重置系统
-
-⏳ **待实现系统 (按优先级)**
-1. 🎯 成就系统
-2. 🎯 音频系统
-3. 🎯 数据分析系统
-4. 🎯 社交系统
-5. 🎯 微信云存储
-6. 🎯 UI系统
-7. 🎯 微信API接入
-8. 🎯 性能优化与上线准备
+- **想知道某个类的字段和方法** → 查对应系统文档
+- **想知道事件定义和触发时机** → 查 `docs/core-layer.md` 的「核心事件清单」
+- **想知道合成公式** → 查 `docs/item-config.md` 的「合成线完整列表」
+- **想知道数据流怎么走** → 查 `docs/architecture.md` 的「关键数据流」
+- **想知道某个系统是否完成** → 查对应文档顶部状态标记或 `docs/other-systems.md`
+- **想修改某个功能** → 先查对应文档了解职责和API，再定位代码文件
 
 ---
 
-## 🏗️ 三层架构 v2.0
-```
-                                            ╔══════════════════════════════╗
-                                            ║  第三层: 行为层              ║
-                                            ║  移动 合成 探索 提交 升级      ║
-                                            ╚══════════════════════════════╝
-                                                  ↓ 产生事件
-                                            ╔══════════════════════════════╗
-                                            ║  第二层: 事件总线层          ║
-                                            ║  EventBus 全局事件分发        ║
-                                            ╚══════════════════════════════╝
-                                                  ↓ 事件分发
-                                            ╔══════════════════════════════╗
-                                            ║  第一层: 状态层              ║
-                                            ║  StateMutator / GameState    ║
-                                            ║  不可变游戏状态 纯数据        ║
-                                            ╚══════════════════════════════╝
-```
+## 文档列表
 
-### 架构铁律
-1.  依赖方向永远向内，外层知道内层，内层绝对不知道外层
-2.  跨层通信只有事件一种方式，无直接调用
-3.  状态变更统一由 `StateMutator` 负责
-4.  `GameState` 是纯数据，无业务方法
-5.  所有状态变更可通过事件溯源完整重现
+### 架构文档
 
----
+| 文档 | 路径 | 内容 |
+|------|------|------|
+| 架构总览 | `docs/architecture.md` | 三层洋葱架构全景、命名空间、目录映射、关键数据流 |
+| 状态层与事件层 | `docs/core-layer.md` | GameState、StateMutator、EventBus、所有事件定义、GameLoop、GameEntry |
 
-## 📋 编码规范
-- 类名: `PascalCase`
-- 方法名: `PascalCase`
-- 变量名: `camelCase`
-- 私有字段: `_camelCase`
-- 常量: `UPPER_SNAKE_CASE`
+### 核心系统文档
 
----
+| 文档 | 路径 | 内容 |
+|------|------|------|
+| 格子系统 | `docs/grid-system.md` | GridManager、GridCell、锁格配置、错误码、辅助数据结构 |
+| 合成引擎 | `docs/crafting-system.md` | CraftingEngine、双击/拖拽/解锁/一键合成流程、跨线合成表 |
+| 探索系统 | `docs/exploration-system.md` | ExplorationEngine(V2纯函数)、ExplorationSystem(V1)、物品概率池、经验公式 |
+| 订单系统 | `docs/order-system.md` | OrderEngine、OrderData、OrderResult、提交流程、生成规则、跨天重置 |
+| 物品配置 | `docs/item-config.md` | ItemType(116种)、ID编码规则、9条合成线完整列表、跨线合成汇总、ItemConfig API |
+| 玩家系统 | `docs/player-system.md` | PlayerManager、PlayerData、等级经验配置、体力成长表、经验来源、离线恢复 |
+| 存储系统 | `docs/storage-system.md` | StorageSystem、存档数据结构、StorageResult、自动保存、CloudStorageSystem |
+| UI系统 | `docs/ui-system.md` | UIManager、BackpackUI、UICell、UIPanelBase、交互设计、UI事件 |
+| 微信系统 | `docs/wechat-system.md` | WeChatManager、7个子系统、微信事件定义、接入状态 |
+| 其他系统 | `docs/other-systems.md` | 成就、音频、数据分析、社交、反馈、本地化系统的API汇总与状态 |
 
-**最后更新**: 2026-04-16  
-**文档版本**: v2.1
+### 开发文档
+
+| 文档 | 路径 | 内容 |
+|------|------|------|
+| 开发阶段日志 | `docs/development-log.md` | Phase 1-7 各阶段关键实现、技术决策、代码统计 |
+
+### 工具文档
+
+| 文档 | 路径 | 内容 |
+|------|------|------|
+| AI-Prompt-Generator | `docs/ai-prompt-generator.md` | Prompt生成工具完整文档：命令用法、模板定义、等级风格表 |

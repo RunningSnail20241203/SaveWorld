@@ -1,0 +1,17 @@
+{
+  "name": "ai-prompt-generator",
+  "version": "1.0.0",
+  "description": "末世生存合成 - AI绘画Prompt生成工具",
+  "main": "src/index.js",
+  "scripts": {
+    "generate": "node src/index.js",
+    "generate:item": "node src/index.js --item",
+    "generate:line": "node src/index.js --line",
+    "generate:level": "node src/index.js --level",
+    "generate:ui": "node src/index.js --ui",
+    "generate:all": "node src/index.js --all"
+  },
+  "keywords": ["ai", "prompt", "game", "assets"],
+  "author": "",
+  "license": "MIT"
+}
