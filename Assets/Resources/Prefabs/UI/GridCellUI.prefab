@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 900bdd6af785827419909013cd5c857c, type: 2}
-  m_sharedMaterial: {fileID: 8692668652699043521, guid: 900bdd6af785827419909013cd5c857c, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 6e5bb010a1f2d294bb9f8f7b8e4022a1, type: 2}
+  m_sharedMaterial: {fileID: 4392310545285495187, guid: 6e5bb010a1f2d294bb9f8f7b8e4022a1, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -204,8 +204,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 900bdd6af785827419909013cd5c857c, type: 2}
-  m_sharedMaterial: {fileID: 8692668652699043521, guid: 900bdd6af785827419909013cd5c857c, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 6e5bb010a1f2d294bb9f8f7b8e4022a1, type: 2}
+  m_sharedMaterial: {fileID: 4392310545285495187, guid: 6e5bb010a1f2d294bb9f8f7b8e4022a1, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -284,7 +284,6 @@ GameObject:
   m_Component:
   - component: {fileID: 275552986090005023}
   - component: {fileID: 6843948446375291727}
-  - component: {fileID: 9105277544143325534}
   m_Layer: 0
   m_Name: GridCellUI
   m_TagString: Untagged
@@ -359,27 +358,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &9105277544143325534
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 971344227835684831}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6607520f29566ec438ad405cea2564ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TestWebGL.Game.UI.GridCellUI
-  backgroundImage: {fileID: 2039045278826592074}
-  itemIcon: {fileID: 7838166071580129514}
-  itemCountText: {fileID: 7764987567414188646}
-  lockLevelText: {fileID: 6325749241413717261}
-  cellButton: {fileID: 6843948446375291727}
-  normalColor: {r: 0.247, g: 0.298, b: 0.369, a: 1}
-  lockedColor: {r: 0.157, g: 0.2, b: 0.267, a: 1}
-  filledColor: {r: 1, g: 0.624, b: 0.263, a: 1}
-  highlightColor: {r: 1, g: 0.624, b: 0.263, a: 1}
 --- !u!1 &2360046455985859162
 GameObject:
   m_ObjectHideFlags: 0

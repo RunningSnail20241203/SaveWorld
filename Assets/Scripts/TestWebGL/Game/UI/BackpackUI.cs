@@ -3,8 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using SaveWorld.Game.Core;
-
-using SaveWorld.Game.Grid;
+using SaveWorld.Game.Items;
 
 namespace SaveWorld.Game.UI
 {
@@ -15,6 +14,7 @@ namespace SaveWorld.Game.UI
     public class BackpackUI : UIPanelBase
     {
         [Header("背包配置")]
+        public Canvas ParentCanvas;
         public GridLayoutGroup GridLayout;
         public GameObject CellPrefab;
 
@@ -26,8 +26,6 @@ namespace SaveWorld.Game.UI
 
         public override void Initialize()
         {
-            base.Initialize();
-
             _stateMutator = GameLoop.Instance.StateMutator;
             _eventBus = GameLoop.Instance.EventBus;
 
@@ -35,7 +33,7 @@ namespace SaveWorld.Game.UI
             _cells = new UICell[63];
             for (int i = 0; i < 63; i++)
             {
-                var cellObj = Instantiate(CellPrefab, GridLayout.transform);
+                var cellObj = UnityEngine.Object.Instantiate(CellPrefab, GridLayout.transform);
                 _cells[i] = cellObj.GetComponent<UICell>();
                 _cells[i].Initialize(i, _eventBus);
             }
@@ -58,14 +56,14 @@ namespace SaveWorld.Game.UI
         private void CreateDragOverlay()
         {
             GameObject overlayObj = new GameObject("DragOverlay");
-            overlayObj.transform.SetParent(Canvas.transform, false);
+            overlayObj.transform.SetParent(ParentCanvas.transform, false);
             overlayObj.transform.SetAsLastSibling();
-            
+
             _dragOverlayImage = overlayObj.AddComponent<Image>();
             _dragOverlayImage.raycastTarget = false;
             _dragOverlayImage.color = new Color(1f, 1f, 1f, 0.8f);
             _dragOverlayImage.enabled = false;
-            
+
             RectTransform rect = overlayObj.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(80, 80);
         }
@@ -73,35 +71,20 @@ namespace SaveWorld.Game.UI
         private void OnCellDragStart(CellDragStartEvent e)
         {
             _draggingCellId = e.CellId;
-            
+
             // 隐藏原格子图标
             _cells[e.CellId].IconImage.enabled = false;
-            
+
             // 复制图标到拖拽层
-            var cell = GridManager.Instance.GetCell(e.CellId);
-            _dragOverlayImage.sprite = Items.ItemIconManager.Instance.GetIcon(cell.ItemType);
+            var cellState = _stateMutator.CurrentState.Cells[e.CellId];
+            if (cellState.HasItem())
+            {
+                _dragOverlayImage.sprite = Items.ItemIconManager.Instance.GetItemIcon((ItemType)cellState.ItemId);
+            }
             _dragOverlayImage.enabled = true;
 
-            // 启动位置跟随
-            StartCoroutine(DragUpdateCoroutine());
-        }
-
-        private IEnumerator DragUpdateCoroutine()
-        {
-            while (_draggingCellId != -1)
-            {
-                // 更新拖拽遮罩位置
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    Canvas.GetComponent<RectTransform>(),
-                    Input.mousePosition,
-                    null,
-                    out Vector2 localPoint
-                );
-                
-                _dragOverlayImage.rectTransform.anchoredPosition = localPoint;
-
-                yield return null;
-            }
+            // TODO: V2迁移 - StartCoroutine 需要 MonoBehaviour
+            // StartCoroutine(DragUpdateCoroutine());
         }
 
         private void OnCellDragEnd(CellDragEndEvent e)
@@ -111,37 +94,33 @@ namespace SaveWorld.Game.UI
 
             if (targetCellId != -1 && targetCellId != _draggingCellId)
             {
-                var targetCell = GridManager.Instance.GetCell(targetCellId);
-                
-                if (!targetCell.IsLocked)
+                var cellState = _stateMutator.CurrentState.Cells[targetCellId];
+
+                if (!cellState.IsLocked)
                 {
-                    if (!targetCell.HasItem)
+                    if (!cellState.HasItem())
                     {
                         // 空格子 移动
-                        _eventBus.Publish(new ItemMovedEvent
-                        {
-                            FromCellId = _draggingCellId,
-                            ToCellId = targetCellId
-                        });
+                        _eventBus.Publish(new ItemMovedEvent(_draggingCellId, targetCellId, 0));
                     }
                     else
                     {
                         // 有物品 交换
-                        _eventBus.Publish(new ItemSwappedEvent
-                        {
-                            CellAId = _draggingCellId,
-                            CellBId = targetCellId
-                        });
+                        var dragCellState = _stateMutator.CurrentState.Cells[_draggingCellId];
+                        _eventBus.Publish(new ItemSwappedEvent(
+                            _draggingCellId, targetCellId,
+                            dragCellState.ItemId, cellState.ItemId
+                        ));
                     }
                 }
             }
 
             // 恢复原格子图标
             _cells[_draggingCellId].IconImage.enabled = true;
-            
+
             // 隐藏拖拽层
             _dragOverlayImage.enabled = false;
-            
+
             _draggingCellId = -1;
         }
 
@@ -153,7 +132,7 @@ namespace SaveWorld.Game.UI
             for (int i = 0; i < 63; i++)
             {
                 var rect = _cells[i].GetComponent<RectTransform>();
-                
+
                 if (RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, null))
                 {
                     return i;
@@ -164,9 +143,9 @@ namespace SaveWorld.Game.UI
 
         private void OnMergeComplete(MergeCompleteEvent e)
         {
-            // 合成完成: 只刷新目标格子 + 播放动画
-            RefreshCell(e.TargetCellId);
-            PlayMergeAnimation(e.TargetCellId);
+            // 合成完成: 刷新目标格子 + 播放动画
+            RefreshCell(e.CellId);
+            PlayMergeAnimation(e.CellId);
         }
 
         private void OnItemMoved(ItemMovedEvent e)
@@ -179,14 +158,14 @@ namespace SaveWorld.Game.UI
         private void OnItemSwapped(ItemSwappedEvent e)
         {
             // 物品交换: 刷新两个格子
-            RefreshCell(e.CellAId);
-            RefreshCell(e.CellBId);
+            RefreshCell(e.CellIdA);
+            RefreshCell(e.CellIdB);
         }
 
         private void OnExplorationComplete(ExplorationCompleteEvent e)
         {
             // 探索完成: 刷新获得物品的格子
-            foreach (int cellId in e.AcquiredCellIds)
+            foreach (int cellId in e.GeneratedCellIds)
             {
                 RefreshCell(cellId);
             }
@@ -215,8 +194,8 @@ namespace SaveWorld.Game.UI
         {
             if (cellId < 0 || cellId >= 63) return;
 
-            var cell = GridManager.Instance.GetCell(cellId);
-            _cells[cellId].UpdateCell(cell);
+            var cellState = _stateMutator.CurrentState.Cells[cellId];
+            _cells[cellId].UpdateCell(cellState);
         }
 
         /// <summary>
@@ -255,30 +234,30 @@ namespace SaveWorld.Game.UI
             _eventBus = eventBus;
 
             var trigger = CellButton.GetComponent<EventTrigger>();
-            
+
             // 按下事件
             EventTrigger.Entry pressEntry = new EventTrigger.Entry();
             pressEntry.eventID = EventTriggerType.PointerDown;
             pressEntry.callback.AddListener((data) => { OnPointerDown((PointerEventData)data); });
             trigger.triggers.Add(pressEntry);
-            
+
             // 抬起事件
             EventTrigger.Entry releaseEntry = new EventTrigger.Entry();
             releaseEntry.eventID = EventTriggerType.PointerUp;
             releaseEntry.callback.AddListener((data) => { OnPointerUp((PointerEventData)data); });
             trigger.triggers.Add(releaseEntry);
-            
+
             // 点击事件
             CellButton.onClick.AddListener(OnCellClicked);
         }
 
-        public void UpdateCell(GridCell cell)
+        public void UpdateCell(CellState cellState)
         {
-            if (cell.HasItem)
+            if (cellState.HasItem())
             {
-                IconImage.sprite = Items.ItemIconManager.Instance.GetIcon(cell.ItemType);
+                IconImage.sprite = Items.ItemIconManager.Instance.GetItemIcon((ItemType)cellState.ItemId);
                 IconImage.enabled = true;
-                LevelText.text = "L" + Items.ItemConfig.GetItemLevel(cell.ItemType);
+                LevelText.text = "L" + Items.ItemConfig.GetItemLevel((ItemType)cellState.ItemId);
                 LevelText.enabled = true;
             }
             else
@@ -297,7 +276,7 @@ namespace SaveWorld.Game.UI
         private void OnPointerDown(PointerEventData eventData)
         {
             if (!IconImage.enabled) return;
-            
+
             _pressStartTime = Time.unscaledTime;
             _longPressCoroutine = StartCoroutine(CheckLongPress());
         }
@@ -313,11 +292,8 @@ namespace SaveWorld.Game.UI
             if (_isDragging)
             {
                 // 拖拽结束 发出拖拽完成事件
-                _eventBus.Publish(new CellDragEndEvent
-                {
-                    CellId = this.CellId
-                });
-                
+                _eventBus.Publish(new CellDragEndEvent(this.CellId));
+
                 _isDragging = false;
             }
         }
@@ -325,44 +301,34 @@ namespace SaveWorld.Game.UI
         private IEnumerator CheckLongPress()
         {
             yield return new WaitForSecondsRealtime(LONG_PRESS_THRESHOLD);
-            
+
             // 长按时间达到 开始拖拽
             _isDragging = true;
-            
+
             // 发出拖拽开始事件
-            _eventBus.Publish(new CellDragStartEvent
-            {
-                CellId = this.CellId
-            });
+            _eventBus.Publish(new CellDragStartEvent(this.CellId));
         }
 
         private void OnCellClicked()
         {
             if (_isDragging) return;
-            
+
             float currentTime = Time.unscaledTime;
-            
+
             if (currentTime - _lastClickTime < DOUBLE_CLICK_THRESHOLD)
             {
                 // 双击 → 发出合成请求事件
-                _eventBus.Publish(new CellDoubleClickEvent
-                {
-                    CellId = this.CellId
-                });
-                
+                _eventBus.Publish(new CellDoubleClickEvent(this.CellId));
+
                 _lastClickTime = 0;
             }
             else
             {
                 // 单击 → 发出选中事件
-                _eventBus.Publish(new CellClickEvent
-                {
-                    CellId = this.CellId
-                });
-                
+                _eventBus.Publish(new CellClickEvent(this.CellId));
+
                 _lastClickTime = currentTime;
             }
         }
     }
 }
-

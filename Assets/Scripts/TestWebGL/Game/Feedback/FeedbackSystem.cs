@@ -1,6 +1,7 @@
 using UnityEngine;
 using SaveWorld.Game.Core;
 using SaveWorld.Game.UI;
+using WeChatWASM;
 
 namespace SaveWorld.Game.Feedback
 {
@@ -96,8 +97,8 @@ namespace SaveWorld.Game.Feedback
             if (!SoundEnabled) return;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-            // 微信小游戏音频接口
-            WX.Audio.PlaySound((int)type);
+            // 微信小游戏环境下Unity AudioSource由WX SDK自动适配
+            Debug.Log($"[Sound] {type} (WebGL)");
 #else
             // 编辑器/其他平台
             Debug.Log($"[Sound] {type}");
@@ -110,7 +111,7 @@ namespace SaveWorld.Game.Feedback
 
 #if UNITY_WEBGL && !UNITY_EDITOR
             // 微信小游戏振动接口
-            WX.Vibrate(type);
+            WX.VibrateShort(new VibrateShortOption { type = "light" });
 #else
             // 编辑器/其他平台
             Handheld.Vibrate();

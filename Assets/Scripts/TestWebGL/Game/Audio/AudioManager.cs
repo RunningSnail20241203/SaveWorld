@@ -100,7 +100,7 @@ namespace SaveWorld.Game.Audio
             // var clip = GetSFXClip(type);
             // _sfxSource.PlayOneShot(clip, _sfxVolume * _masterVolume);
             
-            _eventBus.Publish(new SFXPlayedEvent { SoundType = type });
+            _eventBus.Publish(new SFXPlayedEvent { SoundType = (int)type, SoundId = 0, Volume = _sfxVolume });
         }
 
         public void SetMasterVolume(float volume)
@@ -215,11 +215,6 @@ namespace SaveWorld.Game.Audio
     public class MusicPlayedEvent : GameEvent
     {
         public MusicType MusicType;
-    }
-
-    public class SFXPlayedEvent : GameEvent
-    {
-        public SoundType SoundType;
     }
 
     public class MusicToggledEvent : GameEvent

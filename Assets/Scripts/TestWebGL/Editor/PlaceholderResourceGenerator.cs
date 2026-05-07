@@ -1,12 +1,11 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System.IO;
 using System.Collections.Generic;
-// UI命名空间暂时注释，待UI代码创建后恢复
-// using SaveWorld.Game.UI;
+using SaveWorld.Game.UI;
 
 namespace SaveWorld.Editor
 {
@@ -655,6 +654,8 @@ namespace SaveWorld.Editor
             CreateOrderItemPrefab(); // 创建订单项目预制件
             CreateOrdersPanelPrefab();
             CreateAchievementPanelPrefab();
+            CreateExplorationResultItemPrefab(); // 创建探索结果物品预制件
+            CreateExplorationResultPopupPrefab(); // 创建探索结果弹窗预制件
 
             Debug.Log("UI预制件创建完成！");
             AssetDatabase.Refresh();
@@ -797,8 +798,8 @@ namespace SaveWorld.Editor
             rect.offsetMin = new Vector2(16, Screen.height * 0.08f + 16);
             rect.offsetMax = new Vector2(-16, -Screen.height * 0.12f - 16);
 
-            // GridUI组件在V2架构中还未实现，暂时跳过添加脚本
-            // SaveWorld.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<SaveWorld.Game.UI.GridUI>();
+            // 添加GridUI组件并设置cellPrefab引用
+            SaveWorld.Game.UI.GridUI gridUIComponent = gridUI.AddComponent<SaveWorld.Game.UI.GridUI>();
             
             // 使用SerializedObject设置cellPrefab引用
             SerializedObject serializedGridUI = new SerializedObject(gridUIComponent);
@@ -2055,6 +2056,165 @@ namespace SaveWorld.Editor
             return item;
         }
 
+
+        /// <summary>
+        /// 创建探索结果物品预制件
+        /// </summary>
+        private static GameObject CreateExplorationResultItemPrefab()
+        {
+            GameObject item = new GameObject(""ExplorationResultItem"");
+
+            Image backgroundImage = item.AddComponent<Image>();
+            backgroundImage.color = new Color(0.25f, 0.25f, 0.25f, 0.9f);
+
+            HorizontalLayoutGroup layout = item.AddComponent<HorizontalLayoutGroup>();
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.spacing = 10;
+            layout.padding = new RectOffset(10, 10, 5, 5);
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = true;
+
+            RectTransform itemRect = item.GetComponent<RectTransform>();
+            itemRect.sizeDelta = new Vector2(300, 40);
+
+            GameObject iconGO = new GameObject(""ItemIcon"");
+            iconGO.transform.SetParent(item.transform, false);
+            Image itemIcon = iconGO.AddComponent<Image>();
+            itemIcon.color = Color.white;
+            RectTransform iconRect = iconGO.GetComponent<RectTransform>();
+            iconRect.sizeDelta = new Vector2(30, 30);
+
+            GameObject nameGO = new GameObject(""ItemName"");
+            nameGO.transform.SetParent(item.transform, false);
+            TextMeshProUGUI itemNameText = nameGO.AddComponent<TextMeshProUGUI>();
+            itemNameText.font = GetDefaultFontAsset();
+            itemNameText.text = ""物品名称"";
+            itemNameText.fontSize = 14;
+            itemNameText.color = Color.white;
+            itemNameText.alignment = TextAlignmentOptions.Left;
+            RectTransform nameRect = nameGO.GetComponent<RectTransform>();
+            nameRect.sizeDelta = new Vector2(150, 30);
+            LayoutElement nameLayout = nameGO.AddComponent<LayoutElement>();
+            nameLayout.flexibleWidth = 1;
+
+            GameObject countGO = new GameObject(""ItemCount"");
+            countGO.transform.SetParent(item.transform, false);
+            TextMeshProUGUI itemCountText = countGO.AddComponent<TextMeshProUGUI>();
+            itemCountText.font = GetDefaultFontAsset();
+            itemCountText.text = ""x1"";
+            itemCountText.fontSize = 14;
+            itemCountText.color = Color.gray;
+            itemCountText.alignment = TextAlignmentOptions.Right;
+            RectTransform countRect = countGO.GetComponent<RectTransform>();
+            countRect.sizeDelta = new Vector2(60, 30);
+
+            ExplorationResultItemUI resultItemUI = item.AddComponent<ExplorationResultItemUI>();
+            SerializedObject serializedItem = new SerializedObject(resultItemUI);
+            serializedItem.FindProperty(""itemIcon"").objectReferenceValue = itemIcon;
+            serializedItem.FindProperty(""itemNameText"").objectReferenceValue = itemNameText;
+            serializedItem.FindProperty(""itemCountText"").objectReferenceValue = itemCountText;
+            serializedItem.ApplyModifiedProperties();
+
+            PrefabUtility.SaveAsPrefabAsset(item, $""{PREFAB_PATH}/ExplorationResultItem.prefab"");
+            return item;
+        }
+
+        /// <summary>
+        /// 创建探索结果弹窗预制件
+        /// </summary>
+        private static void CreateExplorationResultPopupPrefab()
+        {
+            GameObject tempItem = CreateExplorationResultItemPrefab();
+            if (tempItem != null)
+            {
+                Object.DestroyImmediate(tempItem);
+            }
+
+            GameObject resultItemPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($""{PREFAB_PATH}/ExplorationResultItem.prefab"");
+
+            GameObject panel = CreateBasePanel(""ExplorationResultPopup"", new Vector2(350, 400));
+
+            GameObject titleGO = new GameObject(""Title"");
+            titleGO.transform.SetParent(panel.transform, false);
+            TextMeshProUGUI titleText = titleGO.AddComponent<TextMeshProUGUI>();
+            titleText.font = GetDefaultFontAsset();
+            titleText.text = ""探索结果"";
+            titleText.fontSize = 20;
+            titleText.fontStyle = FontStyles.Bold;
+            titleText.color = Color.white;
+            titleText.alignment = TextAlignmentOptions.Center;
+            RectTransform titleRect = titleGO.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0.5f, 1);
+            titleRect.anchorMax = new Vector2(0.5f, 1);
+            titleRect.pivot = new Vector2(0.5f, 1);
+            titleRect.anchoredPosition = new Vector2(0, -15);
+            titleRect.sizeDelta = new Vector2(300, 35);
+
+            GameObject scrollGO = new GameObject(""ResultScrollRect"");
+            scrollGO.transform.SetParent(panel.transform, false);
+            ScrollRect scrollRect = scrollGO.AddComponent<ScrollRect>();
+            RectTransform scrollRectRT = scrollGO.GetComponent<RectTransform>();
+            scrollRectRT.anchorMin = new Vector2(0, 0);
+            scrollRectRT.anchorMax = new Vector2(1, 1);
+            scrollRectRT.offsetMin = new Vector2(15, 65);
+            scrollRectRT.offsetMax = new Vector2(-15, -50);
+
+            GameObject viewportGO = new GameObject(""Viewport"");
+            viewportGO.transform.SetParent(scrollGO.transform, false);
+            Image viewportImage = viewportGO.AddComponent<Image>();
+            viewportImage.color = new Color(0.15f, 0.15f, 0.15f, 0.8f);
+            RectTransform viewportRT = viewportGO.GetComponent<RectTransform>();
+            viewportRT.anchorMin = Vector2.zero;
+            viewportRT.anchorMax = Vector2.one;
+            viewportRT.sizeDelta = Vector2.zero;
+            viewportGO.AddComponent<Mask>();
+
+            GameObject contentGO = new GameObject(""Content"");
+            contentGO.transform.SetParent(viewportGO.transform, false);
+            Transform itemsContainer = contentGO.transform;
+            RectTransform contentRT = contentGO.GetComponent<RectTransform>();
+            contentRT.anchorMin = new Vector2(0, 1);
+            contentRT.anchorMax = new Vector2(1, 1);
+            contentRT.pivot = new Vector2(0.5f, 1);
+            contentRT.anchoredPosition = Vector2.zero;
+            contentRT.sizeDelta = new Vector2(0, 0);
+            VerticalLayoutGroup contentLayout = contentGO.AddComponent<VerticalLayoutGroup>();
+            contentLayout.childAlignment = TextAnchor.UpperCenter;
+            contentLayout.spacing = 5;
+            contentLayout.padding = new RectOffset(5, 5, 5, 5);
+            contentLayout.childForceExpandWidth = true;
+            contentLayout.childForceExpandHeight = false;
+            ContentSizeFitter contentFitter = contentGO.AddComponent<ContentSizeFitter>();
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.viewport = viewportRT;
+            scrollRect.content = contentRT;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+            GameObject closeBtn = CreateButton(""CloseButton"", ""关闭"", panel.transform);
+            RectTransform closeBtnRect = closeBtn.GetComponent<RectTransform>();
+            closeBtnRect.anchorMin = new Vector2(0.5f, 0);
+            closeBtnRect.anchorMax = new Vector2(0.5f, 0);
+            closeBtnRect.pivot = new Vector2(0.5f, 0);
+            closeBtnRect.anchoredPosition = new Vector2(0, 10);
+            closeBtnRect.sizeDelta = new Vector2(120, 40);
+            Button closeButton = closeBtn.GetComponent<Button>();
+
+            Image backgroundImage = panel.GetComponent<Image>();
+
+            ExplorationResultPopupUI popupUI = panel.AddComponent<ExplorationResultPopupUI>();
+            SerializedObject serializedPopup = new SerializedObject(popupUI);
+            serializedPopup.FindProperty(""backgroundImage"").objectReferenceValue = backgroundImage;
+            serializedPopup.FindProperty(""titleText"").objectReferenceValue = titleText;
+            serializedPopup.FindProperty(""itemsContainer"").objectReferenceValue = itemsContainer;
+            serializedPopup.FindProperty(""closeButton"").objectReferenceValue = closeButton;
+            serializedPopup.ApplyModifiedProperties();
+
+            PrefabUtility.SaveAsPrefabAsset(panel, $""{PREFAB_PATH}/ExplorationResultPopup.prefab"");
+            Object.DestroyImmediate(panel);
+        }
         // 辅助方法
         private static GameObject CreateBasePanel(string name, Vector2 size)
         {

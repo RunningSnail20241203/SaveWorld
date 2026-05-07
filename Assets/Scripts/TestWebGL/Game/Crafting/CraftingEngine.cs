@@ -1,9 +1,8 @@
 using System;
+using System.Linq;
 using SaveWorld.Game.Core;
 using SaveWorld.Game.Grid;
-
 using SaveWorld.Game.Items;
-using SaveWorld.Game.Grid;
 
 namespace SaveWorld.Game.Crafting
 {
@@ -291,10 +290,18 @@ namespace SaveWorld.Game.Crafting
             // 目标格子为空：直接移动
             if (!targetCell.HasItem)
             {
-                var (moveSuccess, moveError) = _gridManager.TryMoveItem(fromRow, fromCol, toRow, toCol);
-                if (!moveSuccess)
+                var (removeSuccess, removeError) = _gridManager.TryRemoveItem(fromRow, fromCol, sourceCount);
+                if (!removeSuccess)
                 {
-                    OnCraftFailure?.Invoke($"移动物品失败 ({moveError})");
+                    OnCraftFailure?.Invoke($"移动物品失败 ({removeError})");
+                    return false;
+                }
+                
+                var (placeSuccess, placeError) = _gridManager.TryPlaceItem(toRow, toCol, sourceItem, sourceCount);
+                if (!placeSuccess)
+                {
+                    _gridManager.TryPlaceItem(fromRow, fromCol, sourceItem, sourceCount);
+                    OnCraftFailure?.Invoke($"移动物品失败 ({placeError})");
                     return false;
                 }
                 

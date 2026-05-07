@@ -94,39 +94,4 @@ namespace SaveWorld.Game.Core
         }
     }
 
-    /// <summary>
-    /// 体力领取事件
-    /// </summary>
-    public sealed class StaminaClaimedEvent : GameEvent
-    {
-        public int Amount { get; set; }
-        public int NewStamina { get; set; }
-    }
-
-    /// <summary>
-    /// 云同步开始事件
-    /// </summary>
-    public sealed class CloudSyncStartedEvent : GameEvent
-    {
-        public string SyncId { get; set; }
-    }
-
-    /// <summary>
-    /// 云同步完成事件
-    /// </summary>
-    public sealed class CloudSyncCompletedEvent : GameEvent
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-    }
-
-    /// <summary>
-    /// 音效播放事件
-    /// </summary>
-    public sealed class SFXPlayedEvent : GameEvent
-    {
-        public int SoundId { get; set; }
-        public float Volume { get; set; }
-    }
-
 }

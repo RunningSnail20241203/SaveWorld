@@ -77,3 +77,10 @@ crashlytics-build.properties
 HybridCLRData
 cline-multi-session/
 .agent_stats/
+
+# Environment
+.env
+
+# AI-Prompt-Generator 本地配置
+AI-Prompt-Generator/.env
+AI-Prompt-Generator/images/

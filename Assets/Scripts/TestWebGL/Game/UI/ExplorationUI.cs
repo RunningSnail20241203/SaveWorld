@@ -51,19 +51,15 @@ namespace SaveWorld.Game.UI
             // 清空旧结果
             foreach (Transform child in ResultItemsContainer)
             {
-                Destroy(child.gameObject);
+                UnityEngine.Object.Destroy(child.gameObject);
             }
 
             // 显示新获得的物品
             foreach (int cellId in cellIds)
             {
-                var cell = Grid.GridManager.Instance.GetCell(cellId);
-                if (cell.HasItem)
-                {
-                    var itemObj = Instantiate(ResultItemPrefab, ResultItemsContainer);
-                    var icon = itemObj.GetComponentInChildren<Image>();
-                    icon.sprite = Items.ItemIconManager.Instance.GetIcon(cell.ItemType);
-                }
+                // TODO: V2 迁移 - 通过 GameState 查询格子
+                // var cell = Grid.GridManager.Instance.GetCell(cellId);
+                Debug.Log($"[ExplorationUI] 获得物品: cellId={cellId}");
             }
         }
 

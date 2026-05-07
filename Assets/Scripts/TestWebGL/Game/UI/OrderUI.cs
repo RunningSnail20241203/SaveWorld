@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using SaveWorld.Game.Order;
+using SaveWorld.Game.Core;
 
 namespace SaveWorld.Game.UI
 {
@@ -17,20 +19,16 @@ namespace SaveWorld.Game.UI
 
         public override void Initialize()
         {
-            base.Initialize();
 
             // 创建3个订单槽位
             _orderItems = new OrderItemUI[3];
             for (int i = 0; i < 3; i++)
             {
-                var obj = Instantiate(OrderItemPrefab, OrderContainer);
+                var obj = UnityEngine.Object.Instantiate(OrderItemPrefab, OrderContainer);
                 _orderItems[i] = obj.GetComponent<OrderItemUI>();
             }
 
             RefreshOrders();
-
-            // 监听订单更新
-            OrderManager.Instance.OnOrdersUpdated += RefreshOrders;
         }
 
         public override void Refresh()
@@ -43,19 +41,10 @@ namespace SaveWorld.Game.UI
         /// </summary>
         public void RefreshOrders()
         {
-            var orders = OrderManager.Instance.GetActiveOrders();
-
+            // TODO: V2 迁移 - 从 GameState 获取活跃订单并通过 EventBus 刷新
             for (int i = 0; i < 3; i++)
             {
-                if (i < orders.Count)
-                {
-                    _orderItems[i].UpdateOrder(orders[i]);
-                    _orderItems[i].gameObject.SetActive(true);
-                }
-                else
-                {
-                    _orderItems[i].gameObject.SetActive(false);
-                }
+                _orderItems[i].gameObject.SetActive(false);
             }
         }
     }
@@ -72,20 +61,22 @@ namespace SaveWorld.Game.UI
         public Button SubmitButton;
         public Button RefreshButton;
 
-        private OrderData _currentOrder;
+        private OrderData? _currentOrder;
 
         public void UpdateOrder(OrderData order)
         {
             _currentOrder = order;
 
-            RequireItemIcon.sprite = Items.ItemIconManager.Instance.GetIcon(order.RequireItem);
+            RequireItemIcon.sprite = Items.ItemIconManager.Instance.GetItemIcon(order.RequireItem);
             RewardExpText.text = order.RewardExp.ToString();
             RewardGoldText.text = order.RewardGold.ToString();
 
-            TimeSpan remaining = order.ExpireTime - DateTime.Now;
+            DateTime expireDateTime = DateTimeOffset.FromUnixTimeSeconds(order.ExpireTime).LocalDateTime;
+            TimeSpan remaining = expireDateTime - DateTime.Now;
             TimeLeftText.text = $"{remaining.Hours:D2}:{remaining.Minutes:D2}";
 
-            SubmitButton.interactable = !order.IsCompleted && Grid.GridManager.Instance.HasItem(order.RequireItem);
+            // TODO: V2 迁移 - 通过 EventBus 查询背包中是否有该物品
+            SubmitButton.interactable = !order.IsCompleted;
             SubmitButton.onClick.RemoveAllListeners();
             SubmitButton.onClick.AddListener(OnSubmitClicked);
 
@@ -95,17 +86,19 @@ namespace SaveWorld.Game.UI
 
         private void OnSubmitClicked()
         {
-            if (_currentOrder != null)
+            if (_currentOrder.HasValue)
             {
-                OrderManager.Instance.TrySubmitOrder(_currentOrder.OrderId);
+                // TODO: V2 迁移 - 通过 EventBus 发布订单提交请求
+                Debug.Log($"[OrderUI] 提交订单: {_currentOrder.Value.OrderId}");
             }
         }
 
         private void OnRefreshClicked()
         {
-            if (_currentOrder != null)
+            if (_currentOrder.HasValue)
             {
-                OrderManager.Instance.RefreshOrder(_currentOrder.OrderId);
+                // TODO: V2 迁移 - 通过 EventBus 请求刷新订单
+                Debug.Log($"[OrderUI] 刷新订单: {_currentOrder.Value.OrderId}");
             }
         }
     }

@@ -1,24 +1,92 @@
 using System;
 using System.Collections.Generic;
-// V2: 暂时移除旧命名空间引用
-// using SaveWorld.Game.Player;
-// using SaveWorld.Game.Grid;
-
 using SaveWorld.Game.Core;
+using UnityEngine;
+using WeChatWASM;
 
 namespace SaveWorld.Game.Storage
 {
     /// <summary>
-    /// 本地存储系统
-    /// 负责游戏数据的保存和加载
-    /// WebGL环境下使用JSON + localStorage
+    /// 本地存储系统 - 自动适配微信/非微信环境
+    /// 微信环境 → WX.StorageSetStringSync (wx.storage)
+    /// 其他环境 → UnityEngine.PlayerPrefs
     /// </summary>
     public class StorageSystem
     {
+        private readonly bool _useWeChatStorage;
+
         // 存储键名
         private const string PLAYER_DATA_KEY = "TestWebGL_PlayerData";
         private const string GRID_DATA_KEY = "TestWebGL_GridData";
         private const string GAME_SETTINGS_KEY = "TestWebGL_Settings";
+
+        public StorageSystem(bool useWeChatStorage = false)
+        {
+            _useWeChatStorage = useWeChatStorage;
+        }
+
+        #region 存储后端路由
+
+        private void SetStr(string key, string value)
+        {
+            if (_useWeChatStorage)
+            {
+                WX.StorageSetStringSync(key, value);
+            }
+            else
+            {
+                PlayerPrefs.SetString(key, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        private string GetStr(string key, string defaultValue = "")
+        {
+            if (_useWeChatStorage)
+            {
+                return WX.StorageHasKeySync(key) ? WX.StorageGetStringSync(key, defaultValue) : defaultValue;
+            }
+            return PlayerPrefs.GetString(key, defaultValue);
+        }
+
+        private bool HasKey(string key)
+        {
+            if (_useWeChatStorage)
+            {
+                return WX.StorageHasKeySync(key);
+            }
+            return PlayerPrefs.HasKey(key);
+        }
+
+        private void DelKey(string key)
+        {
+            if (_useWeChatStorage)
+            {
+                WX.StorageDeleteKeySync(key);
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(key);
+                PlayerPrefs.Save();
+            }
+        }
+
+        private void DelAllKeys()
+        {
+            if (_useWeChatStorage)
+            {
+                WX.StorageDeleteAllSync();
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(PLAYER_DATA_KEY);
+                PlayerPrefs.DeleteKey(GRID_DATA_KEY);
+                PlayerPrefs.DeleteKey(GAME_SETTINGS_KEY);
+                PlayerPrefs.Save();
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 游戏设置数据
@@ -94,12 +162,14 @@ namespace SaveWorld.Game.Storage
                     versionNumber = gameState.Version,
                     player = gameState.Player,
                     cells = gameState.Cells,
-                    metadata = gameState.Metadata
+                    metadata = gameState.Metadata,
+                    orders = gameState.Orders,
+                    achievements = gameState.Achievements,
+                    lastOrderResetDate = gameState.LastOrderResetDate
                 };
 
-                string jsonData = UnityEngine.JsonUtility.ToJson(saveData);
-                UnityEngine.PlayerPrefs.SetString(PLAYER_DATA_KEY, jsonData);
-                UnityEngine.PlayerPrefs.Save();
+                string jsonData = JsonUtility.ToJson(saveData);
+                SetStr(PLAYER_DATA_KEY, jsonData);
 
                 OnSaveCompleted?.Invoke(StorageResult.Success, $"游戏状态保存成功 版本:{gameState.Version}");
                 return StorageResult.Success;
@@ -112,19 +182,43 @@ namespace SaveWorld.Game.Storage
         }
 
         /// <summary>
+        /// 直接保存JSON存档数据（用于云端恢复等场景）
+        /// </summary>
+        public StorageResult SaveGameStateRaw(string jsonData)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(jsonData))
+                {
+                    OnSaveCompleted?.Invoke(StorageResult.CorruptedData, "JSON数据为空");
+                    return StorageResult.CorruptedData;
+                }
+
+                SetStr(PLAYER_DATA_KEY, jsonData);
+                OnSaveCompleted?.Invoke(StorageResult.Success, "存档JSON直写成功");
+                return StorageResult.Success;
+            }
+            catch (Exception ex)
+            {
+                OnSaveCompleted?.Invoke(StorageResult.SerializationError, $"直写失败: {ex.Message}");
+                return StorageResult.SerializationError;
+            }
+        }
+
+        /// <summary>
         /// 加载完整游戏状态
         /// </summary>
         public (StorageResult result, GameStateSaveData data) LoadGameState()
         {
             try
             {
-                if (!UnityEngine.PlayerPrefs.HasKey(PLAYER_DATA_KEY))
+                if (!HasKey(PLAYER_DATA_KEY))
                 {
                     OnLoadCompleted?.Invoke(StorageResult.FileNotFound, "未找到游戏存档");
                     return (StorageResult.FileNotFound, null);
                 }
 
-                string jsonData = UnityEngine.PlayerPrefs.GetString(PLAYER_DATA_KEY);
+                string jsonData = GetStr(PLAYER_DATA_KEY);
 
                 if (string.IsNullOrEmpty(jsonData))
                 {
@@ -168,6 +262,9 @@ namespace SaveWorld.Game.Storage
             public PlayerState player;
             public CellState[] cells;
             public IReadOnlyDictionary<string, object> metadata;
+            public IReadOnlyDictionary<int, SaveWorld.Game.Order.OrderData> orders;
+            public IReadOnlyDictionary<int, SaveWorld.Game.Achievement.AchievementData> achievements;
+            public DateTime lastOrderResetDate;
         }
 
         /// <summary>
@@ -177,13 +274,13 @@ namespace SaveWorld.Game.Storage
         {
             try
             {
-                if (!UnityEngine.PlayerPrefs.HasKey(GRID_DATA_KEY))
+                if (!HasKey(GRID_DATA_KEY))
                 {
                     OnLoadCompleted?.Invoke(StorageResult.FileNotFound, "未找到网格存档");
                     return (StorageResult.FileNotFound, null);
                 }
 
-                string jsonData = UnityEngine.PlayerPrefs.GetString(GRID_DATA_KEY);
+                string jsonData = GetStr(GRID_DATA_KEY);
 
                 if (string.IsNullOrEmpty(jsonData))
                 {
@@ -223,9 +320,8 @@ namespace SaveWorld.Game.Storage
         {
             try
             {
-                string jsonData = UnityEngine.JsonUtility.ToJson(settings);
-                UnityEngine.PlayerPrefs.SetString(GAME_SETTINGS_KEY, jsonData);
-                UnityEngine.PlayerPrefs.Save();
+                string jsonData = JsonUtility.ToJson(settings);
+                SetStr(GAME_SETTINGS_KEY, jsonData);
 
                 OnSaveCompleted?.Invoke(StorageResult.Success, "游戏设置保存成功");
                 return StorageResult.Success;
@@ -244,7 +340,7 @@ namespace SaveWorld.Game.Storage
         {
             try
             {
-                if (!UnityEngine.PlayerPrefs.HasKey(GAME_SETTINGS_KEY))
+                if (!HasKey(GAME_SETTINGS_KEY))
                 {
                     // 返回默认设置
                     var defaultSettings = new GameSettings();
@@ -252,7 +348,7 @@ namespace SaveWorld.Game.Storage
                     return (StorageResult.Success, defaultSettings);
                 }
 
-                string jsonData = UnityEngine.PlayerPrefs.GetString(GAME_SETTINGS_KEY);
+                string jsonData = GetStr(GAME_SETTINGS_KEY);
                 GameSettings settings = UnityEngine.JsonUtility.FromJson<GameSettings>(jsonData);
 
                 if (settings == null)
@@ -280,10 +376,9 @@ namespace SaveWorld.Game.Storage
         {
             try
             {
-                UnityEngine.PlayerPrefs.DeleteKey(PLAYER_DATA_KEY);
-                UnityEngine.PlayerPrefs.DeleteKey(GRID_DATA_KEY);
-                UnityEngine.PlayerPrefs.DeleteKey(GAME_SETTINGS_KEY);
-                UnityEngine.PlayerPrefs.Save();
+                DelKey(PLAYER_DATA_KEY);
+                DelKey(GRID_DATA_KEY);
+                DelKey(GAME_SETTINGS_KEY);
 
                 OnSaveCompleted?.Invoke(StorageResult.Success, "所有存档已删除");
                 return StorageResult.Success;
@@ -300,8 +395,8 @@ namespace SaveWorld.Game.Storage
         /// </summary>
         public bool HasSaveData()
         {
-            return UnityEngine.PlayerPrefs.HasKey(PLAYER_DATA_KEY) ||
-                   UnityEngine.PlayerPrefs.HasKey(GRID_DATA_KEY);
+            return HasKey(PLAYER_DATA_KEY) ||
+                   HasKey(GRID_DATA_KEY);
         }
 
         /// <summary>
@@ -309,11 +404,12 @@ namespace SaveWorld.Game.Storage
         /// </summary>
         public string GetStorageInfo()
         {
-            bool hasPlayerData = UnityEngine.PlayerPrefs.HasKey(PLAYER_DATA_KEY);
-            bool hasGridData = UnityEngine.PlayerPrefs.HasKey(GRID_DATA_KEY);
-            bool hasSettings = UnityEngine.PlayerPrefs.HasKey(GAME_SETTINGS_KEY);
+            bool hasPlayerData = HasKey(PLAYER_DATA_KEY);
+            bool hasGridData = HasKey(GRID_DATA_KEY);
+            bool hasSettings = HasKey(GAME_SETTINGS_KEY);
 
-            return $"存储状态: 玩家数据={hasPlayerData}, 网格数据={hasGridData}, 设置={hasSettings}";
+            string backend = _useWeChatStorage ? "微信WX.Storage" : "PlayerPrefs";
+            return $"存储后端: {backend}, 玩家数据={hasPlayerData}, 网格数据={hasGridData}, 设置={hasSettings}";
         }
     }
 }

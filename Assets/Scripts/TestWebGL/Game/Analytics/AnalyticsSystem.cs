@@ -39,8 +39,8 @@ namespace SaveWorld.Game.Analytics
                 new Dictionary<string, object> 
                 { 
                     {"order_id", e.OrderId},
-                    {"exp_reward", e.ExpReward},
-                    {"coin_reward", e.CoinReward}
+                    {"exp_reward", e.RewardExp},
+                    {"coin_reward", e.RewardGold}
                 }));
 
             _eventBus.Listen<AchievementUnlockedEvent>(e => LogEvent("achievement_unlocked",

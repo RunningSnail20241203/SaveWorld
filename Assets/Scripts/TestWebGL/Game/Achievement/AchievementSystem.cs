@@ -274,26 +274,5 @@ private void UnlockAchievement(int achievementId)
         public int AchievementId;
     }
 
-    public class AchievementUnlockedEvent : GameEvent
-    {
-        public int AchievementId;
-        public string AchievementName;
-        public int ExpReward;
-        public int CoinReward;
-    }
-
-    public class AchievementUnlockFailedEvent : GameEvent
-    {
-        public int AchievementId;
-        public string Reason;
-    }
-
-    public class AchievementProgressUpdatedEvent : GameEvent
-    {
-        public int AchievementId;
-        public int Progress;
-        public int RequiredProgress;
-    }
-
     #endregion
 }

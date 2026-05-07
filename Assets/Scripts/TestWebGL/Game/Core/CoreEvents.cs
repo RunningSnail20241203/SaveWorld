@@ -223,12 +223,56 @@ namespace SaveWorld.Game.Core
 
     public class AchievementUnlockedEvent : GameEvent
     {
-        public int AchievementId { get; }
+        public int AchievementId;
+        public string AchievementName;
+        public int ExpReward;
+        public int CoinReward;
+    }
 
-        public AchievementUnlockedEvent(int achievementId)
-        {
-            AchievementId = achievementId;
-        }
+    public class AchievementUnlockFailedEvent : GameEvent
+    {
+        public int AchievementId;
+        public string Reason;
+    }
+
+    public class AchievementProgressUpdatedEvent : GameEvent
+    {
+        public int AchievementId;
+        public int Progress;
+        public int RequiredProgress;
+    }
+
+    #endregion
+
+    #region 系统事件
+
+    public class GameStartedEvent : GameEvent
+    {
+    }
+
+    public class StaminaClaimedEvent : GameEvent
+    {
+        public int Amount;
+        public int NewStamina;
+    }
+
+    public class CloudSyncStartedEvent : GameEvent
+    {
+        public string SyncId;
+    }
+
+    public class CloudSyncCompletedEvent : GameEvent
+    {
+        public bool Success;
+        public string Message;
+        public DateTime SyncTime;
+    }
+
+    public class SFXPlayedEvent : GameEvent
+    {
+        public int SoundType;
+        public int SoundId;
+        public float Volume;
     }
 
     #endregion

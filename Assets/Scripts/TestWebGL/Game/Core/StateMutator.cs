@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SaveWorld.Game.Order;
 using SaveWorld.Game.Achievement;
+using SaveWorld.Game.Storage;
 
 namespace SaveWorld.Game.Core
 {
@@ -111,7 +112,7 @@ namespace SaveWorld.Game.Core
         /// <summary>
         /// 更新状态（格子+玩家）
         /// </summary>
-        private void UpdateState(CellState[] newCells, PlayerState newPlayer)
+        internal void UpdateState(CellState[] newCells, PlayerState newPlayer)
         {
             _currentState = new GameState(
                 version: _currentState.Version + 1,
@@ -215,7 +216,7 @@ namespace SaveWorld.Game.Core
         {
             var (result, saveData) = _storageSystem.LoadGameState();
             // StorageSystem 旧版本不包含 orders/achievements 字段，加载时使用默认值
-            if (result == SaveWorld.Game.Storage.StorageResult.Success && saveData != null)
+            if (result == StorageSystem.StorageResult.Success && saveData != null)
             {
                 _currentState = new GameState(
                     version: saveData.versionNumber,
@@ -237,7 +238,12 @@ namespace SaveWorld.Game.Core
                     var newPlayer = new PlayerState(
                         level: _currentState.Player.Level,
                         stamina: Math.Min(MAX_STAMINA, _currentState.Player.Stamina + recoveredStamina),
+                        maxStamina: _currentState.Player.MaxStamina,
                         gold: _currentState.Player.Gold,
+                        coins: _currentState.Player.Coins,
+                        exp: _currentState.Player.Exp,
+                        experience: _currentState.Player.Experience,
+                        expToNextLevel: _currentState.Player.ExpToNextLevel,
                         lastOfflineTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                     );
                     

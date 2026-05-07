@@ -169,12 +169,6 @@ namespace SaveWorld.Game.Social
     {
     }
 
-    public class StaminaClaimedEvent : GameEvent
-    {
-        public int Amount;
-        public int NewStamina;
-    }
-
     public class ShareGameRequestEvent : GameEvent
     {
         public ShareType ShareType;
