@@ -1,0 +1,8 @@
+# API密钥
+.env
+
+# 生成的图片 (体积大，一般不提交)
+images/
+
+# 依赖
+node_modules/

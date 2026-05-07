@@ -1,0 +1,34 @@
+{
+  "endpoint": "https://api.example.com/v1/images/generations",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "authType": "bearer",
+  "authHeaderName": "Authorization",
+  "apiKeyEnv": "IMAGE_API_KEY",
+  "requestBody": {
+    "model": "stable-diffusion-xl",
+    "prompt": "{{PROMPT}}",
+    "negative_prompt": "{{NEGATIVE_PROMPT}}",
+    "n": 1,
+    "size": "{{SIZE}}",
+    "response_format": "url"
+  },
+  "responseImageField": "data.0.url",
+  "responseImageFormat": "url",
+  "timeout": 120000,
+  "concurrency": 2,
+  "retryCount": 2,
+  "retryDelay": 3000,
+  "defaultNegativePrompt": "blurry, low quality, distorted, ugly, bad anatomy, watermark, text, signature",
+  "imageExtension": "png",
+  "supportedSizes": [
+    "512x512",
+    "768x768",
+    "1024x1024",
+    "1024x576",
+    "576x1024"
+  ],
+  "defaultSize": "1024x1024"
+}

@@ -1,11 +1,12 @@
 /**
  * Prompt生成器核心逻辑
- * 负责加载配置、生成prompt、保存文件
+ * 负责加载配置、生成prompt、保存文件、调用图片生成
  */
 
 const fs = require('fs');
 const path = require('path');
 const { generateItemPrompt, generateItemPromptSimple, generateUIPrompt } = require('./templates');
+const { init: imgInit, generateImage, generateImagesBatch, generateImageFromPromptFile, IMAGES_ITEMS_DIR, IMAGES_UI_DIR } = require('./image-generator');
 
 // 配置路径
 const CONFIG_DIR = path.join(__dirname, '..', 'config');
@@ -284,11 +285,178 @@ function generateAll() {
   };
 }
 
+/**
+ * 生成单个物品的prompt和图片
+ */
+async function generateSingleItemWithImage(itemName, imageOptions = {}) {
+  const config = loadItemsConfig();
+  
+  for (const [lineKey, lineData] of Object.entries(config.lines)) {
+    const item = lineData.items.find(i => i.name === itemName);
+    if (item) {
+      const prompt = generateItemPrompt(item, lineData.theme);
+      const promptFileName = `${item.id}.txt`;
+      const promptFilePath = path.join(ITEMS_OUTPUT_DIR, promptFileName);
+      savePrompt(promptFilePath, prompt);
+      
+      const imgFileName = `${item.id}.png`;
+      const imgResult = await generateImage(prompt, { ...imageOptions, fileName: imgFileName, outputDir: IMAGES_ITEMS_DIR });
+      return { success: true, item, line: lineData, prompt, image: imgResult };
+    }
+  }
+  
+  const specialItem = config.specialItems.find(i => i.name === itemName);
+  if (specialItem) {
+    const prompt = generateItemPrompt(specialItem, "特殊物品");
+    const promptFileName = `${specialItem.id}.txt`;
+    savePrompt(path.join(ITEMS_OUTPUT_DIR, promptFileName), prompt);
+    
+    const imgFileName = `${specialItem.id}.png`;
+    const imgResult = await generateImage(prompt, { ...imageOptions, fileName: imgFileName, outputDir: IMAGES_ITEMS_DIR });
+    return { success: true, item: specialItem, line: null, prompt, image: imgResult };
+  }
+  
+  const crossItem = config.crossLineItems.find(i => i.name === itemName);
+  if (crossItem) {
+    const prompt = generateItemPrompt(crossItem, "跨线合成");
+    const promptFileName = `${crossItem.id}.txt`;
+    savePrompt(path.join(ITEMS_OUTPUT_DIR, promptFileName), prompt);
+    
+    const imgFileName = `${crossItem.id}.png`;
+    const imgResult = await generateImage(prompt, { ...imageOptions, fileName: imgFileName, outputDir: IMAGES_ITEMS_DIR });
+    return { success: true, item: crossItem, line: null, prompt, image: imgResult };
+  }
+  
+  return { success: false, message: `未找到物品: ${itemName}` };
+}
+
+/**
+ * 收集所有物品的prompt任务
+ */
+function collectAllItemTasks(imageOptions = {}) {
+  const config = loadItemsConfig();
+  const tasks = [];
+  
+  for (const [lineKey, lineData] of Object.entries(config.lines)) {
+    for (const item of lineData.items) {
+      const prompt = generateItemPrompt(item, lineData.theme);
+      const promptFileName = `${item.id}.txt`;
+      savePrompt(path.join(ITEMS_OUTPUT_DIR, promptFileName), prompt);
+      tasks.push({
+        prompt,
+        options: { ...imageOptions, fileName: `${item.id}.png`, outputDir: IMAGES_ITEMS_DIR }
+      });
+    }
+  }
+  
+  for (const item of config.specialItems) {
+    const prompt = generateItemPrompt(item, "特殊物品");
+    const promptFileName = `${item.id}.txt`;
+    savePrompt(path.join(ITEMS_OUTPUT_DIR, promptFileName), prompt);
+    tasks.push({
+      prompt,
+      options: { ...imageOptions, fileName: `${item.id}.png`, outputDir: IMAGES_ITEMS_DIR }
+    });
+  }
+  
+  for (const item of config.crossLineItems) {
+    const prompt = generateItemPrompt(item, "跨线合成");
+    const promptFileName = `${item.id}.txt`;
+    savePrompt(path.join(ITEMS_OUTPUT_DIR, promptFileName), prompt);
+    tasks.push({
+      prompt,
+      options: { ...imageOptions, fileName: `${item.id}.png`, outputDir: IMAGES_ITEMS_DIR }
+    });
+  }
+  
+  return tasks;
+}
+
+/**
+ * 收集UI元素的prompt任务
+ */
+function collectUITasks(imageOptions = {}) {
+  const config = loadUIConfig();
+  const tasks = [];
+  
+  for (const element of config.elements) {
+    const prompt = generateUIPrompt(element.type, {
+      color: element.color,
+      size: element.size,
+      custom: element.description
+    });
+    const fileName = `${element.type}_${element.name}.txt`;
+    const filePath = path.join(UI_OUTPUT_DIR, fileName);
+    savePrompt(filePath, prompt);
+    tasks.push({
+      prompt,
+      options: { ...imageOptions, fileName: `${element.type}_${element.name}.png`, outputDir: IMAGES_UI_DIR }
+    });
+  }
+  
+  return tasks;
+}
+
+/**
+ * 生成所有物品的prompt和图片
+ */
+async function generateAllItemsWithImages(imageOptions = {}) {
+  const tasks = collectAllItemTasks(imageOptions);
+  console.log(`📦 开始生成所有物品图片...\n`);
+  
+  const concurrency = imageOptions.concurrency;
+  return await generateImagesBatch(tasks, concurrency, (completed, total, result) => {
+    const status = result.success ? '✅' : '❌';
+    console.log(`   ${status} [${completed}/${total}] ${path.basename(result.filePath || '')}`);
+  });
+}
+
+/**
+ * 生成所有UI的prompt和图片
+ */
+async function generateUIWithImages(imageOptions = {}) {
+  const tasks = collectUITasks(imageOptions);
+  console.log(`🎨 开始生成UI元素图片...\n`);
+  
+  const concurrency = imageOptions.concurrency;
+  return await generateImagesBatch(tasks, concurrency, (completed, total, result) => {
+    const status = result.success ? '✅' : '❌';
+    console.log(`   ${status} [${completed}/${total}] ${path.basename(result.filePath || '')}`);
+  });
+}
+
+/**
+ * 生成所有资源的prompt和图片
+ */
+async function generateAllWithImages(imageOptions = {}) {
+  console.log('🚀 开始生成所有资源...\n');
+  
+  const itemTasks = collectAllItemTasks(imageOptions);
+  const uiTasks = collectUITasks(imageOptions);
+  const allTasks = [...itemTasks, ...uiTasks];
+  
+  console.log(`📦 共 ${allTasks.length} 个图片任务 (${itemTasks.length} 物品 + ${uiTasks.length} UI)\n`);
+  
+  const concurrency = imageOptions.concurrency;
+  const result = await generateImagesBatch(allTasks, concurrency, (completed, total, r) => {
+    const status = r.success ? '✅' : '❌';
+    console.log(`   ${status} [${completed}/${total}] ${path.basename(r.filePath || '')}`);
+  });
+  
+  console.log('\n========================================');
+  console.log('📊 生成统计:');
+  console.log(`   成功: ${result.successCount} / 失败: ${result.failCount}`);
+  console.log('========================================\n');
+  
+  return result;
+}
+
 // 初始化输出目录
 function init() {
   ensureDirectory(OUTPUT_DIR);
   ensureDirectory(ITEMS_OUTPUT_DIR);
   ensureDirectory(UI_OUTPUT_DIR);
+  imgInit();
 }
 
 // 导出模块
@@ -299,5 +467,12 @@ module.exports = {
   generateByLine,
   generateAllItems,
   generateUI,
-  generateAll
+  generateAll,
+  generateSingleItemWithImage,
+  generateAllItemsWithImages,
+  generateUIWithImages,
+  generateAllWithImages,
+  generateImageFromPromptFile,
+  collectAllItemTasks,
+  collectUITasks
 };
