@@ -52,4 +52,4 @@
 
 | 文档 | 路径 | 内容 |
 |------|------|------|
-| AI-Prompt-Generator | `docs/ai-prompt-generator.md` | Prompt生成工具完整文档：命令用法、模板定义、等级风格表 |
+| AI-Asset-Generator | `docs/ai-asset-generator.md` | 游戏AI资产生成工具 (图片/音效/音乐)：命令用法、配置、API接入 |

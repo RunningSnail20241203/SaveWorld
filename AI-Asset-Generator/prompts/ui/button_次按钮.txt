@@ -1,0 +1,5 @@
+transparent background, alpha channel, cutout, 游戏UI按钮, 末世生存风格, 简洁设计, 
+透明背景, 无底色, 
+暖色调/冷色调, 圆角矩形, 适合点击, 
+Unity UI Button使用, 128x48像素, 
+PNG格式透明通道, 悬停效果, 按下效果, 冷色调, 96x36像素, 次要操作按钮

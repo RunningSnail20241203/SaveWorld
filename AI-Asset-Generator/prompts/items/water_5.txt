@@ -1,0 +1,6 @@
+transparent background, alpha channel, cutout object on transparent canvas, no background, isolated, 游戏物品图标, 末世生存主题, 净水站, 等级5, 
+社区级供水设施, 扁平化图标风格, 暖色调, 明亮, 
+透明背景, 无底色, 纯透明PNG格式, 80x80像素, Unity UI Sprite使用, 
+专业, 高品质, 完善, 精细纹理, 简约UI风格, 
+清晰的物品轮廓, 适合游戏内使用, 高对比度, 
+主题元素: 水、净化、生命维持

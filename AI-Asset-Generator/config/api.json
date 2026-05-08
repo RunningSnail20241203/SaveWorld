@@ -1,0 +1,66 @@
+{
+  "_docs": "https://help.aliyun.com/zh/model-studio/text-to-image-api-reference",
+  "_switch": "切回z-image只需改 protocol 为 sync 并替换 endpoint/requestBody/responseImageField",
+
+  "protocol": "async",
+
+  "endpoint": "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
+  "pollEndpoint": "https://dashscope.aliyuncs.com/api/v1/tasks/{{TASK_ID}}",
+
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-DashScope-Async": "enable"
+  },
+  "authType": "bearer",
+  "authHeaderName": "Authorization",
+  "apiKeyEnv": "DASHSCOPE_API_KEY",
+
+  "requestBody": {
+    "model": "wanx2.0-t2i-turbo",
+    "input": {
+      "prompt": "{{PROMPT}}",
+      "negative_prompt": "{{NEGATIVE_PROMPT}}"
+    },
+    "parameters": {
+      "size": "{{SIZE}}",
+      "n": 1
+    }
+  },
+
+  "taskIdField": "output.task_id",
+  "taskStatusField": "output.task_status",
+  "responseImageField": "output.results.0.url",
+  "responseImageFormat": "url",
+
+  "pollInterval": 5000,
+  "maxPollTime": 180000,
+  "timeout": 60000,
+  "concurrency": 3,
+  "retryCount": 1,
+  "retryDelay": 2000,
+  "imageExtension": "png",
+
+  "defaultNegativePrompt": "blurry, low quality, distorted, watermark, text, white background, solid color background",
+
+  "sizeMapping": {
+    "_comment": "wanx2.0 尺寸限制: 宽高均∈[512,1440]",
+    "item": "1024*1024",
+    "icon": "1024*1024",
+    "button": "1024*1024",
+    "progressBar": "1024*1024",
+    "border": "1024*1024",
+    "panel": "1280*1280",
+    "background": "1440*1440",
+    "default": "1024*1024"
+  },
+
+  "supportedSizes": [
+    "1024*1024",
+    "1280*1280",
+    "1440*1440",
+    "1024*768",
+    "768*1024"
+  ],
+  "defaultSize": "1024*1024"
+}

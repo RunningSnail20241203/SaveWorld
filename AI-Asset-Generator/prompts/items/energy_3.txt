@@ -1,0 +1,6 @@
+transparent background, alpha channel, cutout object on transparent canvas, no background, isolated, 游戏物品图标, 末世生存主题, 手摇发电机, 等级3, 
+手摇发电装置, 扁平化图标风格, 中性色调, 
+透明背景, 无底色, 纯透明PNG格式, 80x80像素, Unity UI Sprite使用, 
+实用, 改良, 精致, 适度细节, 简约UI风格, 
+清晰的物品轮廓, 适合游戏内使用, 高对比度, 
+主题元素: 能源、电力、动力

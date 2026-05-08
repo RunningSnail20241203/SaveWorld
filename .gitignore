@@ -81,6 +81,8 @@ cline-multi-session/
 # Environment
 .env
 
-# AI-Prompt-Generator 本地配置
-AI-Prompt-Generator/.env
-AI-Prompt-Generator/images/
+# AI-Asset-Generator 本地配置
+AI-Asset-Generator/.env
+AI-Asset-Generator/images/
+
+资源

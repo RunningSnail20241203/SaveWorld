@@ -1,0 +1,6 @@
+transparent background, alpha channel, cutout object on transparent canvas, no background, isolated, 游戏物品图标, 末世生存主题, 燃油, 等级2, 
+发动机燃料, 扁平化图标风格, 冷色调, 暗淡, 
+透明背景, 无底色, 纯透明PNG格式, 80x80像素, Unity UI Sprite使用, 
+简洁, 朴素, 实用, 基础细节, 简约UI风格, 
+清晰的物品轮廓, 适合游戏内使用, 高对比度, 
+主题元素: 特殊物品

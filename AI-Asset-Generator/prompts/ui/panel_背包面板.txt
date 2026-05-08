@@ -1,0 +1,5 @@
+transparent background, alpha channel, cutout, 游戏UI面板, 末世生存风格, 
+透明背景, 无底色, 
+深色主题, 半透明背景, 边框装饰, 
+Unity UI Panel使用, 圆角矩形, 
+PNG格式透明通道, 适合叠加层, 深色半透明, 500x400像素, 背包界面面板

@@ -1,0 +1,5 @@
+transparent background, alpha channel, cutout, 游戏UI进度条, 末世生存风格, 
+透明背景, 无底色, 
+简洁设计, 填充样式, 边框装饰, 
+Unity UI Slider使用, 横向/纵向, 
+PNG格式透明通道, 橙色, 100x10像素, 技能冷却进度条

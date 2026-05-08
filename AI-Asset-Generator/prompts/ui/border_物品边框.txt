@@ -1,0 +1,5 @@
+transparent background, alpha channel, cutout, 游戏UI边框, 末世生存风格, 
+透明背景, 无底色, 
+装饰性边框, 金属质感/科技感, 
+Unity UI Image使用, 九宫格拉伸, 
+PNG格式透明通道, 金属灰, 88x88像素, 物品格子边框

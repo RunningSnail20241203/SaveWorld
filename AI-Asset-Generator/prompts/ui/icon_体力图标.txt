@@ -1,0 +1,5 @@
+transparent background, alpha channel, cutout, 游戏UI图标, 末世生存风格, 
+透明背景, 无底色, 
+简洁易懂, 高辨识度, 扁平化设计, 
+Unity UI Image使用, 32x32像素, 
+PNG格式透明通道, 绿色, 32x32像素, 体力值图标
