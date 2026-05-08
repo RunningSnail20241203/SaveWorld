@@ -87,7 +87,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 1846453617057849666}
   - component: {fileID: 3850793135836234059}
   - component: {fileID: 229515944635890527}
+  - component: {fileID: 2103382897908132381}
   m_Layer: 0
   m_Name: AchievementPanel
   m_TagString: Untagged
@@ -216,6 +217,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2103382897908132381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405964286629709053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac492f4c4ab14ed7aa8f0fdbfbf1f84a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaveWorld.Game.UI.AchievementPanel
+  achievementItemPrefab: {fileID: 7438132914506996330, guid: 02de224f5cdb5c04cb53cd52fcf6f703, type: 3}
+  progressText: {fileID: 4153587560012761913}
+  achievementListContainer: {fileID: 5484022465829822681}
+  closeButton: {fileID: 3910272958565299080}
 --- !u!1 &2638761666743697709
 GameObject:
   m_ObjectHideFlags: 0
@@ -330,7 +347,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 4471408771210138412}
+  m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -459,7 +476,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -596,7 +613,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

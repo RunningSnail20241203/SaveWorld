@@ -681,26 +681,6 @@ namespace SaveWorld.Editor
                 return;
             }
 
-            // 加载预制件引用
-            GameObject gridUIPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/GridUI.prefab");
-            GameObject playerInfoPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/PlayerInfoPanel.prefab");
-            GameObject controlPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/ControlPanel.prefab");
-            GameObject itemDetailPopupPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/ItemDetailPopup.prefab");
-            GameObject settingsPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/SettingsPanel.prefab");
-            GameObject ordersPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/OrdersPanel.prefab");
-            GameObject achievementPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/AchievementPanel.prefab");
-
-            // 使用SerializedObject设置引用
-            SerializedObject serializedSetup = new SerializedObject(sceneSetup);
-            serializedSetup.FindProperty("gridUIPrefab").objectReferenceValue = gridUIPrefab;
-            serializedSetup.FindProperty("playerInfoPanelPrefab").objectReferenceValue = playerInfoPanelPrefab;
-            serializedSetup.FindProperty("controlPanelPrefab").objectReferenceValue = controlPanelPrefab;
-            serializedSetup.FindProperty("itemDetailPopupPrefab").objectReferenceValue = itemDetailPopupPrefab;
-            serializedSetup.FindProperty("settingsPanelPrefab").objectReferenceValue = settingsPanelPrefab;
-            serializedSetup.FindProperty("ordersPanelPrefab").objectReferenceValue = ordersPanelPrefab;
-            serializedSetup.FindProperty("achievementPanelPrefab").objectReferenceValue = achievementPanelPrefab;
-            serializedSetup.ApplyModifiedProperties();
-
             // 保存场景
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
 
@@ -1134,7 +1114,7 @@ namespace SaveWorld.Editor
                 buttonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(buttonPrefabPath);
             }
 
-            GameObject panel = CreateBasePanel("ControlPanel", new Vector2(400, 80));
+            GameObject panel = CreateBasePanel("ControlPanel", new Vector2(460, 80));
 
             // 按钮容器
             GameObject container = new GameObject("ButtonContainer", new System.Type[]{typeof(RectTransform)});
@@ -1522,6 +1502,8 @@ namespace SaveWorld.Editor
             layout.padding = new RectOffset(20, 20, 20, 20);
             layout.spacing = 10;
             layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = true;
 
             // 标题
             GameObject titleGO = CreateTextElement("Title", "订单管理", panel.transform);
@@ -1926,44 +1908,107 @@ namespace SaveWorld.Editor
 
             // 设置RectTransform
             RectTransform itemRect = item.GetComponent<RectTransform>();
-            itemRect.sizeDelta = new Vector2(440, 50);
+            itemRect.sizeDelta = new Vector2(530, 50);
 
-            // 标题文本
-            GameObject titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(item.transform, false);
+            // 需求物品图标
+            GameObject iconGO = new GameObject("RequireItemIcon");
+            iconGO.transform.SetParent(item.transform, false);
+            Image requireItemIcon = iconGO.AddComponent<Image>();
+            requireItemIcon.color = Color.white;
+            RectTransform iconRect = iconGO.GetComponent<RectTransform>();
+            iconRect.sizeDelta = new Vector2(40, 40);
 
-            TextMeshProUGUI titleText = titleGO.AddComponent<TextMeshProUGUI>();
-            titleText.font = GetDefaultFontAsset();
-            titleText.text = "订单标题";
-            titleText.fontSize = 14;
-            titleText.color = Color.white;
+            // 经验奖励文本
+            GameObject rewardExpGO = new GameObject("RewardExp");
+            rewardExpGO.transform.SetParent(item.transform, false);
+            Text rewardExpText = rewardExpGO.AddComponent<Text>();
+            rewardExpText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            rewardExpText.text = "经验: 0";
+            rewardExpText.fontSize = 14;
+            rewardExpText.color = Color.white;
+            rewardExpText.alignment = TextAnchor.MiddleLeft;
+            RectTransform rewardExpRect = rewardExpGO.GetComponent<RectTransform>();
+            rewardExpRect.sizeDelta = new Vector2(100, 40);
 
-            RectTransform titleRect = titleGO.GetComponent<RectTransform>();
-            titleRect.sizeDelta = new Vector2(200, 40);
+            // 金币奖励文本
+            GameObject rewardGoldGO = new GameObject("RewardGold");
+            rewardGoldGO.transform.SetParent(item.transform, false);
+            Text rewardGoldText = rewardGoldGO.AddComponent<Text>();
+            rewardGoldText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            rewardGoldText.text = "金币: 0";
+            rewardGoldText.fontSize = 14;
+            rewardGoldText.color = Color.yellow;
+            rewardGoldText.alignment = TextAnchor.MiddleLeft;
+            RectTransform rewardGoldRect = rewardGoldGO.GetComponent<RectTransform>();
+            rewardGoldRect.sizeDelta = new Vector2(100, 40);
 
-            // 状态文本
-            GameObject statusGO = new GameObject("Status");
-            statusGO.transform.SetParent(item.transform, false);
+            // 剩余时间文本
+            GameObject timeLeftGO = new GameObject("TimeLeft");
+            timeLeftGO.transform.SetParent(item.transform, false);
+            Text timeLeftText = timeLeftGO.AddComponent<Text>();
+            timeLeftText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            timeLeftText.text = "剩余: 00:00";
+            timeLeftText.fontSize = 12;
+            timeLeftText.color = Color.cyan;
+            timeLeftText.alignment = TextAnchor.MiddleLeft;
+            RectTransform timeLeftRect = timeLeftGO.GetComponent<RectTransform>();
+            timeLeftRect.sizeDelta = new Vector2(100, 40);
 
-            TextMeshProUGUI statusText = statusGO.AddComponent<TextMeshProUGUI>();
-            statusText.font = GetDefaultFontAsset();
-            statusText.text = "进行中";
-            statusText.fontSize = 12;
-            statusText.alignment = TextAlignmentOptions.Right;
-            statusText.color = Color.yellow;
+            // 提交按钮
+            GameObject submitBtnGO = new GameObject("SubmitButton");
+            submitBtnGO.transform.SetParent(item.transform, false);
+            Button submitButton = submitBtnGO.AddComponent<Button>();
+            Image submitBtnImage = submitBtnGO.AddComponent<Image>();
+            submitBtnImage.color = new Color(0.3f, 0.6f, 0.3f);
+            GameObject submitTextGO = new GameObject("Text");
+            submitTextGO.transform.SetParent(submitBtnGO.transform, false);
+            Text submitText = submitTextGO.AddComponent<Text>();
+            submitText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            submitText.text = "提交";
+            submitText.fontSize = 12;
+            submitText.color = Color.white;
+            submitText.alignment = TextAnchor.MiddleCenter;
+            RectTransform submitBtnRect = submitBtnGO.GetComponent<RectTransform>();
+            submitBtnRect.sizeDelta = new Vector2(60, 35);
+            RectTransform submitTextRect = submitTextGO.GetComponent<RectTransform>();
+            submitTextRect.anchorMin = Vector2.zero;
+            submitTextRect.anchorMax = Vector2.one;
+            submitTextRect.offsetMin = Vector2.zero;
+            submitTextRect.offsetMax = Vector2.zero;
 
-            RectTransform statusRect = statusGO.GetComponent<RectTransform>();
-            statusRect.sizeDelta = new Vector2(100, 40);
+            // 刷新按钮
+            GameObject refreshBtnGO = new GameObject("RefreshButton");
+            refreshBtnGO.transform.SetParent(item.transform, false);
+            Button refreshButton = refreshBtnGO.AddComponent<Button>();
+            Image refreshBtnImage = refreshBtnGO.AddComponent<Image>();
+            refreshBtnImage.color = new Color(0.3f, 0.3f, 0.5f);
+            GameObject refreshTextGO = new GameObject("Text");
+            refreshTextGO.transform.SetParent(refreshBtnGO.transform, false);
+            Text refreshText = refreshTextGO.AddComponent<Text>();
+            refreshText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            refreshText.text = "刷新";
+            refreshText.fontSize = 12;
+            refreshText.color = Color.white;
+            refreshText.alignment = TextAnchor.MiddleCenter;
+            RectTransform refreshBtnRect = refreshBtnGO.GetComponent<RectTransform>();
+            refreshBtnRect.sizeDelta = new Vector2(60, 35);
+            RectTransform refreshTextRect = refreshTextGO.GetComponent<RectTransform>();
+            refreshTextRect.anchorMin = Vector2.zero;
+            refreshTextRect.anchorMax = Vector2.one;
+            refreshTextRect.offsetMin = Vector2.zero;
+            refreshTextRect.offsetMax = Vector2.zero;
 
             // 添加OrderItemUI脚本
             SaveWorld.Game.UI.OrderItemUI orderItemUI = item.AddComponent<SaveWorld.Game.UI.OrderItemUI>();
             
             // 使用SerializedObject设置引用
             SerializedObject serializedItem = new SerializedObject(orderItemUI);
-            serializedItem.FindProperty("titleText").objectReferenceValue = titleText;
-            serializedItem.FindProperty("statusText").objectReferenceValue = statusText;
-            serializedItem.FindProperty("button").objectReferenceValue = button;
-            serializedItem.FindProperty("background").objectReferenceValue = backgroundImage;
+            serializedItem.FindProperty("RequireItemIcon").objectReferenceValue = requireItemIcon;
+            serializedItem.FindProperty("RewardExpText").objectReferenceValue = rewardExpText;
+            serializedItem.FindProperty("RewardGoldText").objectReferenceValue = rewardGoldText;
+            serializedItem.FindProperty("TimeLeftText").objectReferenceValue = timeLeftText;
+            serializedItem.FindProperty("SubmitButton").objectReferenceValue = submitButton;
+            serializedItem.FindProperty("RefreshButton").objectReferenceValue = refreshButton;
             serializedItem.ApplyModifiedProperties();
 
             // 保存为预制件
@@ -2062,7 +2107,7 @@ namespace SaveWorld.Editor
         /// </summary>
         private static GameObject CreateExplorationResultItemPrefab()
         {
-            GameObject item = new GameObject(""ExplorationResultItem"");
+            GameObject item = new GameObject("ExplorationResultItem");
 
             Image backgroundImage = item.AddComponent<Image>();
             backgroundImage.color = new Color(0.25f, 0.25f, 0.25f, 0.9f);
@@ -2077,18 +2122,18 @@ namespace SaveWorld.Editor
             RectTransform itemRect = item.GetComponent<RectTransform>();
             itemRect.sizeDelta = new Vector2(300, 40);
 
-            GameObject iconGO = new GameObject(""ItemIcon"");
+            GameObject iconGO = new GameObject("ItemIcon");
             iconGO.transform.SetParent(item.transform, false);
             Image itemIcon = iconGO.AddComponent<Image>();
             itemIcon.color = Color.white;
             RectTransform iconRect = iconGO.GetComponent<RectTransform>();
             iconRect.sizeDelta = new Vector2(30, 30);
 
-            GameObject nameGO = new GameObject(""ItemName"");
+            GameObject nameGO = new GameObject("ItemName");
             nameGO.transform.SetParent(item.transform, false);
             TextMeshProUGUI itemNameText = nameGO.AddComponent<TextMeshProUGUI>();
             itemNameText.font = GetDefaultFontAsset();
-            itemNameText.text = ""物品名称"";
+            itemNameText.text = "物品名称";
             itemNameText.fontSize = 14;
             itemNameText.color = Color.white;
             itemNameText.alignment = TextAlignmentOptions.Left;
@@ -2097,11 +2142,11 @@ namespace SaveWorld.Editor
             LayoutElement nameLayout = nameGO.AddComponent<LayoutElement>();
             nameLayout.flexibleWidth = 1;
 
-            GameObject countGO = new GameObject(""ItemCount"");
+            GameObject countGO = new GameObject("ItemCount");
             countGO.transform.SetParent(item.transform, false);
             TextMeshProUGUI itemCountText = countGO.AddComponent<TextMeshProUGUI>();
             itemCountText.font = GetDefaultFontAsset();
-            itemCountText.text = ""x1"";
+            itemCountText.text = "x1";
             itemCountText.fontSize = 14;
             itemCountText.color = Color.gray;
             itemCountText.alignment = TextAlignmentOptions.Right;
@@ -2110,12 +2155,12 @@ namespace SaveWorld.Editor
 
             ExplorationResultItemUI resultItemUI = item.AddComponent<ExplorationResultItemUI>();
             SerializedObject serializedItem = new SerializedObject(resultItemUI);
-            serializedItem.FindProperty(""itemIcon"").objectReferenceValue = itemIcon;
-            serializedItem.FindProperty(""itemNameText"").objectReferenceValue = itemNameText;
-            serializedItem.FindProperty(""itemCountText"").objectReferenceValue = itemCountText;
+            serializedItem.FindProperty("itemIcon").objectReferenceValue = itemIcon;
+            serializedItem.FindProperty("itemNameText").objectReferenceValue = itemNameText;
+            serializedItem.FindProperty("itemCountText").objectReferenceValue = itemCountText;
             serializedItem.ApplyModifiedProperties();
 
-            PrefabUtility.SaveAsPrefabAsset(item, $""{PREFAB_PATH}/ExplorationResultItem.prefab"");
+            PrefabUtility.SaveAsPrefabAsset(item, $"{PREFAB_PATH}/ExplorationResultItem.prefab");
             return item;
         }
 
@@ -2130,15 +2175,15 @@ namespace SaveWorld.Editor
                 Object.DestroyImmediate(tempItem);
             }
 
-            GameObject resultItemPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($""{PREFAB_PATH}/ExplorationResultItem.prefab"");
+            GameObject resultItemPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_PATH}/ExplorationResultItem.prefab");
 
-            GameObject panel = CreateBasePanel(""ExplorationResultPopup"", new Vector2(350, 400));
+            GameObject panel = CreateBasePanel("ExplorationResultPopup", new Vector2(350, 400));
 
-            GameObject titleGO = new GameObject(""Title"");
+            GameObject titleGO = new GameObject("Title", typeof(RectTransform));
             titleGO.transform.SetParent(panel.transform, false);
             TextMeshProUGUI titleText = titleGO.AddComponent<TextMeshProUGUI>();
             titleText.font = GetDefaultFontAsset();
-            titleText.text = ""探索结果"";
+            titleText.text = "探索结果";
             titleText.fontSize = 20;
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = Color.white;
@@ -2150,7 +2195,7 @@ namespace SaveWorld.Editor
             titleRect.anchoredPosition = new Vector2(0, -15);
             titleRect.sizeDelta = new Vector2(300, 35);
 
-            GameObject scrollGO = new GameObject(""ResultScrollRect"");
+            GameObject scrollGO = new GameObject("ResultScrollRect", typeof(RectTransform));
             scrollGO.transform.SetParent(panel.transform, false);
             ScrollRect scrollRect = scrollGO.AddComponent<ScrollRect>();
             RectTransform scrollRectRT = scrollGO.GetComponent<RectTransform>();
@@ -2159,7 +2204,7 @@ namespace SaveWorld.Editor
             scrollRectRT.offsetMin = new Vector2(15, 65);
             scrollRectRT.offsetMax = new Vector2(-15, -50);
 
-            GameObject viewportGO = new GameObject(""Viewport"");
+            GameObject viewportGO = new GameObject("Viewport", typeof(RectTransform));
             viewportGO.transform.SetParent(scrollGO.transform, false);
             Image viewportImage = viewportGO.AddComponent<Image>();
             viewportImage.color = new Color(0.15f, 0.15f, 0.15f, 0.8f);
@@ -2169,7 +2214,7 @@ namespace SaveWorld.Editor
             viewportRT.sizeDelta = Vector2.zero;
             viewportGO.AddComponent<Mask>();
 
-            GameObject contentGO = new GameObject(""Content"");
+            GameObject contentGO = new GameObject("Content", typeof(RectTransform));
             contentGO.transform.SetParent(viewportGO.transform, false);
             Transform itemsContainer = contentGO.transform;
             RectTransform contentRT = contentGO.GetComponent<RectTransform>();
@@ -2193,7 +2238,7 @@ namespace SaveWorld.Editor
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
-            GameObject closeBtn = CreateButton(""CloseButton"", ""关闭"", panel.transform);
+            GameObject closeBtn = CreateButton("CloseButton", "关闭", panel.transform);
             RectTransform closeBtnRect = closeBtn.GetComponent<RectTransform>();
             closeBtnRect.anchorMin = new Vector2(0.5f, 0);
             closeBtnRect.anchorMax = new Vector2(0.5f, 0);
@@ -2206,13 +2251,13 @@ namespace SaveWorld.Editor
 
             ExplorationResultPopupUI popupUI = panel.AddComponent<ExplorationResultPopupUI>();
             SerializedObject serializedPopup = new SerializedObject(popupUI);
-            serializedPopup.FindProperty(""backgroundImage"").objectReferenceValue = backgroundImage;
-            serializedPopup.FindProperty(""titleText"").objectReferenceValue = titleText;
-            serializedPopup.FindProperty(""itemsContainer"").objectReferenceValue = itemsContainer;
-            serializedPopup.FindProperty(""closeButton"").objectReferenceValue = closeButton;
+            serializedPopup.FindProperty("backgroundImage").objectReferenceValue = backgroundImage;
+            serializedPopup.FindProperty("titleText").objectReferenceValue = titleText;
+            serializedPopup.FindProperty("itemsContainer").objectReferenceValue = itemsContainer;
+            serializedPopup.FindProperty("closeButton").objectReferenceValue = closeButton;
             serializedPopup.ApplyModifiedProperties();
 
-            PrefabUtility.SaveAsPrefabAsset(panel, $""{PREFAB_PATH}/ExplorationResultPopup.prefab"");
+            PrefabUtility.SaveAsPrefabAsset(panel, $"{PREFAB_PATH}/ExplorationResultPopup.prefab");
             Object.DestroyImmediate(panel);
         }
         // 辅助方法
