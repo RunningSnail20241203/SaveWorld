@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using SaveWorld.Game.Order;
 using SaveWorld.Game.Achievement;
+using SaveWorld.Game.Exploration;
 using SaveWorld.Game.Storage;
 
 namespace SaveWorld.Game.Core
@@ -34,12 +36,56 @@ namespace SaveWorld.Game.Core
         private void RegisterDefaultHandlers()
         {
             // 所有状态修改都在这里统一处理
+            _eventBus.Listen<ExplorationRequestEvent>(OnExplorationRequest);
             _eventBus.Listen<MergeCompleteEvent>(OnMergeComplete);
             _eventBus.Listen<ItemMovedEvent>(OnItemMoved);
             _eventBus.Listen<ItemSwappedEvent>(OnItemSwapped);
             _eventBus.Listen<ExplorationCompleteEvent>(OnExplorationComplete);
             _eventBus.Listen<LevelUpEvent>(OnLevelUp);
             _eventBus.Listen<OrderSubmittedEvent>(OnOrderSubmitted);
+        }
+
+        private void OnExplorationRequest(ExplorationRequestEvent e)
+        {
+            int randomSeed = UnityEngine.Random.Range(0, int.MaxValue);
+            var result = ExplorationEngine.TryExplore(_currentState, randomSeed);
+
+            if (!result.Success)
+            {
+                Debug.LogWarning($"[StateMutator] 探索失败: {result.FailReason}");
+                return;
+            }
+
+            // 更新格子：放入探索获得的物品
+            var newCells = (CellState[])_currentState.Cells.Clone();
+            for (int i = 0; i < result.CellIds.Length; i++)
+            {
+                int cellId = result.CellIds[i];
+                int itemId = result.ItemIds[i];
+                newCells[cellId] = CellState.Create(cellId, itemId, 1);
+            }
+
+            // 扣除体力
+            var player = _currentState.Player;
+            var newPlayer = new PlayerState(
+                level: player.Level,
+                stamina: player.Stamina - e.StaminaCost,
+                maxStamina: player.MaxStamina,
+                gold: player.Gold,
+                coins: player.Coins,
+                exp: player.Exp,
+                experience: player.Experience + result.ExperienceGain,
+                expToNextLevel: player.ExpToNextLevel,
+                lastOfflineTime: player.LastOfflineTime
+            );
+
+            UpdateState(newCells, newPlayer);
+
+            // 发布探索完成事件
+            _eventBus.Publish(new ExplorationCompleteEvent(result.CellIds, e.StaminaCost));
+            _eventBus.Publish(new ExperienceGainedEvent(result.ExperienceGain, "探索"));
+
+            Debug.Log($"[StateMutator] 探索成功: 获得{result.CellIds.Length}个物品, 消耗{e.StaminaCost}体力, 获得{result.ExperienceGain}经验");
         }
 
         private void OnMergeComplete(MergeCompleteEvent e)
@@ -82,19 +128,8 @@ namespace SaveWorld.Game.Core
 
         private void OnExplorationComplete(ExplorationCompleteEvent e)
         {
-            var newCells = (CellState[])_currentState.Cells.Clone();
-            var random = new Random();
-            
-            foreach (var cellId in e.GeneratedCellIds)
-            {
-                // 暂时生成物品ID 1，以后从配置表读取
-                newCells[cellId] = CellState.Create(cellId, 1, 1);
-            }
-
-            var newPlayer = _currentState.Player;
-            // 扣除体力
-            
-            UpdateState(newCells, newPlayer);
+            // 状态更新已在 OnExplorationRequest 中处理
+            // UI 刷新由 BackpackUI / PlayerStatusUI 监听此事件自行处理
         }
 
         private void OnLevelUp(LevelUpEvent e)

@@ -21,9 +21,6 @@ namespace SaveWorld.Game.Crafting
         public delegate void CraftFailureHandler(string reason);
         public event CraftFailureHandler OnCraftFailure;
 
-        public delegate void GridFullHandler();
-        public event GridFullHandler OnGridFull;
-
         // 满格反馈事件
         public delegate void FullGridFeedbackHandler();
         public event FullGridFeedbackHandler OnFullGridFeedback;

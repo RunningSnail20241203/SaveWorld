@@ -1,20 +1,24 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
+using SaveWorld.Game.Core;
 
-namespace SaveWorld.Game.Core
+namespace SaveWorld.Game.EditorDebug
 {
     /// <summary>
     /// 游戏入口脚本
     /// 挂载在场景中，负责初始化游戏和处理调试输入
     /// </summary>
-    public class GameEntry : MonoBehaviour
+    public class DebugEntry : MonoBehaviour
     {
         private GameLoop _gameLoop;
 
         private void Awake()
         {
-            // 初始化游戏循环
+        }
+
+        private void Start()
+        {
             _gameLoop = GameLoop.Instance;
-            
             Debug.Log("✅ 游戏初始化完成");
         }
 
@@ -25,26 +29,29 @@ namespace SaveWorld.Game.Core
 
         private void HandleDebugInput()
         {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+
             // G键：打印格子信息
-            if (Input.GetKeyDown(KeyCode.G))
+            if (keyboard.gKey.wasPressedThisFrame)
             {
                 Debug_PrintGridInfo();
             }
 
             // P键：打印玩家信息
-            if (Input.GetKeyDown(KeyCode.P))
+            if (keyboard.pKey.wasPressedThisFrame)
             {
                 Debug_PrintPlayerInfo();
             }
 
             // E键：测试事件
-            if (Input.GetKeyDown(KeyCode.E))
+            if (keyboard.eKey.wasPressedThisFrame)
             {
                 _gameLoop.EventBus.Dispatch(new MergeCompleteEvent(0, 1, 2, 1.0f));
             }
 
             // X键：执行探索
-            if (Input.GetKeyDown(KeyCode.X))
+            if (keyboard.xKey.wasPressedThisFrame)
             {
                 _gameLoop.EventBus.Dispatch(new ExplorationRequestEvent());
             }

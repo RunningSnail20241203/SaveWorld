@@ -16,16 +16,33 @@ namespace SaveWorld.Game.UI
         public GameObject OrderItemPrefab;
 
         private OrderItemUI[] _orderItems;
+        private bool _initialized = false;
+
+        void Awake()
+        {
+            var panel = GetComponent<OrdersPanel>();
+            if (panel != null)
+            {
+                if (OrderContainer == null) OrderContainer = panel.ordersContent;
+            }
+        }
 
         public override void Initialize()
         {
+            if (_initialized) return;
+            _initialized = true;
 
             // 创建3个订单槽位
             _orderItems = new OrderItemUI[3];
             for (int i = 0; i < 3; i++)
             {
-                var obj = UnityEngine.Object.Instantiate(OrderItemPrefab, OrderContainer);
-                _orderItems[i] = obj.GetComponent<OrderItemUI>();
+                if (OrderItemPrefab != null && OrderContainer != null)
+                {
+                    var obj = UnityEngine.Object.Instantiate(OrderItemPrefab, OrderContainer);
+                    _orderItems[i] = obj.GetComponent<OrderItemUI>();
+                    if (_orderItems[i] == null)
+                        _orderItems[i] = obj.AddComponent<OrderItemUI>();
+                }
             }
 
             RefreshOrders();
@@ -41,12 +58,24 @@ namespace SaveWorld.Game.UI
         /// </summary>
         public void RefreshOrders()
         {
-            // TODO: V2 迁移 - 从 GameState 获取活跃订单并通过 EventBus 刷新
-            for (int i = 0; i < 3; i++)
+            if (_orderItems == null) return;
+            var state = GameLoop.Instance.CurrentState;
+            int idx = 0;
+            foreach (var order in state.Orders)
             {
-                _orderItems[i].gameObject.SetActive(false);
+                if (idx >= _orderItems.Length) break;
+                if (_orderItems[idx] != null)
+                {
+                    _orderItems[idx].gameObject.SetActive(true);
+                    _orderItems[idx].UpdateOrder(order.Value);
+                }
+                idx++;
+            }
+            for (int i = idx; i < _orderItems.Length; i++)
+            {
+                if (_orderItems[i] != null)
+                    _orderItems[i].gameObject.SetActive(false);
             }
         }
     }
-
 }

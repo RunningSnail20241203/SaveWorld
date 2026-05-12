@@ -202,29 +202,37 @@ private void UnlockAchievement(int achievementId)
         /// </summary>
         public void InitializeAchievements()
         {
-            var achievements = new Dictionary<int, AchievementData>();
+            var state = _stateMutator.CurrentState;
+            var achievements = new Dictionary<int, AchievementData>(state.Achievements);
 
             // 合成类成就
-            AddAchievement(achievements, AchievementType.TotalMerges, "合成大师", "累计合成100次物品", 100, 500, 1000);
-            AddAchievement(achievements, AchievementType.ItemLevelUp, "升级达人", "合成出10级物品", 10, 1000, 5000);
+            AddAchievementIfNotExists(achievements, AchievementType.TotalMerges, "合成大师", "累计合成100次物品", 100, 500, 1000);
+            AddAchievementIfNotExists(achievements, AchievementType.ItemLevelUp, "升级达人", "合成出10级物品", 10, 1000, 5000);
             
             // 探索类成就
-            AddAchievement(achievements, AchievementType.TotalExplorations, "探险家", "累计探索100次", 100, 300, 500);
-            AddAchievement(achievements, AchievementType.ItemsCollected, "收藏家", "收集500个物品", 500, 800, 2000);
+            AddAchievementIfNotExists(achievements, AchievementType.TotalExplorations, "探险家", "累计探索100次", 100, 300, 500);
+            AddAchievementIfNotExists(achievements, AchievementType.ItemsCollected, "收藏家", "收集500个物品", 500, 800, 2000);
             
             // 订单类成就
-            AddAchievement(achievements, AchievementType.OrdersCompleted, "配送专家", "完成100个订单", 100, 600, 3000);
+            AddAchievementIfNotExists(achievements, AchievementType.OrdersCompleted, "配送专家", "完成100个订单", 100, 600, 3000);
             
             // 等级类成就
-            AddAchievement(achievements, AchievementType.PlayerLevel, "满级大佬", "达到100级", 100, 5000, 10000);
+            AddAchievementIfNotExists(achievements, AchievementType.PlayerLevel, "满级大佬", "达到100级", 100, 5000, 10000);
 
-            var state = _stateMutator.CurrentState;
-            _stateMutator.UpdateState(state.Cells, state.Player, state.Orders, achievements);
+            if (achievements.Count != state.Achievements.Count)
+            {
+                _stateMutator.UpdateState(state.Cells, state.Player, state.Orders, achievements);
+            }
         }
 
-        private void AddAchievement(Dictionary<int, AchievementData> achievements, AchievementType type, 
-                                    string name, string description, int required, int exp, int coins)
+        private void AddAchievementIfNotExists(Dictionary<int, AchievementData> achievements, AchievementType type, 
+                                               string name, string description, int required, int exp, int coins)
         {
+            if (achievements.ContainsKey((int)type))
+            {
+                return;
+            }
+
             achievements[(int)type] = new AchievementData
             {
                 Id = (int)type,

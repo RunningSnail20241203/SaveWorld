@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
+using TMPro;
 using SaveWorld.Game.Core;
 using SaveWorld.Game.Items;
 
@@ -14,7 +15,7 @@ namespace SaveWorld.Game.UI
     {
         public int CellId;
         public Image IconImage;
-        public Text LevelText;
+        public TextMeshProUGUI LevelText;
         public Button CellButton;
 
         private EventBus _eventBus;
@@ -31,6 +32,8 @@ namespace SaveWorld.Game.UI
             _eventBus = eventBus;
 
             var trigger = CellButton.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = CellButton.gameObject.AddComponent<EventTrigger>();
 
             // 按下事件
             EventTrigger.Entry pressEntry = new EventTrigger.Entry();

@@ -13,7 +13,6 @@ namespace SaveWorld.Game.Analytics
         private readonly EventBus _eventBus;
         private readonly Queue<AnalyticsEvent> _eventQueue;
         private const int MAX_QUEUE_SIZE = 100;
-        private bool _initialized = false;
         private string _sessionId;
 
         public AnalyticsSystem(EventBus eventBus)

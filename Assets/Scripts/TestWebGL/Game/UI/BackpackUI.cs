@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using System.Collections;
 using SaveWorld.Game.Core;
 using SaveWorld.Game.Items;
@@ -13,7 +14,6 @@ namespace SaveWorld.Game.UI
     /// </summary>
     public class BackpackUI : UIPanelBase
     {
-        [Header("背包配置")]
         public Canvas ParentCanvas;
         public GridLayoutGroup GridLayout;
         public GameObject CellPrefab;
@@ -23,18 +23,61 @@ namespace SaveWorld.Game.UI
         private EventBus _eventBus;
         private int _draggingCellId = -1;
         private Image _dragOverlayImage;
+        private bool _initialized = false;
+
+        void Awake()
+        {
+            if (CellPrefab == null)
+            {
+                var gridUI = GetComponent<GridUI>();
+                if (gridUI != null) CellPrefab = gridUI.cellPrefab;
+            }
+            if (GridLayout == null)
+                GridLayout = GetComponentInChildren<GridLayoutGroup>();
+            if (ParentCanvas == null)
+                ParentCanvas = GetComponentInParent<Canvas>();
+        }
 
         public override void Initialize()
         {
+            if (_initialized) return;
+            _initialized = true;
+
             _stateMutator = GameLoop.Instance.StateMutator;
             _eventBus = GameLoop.Instance.EventBus;
+
+            if (GridLayout == null)
+            {
+                Debug.LogError("[BackpackUI] GridLayout is null, cannot create cells");
+                return;
+            }
+            if (CellPrefab == null)
+            {
+                Debug.LogError("[BackpackUI] CellPrefab is null, cannot create cells");
+                return;
+            }
 
             // 创建63个格子
             _cells = new UICell[63];
             for (int i = 0; i < 63; i++)
             {
-                var cellObj = UnityEngine.Object.Instantiate(CellPrefab, GridLayout.transform);
-                _cells[i] = cellObj.GetComponent<UICell>();
+                var cellObj = Object.Instantiate(CellPrefab, GridLayout.transform);
+                cellObj.name = "Cell_" + i;
+
+                var uiCell = cellObj.GetComponent<UICell>();
+                if (uiCell == null)
+                    uiCell = cellObj.AddComponent<UICell>();
+
+                // 从 GridCellUI 预制体组件获取引用
+                var gridCellUI = cellObj.GetComponent<GridCellUI>();
+                if (gridCellUI != null)
+                {
+                    uiCell.IconImage = gridCellUI.itemIcon;
+                    uiCell.LevelText = gridCellUI.itemCountText;
+                    uiCell.CellButton = gridCellUI.cellButton;
+                }
+
+                _cells[i] = uiCell;
                 _cells[i].Initialize(i, _eventBus);
             }
 
@@ -55,6 +98,8 @@ namespace SaveWorld.Game.UI
 
         private void CreateDragOverlay()
         {
+            if (ParentCanvas == null) return;
+
             GameObject overlayObj = new GameObject("DragOverlay");
             overlayObj.transform.SetParent(ParentCanvas.transform, false);
             overlayObj.transform.SetAsLastSibling();
@@ -72,6 +117,8 @@ namespace SaveWorld.Game.UI
         {
             _draggingCellId = e.CellId;
 
+            if (_cells == null || e.CellId >= _cells.Length) return;
+
             // 隐藏原格子图标
             _cells[e.CellId].IconImage.enabled = false;
 
@@ -79,18 +126,30 @@ namespace SaveWorld.Game.UI
             var cellState = _stateMutator.CurrentState.Cells[e.CellId];
             if (cellState.HasItem())
             {
-                _dragOverlayImage.sprite = Items.ItemIconManager.Instance.GetItemIcon((ItemType)cellState.ItemId);
+                _dragOverlayImage.sprite = ItemIconManager.Instance.GetItemIcon((ItemType)cellState.ItemId);
             }
             _dragOverlayImage.enabled = true;
 
-            // TODO: V2迁移 - StartCoroutine 需要 MonoBehaviour
-            // StartCoroutine(DragUpdateCoroutine());
+            StartCoroutine(DragUpdateCoroutine());
+        }
+
+        private IEnumerator DragUpdateCoroutine()
+        {
+            while (_draggingCellId != -1)
+            {
+                if (_dragOverlayImage != null && _dragOverlayImage.enabled)
+                {
+                    var rect = _dragOverlayImage.GetComponent<RectTransform>();
+                    rect.position = Mouse.current.position.ReadValue();
+                }
+                yield return null;
+            }
         }
 
         private void OnCellDragEnd(CellDragEndEvent e)
         {
             // 检测目标格子
-            int targetCellId = FindCellAtPosition(Input.mousePosition);
+            int targetCellId = FindCellAtPosition(Mouse.current.position.ReadValue());
 
             if (targetCellId != -1 && targetCellId != _draggingCellId)
             {
@@ -131,8 +190,8 @@ namespace SaveWorld.Game.UI
         {
             for (int i = 0; i < 63; i++)
             {
+                if (_cells[i] == null) continue;
                 var rect = _cells[i].GetComponent<RectTransform>();
-
                 if (RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, null))
                 {
                     return i;
@@ -181,6 +240,7 @@ namespace SaveWorld.Game.UI
         /// </summary>
         public void RefreshAll()
         {
+            if (_cells == null) return;
             for (int i = 0; i < 63; i++)
             {
                 RefreshCell(i);
@@ -192,6 +252,7 @@ namespace SaveWorld.Game.UI
         /// </summary>
         public void RefreshCell(int cellId)
         {
+            if (_cells == null) return;
             if (cellId < 0 || cellId >= 63) return;
 
             var cellState = _stateMutator.CurrentState.Cells[cellId];
@@ -203,11 +264,10 @@ namespace SaveWorld.Game.UI
         /// </summary>
         public void PlayMergeAnimation(int cellId)
         {
-            if (cellId >= 0 && cellId < 63)
+            if (cellId >= 0 && cellId < 63 && _cells != null && _cells[cellId] != null)
             {
                 _cells[cellId].PlayMergeEffect();
             }
         }
     }
-
 }

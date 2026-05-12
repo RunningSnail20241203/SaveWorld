@@ -2337,16 +2337,37 @@ namespace SaveWorld.Editor
         private static TMP_FontAsset GetDefaultFontAsset()
         {
             const string defaultFontPath = "Assets/Resources/Fonts/AlibabaPuHuiTi-3-105-Heavy SDF.asset";
-            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(defaultFontPath);
-            if (font != null)
-                return font;
+            const string fallbackFontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
 
-            font = TMPro.TMP_Settings.defaultFontAsset;
+            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(defaultFontPath);
+            if (font == null)
+            {
+                font = TMPro.TMP_Settings.defaultFontAsset;
+            }
+
             if (font != null)
+            {
+                EnsureFallbackFont(font, fallbackFontPath);
                 return font;
+            }
 
             Debug.LogWarning($"[PlaceholderGenerator] 未找到字体资产 '{defaultFontPath}'，使用 TMP 默认字体。");
             return null;
+        }
+
+        private static void EnsureFallbackFont(TMP_FontAsset font, string fallbackFontPath)
+        {
+            if (font.fallbackFontAssetTable == null)
+                font.fallbackFontAssetTable = new System.Collections.Generic.List<TMP_FontAsset>();
+
+            if (font.fallbackFontAssetTable.Count > 0)
+                return;
+
+            var fallbackFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(fallbackFontPath);
+            if (fallbackFont != null && fallbackFont != font)
+            {
+                font.fallbackFontAssetTable.Add(fallbackFont);
+            }
         }
 
         private static GameObject CreateSlider(string name, Transform parent)
