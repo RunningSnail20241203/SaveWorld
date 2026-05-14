@@ -25,12 +25,25 @@ namespace SaveWorld.Game.WeChat
             }
         }
 
-        private const string STORAGE_PREFIX = "wx_game_";
+        private string _storagePrefix = "wx_game_";
 
         public event Action<bool, string> OnStorageSaved;
         public event Action<bool, string, string> OnStorageLoaded;
         public event Action<bool, string> OnStorageRemoved;
         public event Action<bool, string> OnCloudStorageSaved;
+
+        /// <summary>
+        /// 从 WeChatConfigManager 加载存储配置
+        /// </summary>
+        public void LoadConfig()
+        {
+            _storagePrefix = WeChatConfigManager.SaveDataKeyPrefix;
+            if (string.IsNullOrEmpty(_storagePrefix))
+            {
+                _storagePrefix = "wx_game_";
+            }
+            Debug.Log($"[WeChatStorage] 配置加载完成: prefix={_storagePrefix}");
+        }
 
         /// <summary>
         /// 同步保存字符串到本地存储
@@ -39,7 +52,7 @@ namespace SaveWorld.Game.WeChat
         {
             try
             {
-                string fullKey = STORAGE_PREFIX + key;
+                string fullKey = _storagePrefix + key;
                 WX.StorageSetStringSync(fullKey, data);
                 Debug.Log($"[WeChatStorage] 本地保存成功: {key}");
                 OnStorageSaved?.Invoke(true, "保存成功");
@@ -58,7 +71,7 @@ namespace SaveWorld.Game.WeChat
         {
             try
             {
-                string fullKey = STORAGE_PREFIX + key;
+                string fullKey = _storagePrefix + key;
                 if (WX.StorageHasKeySync(fullKey))
                 {
                     string data = WX.StorageGetStringSync(fullKey, defaultValue);
@@ -84,7 +97,7 @@ namespace SaveWorld.Game.WeChat
         /// </summary>
         public void SaveIntSync(string key, int value)
         {
-            string fullKey = STORAGE_PREFIX + key;
+            string fullKey = _storagePrefix + key;
             WX.StorageSetIntSync(fullKey, value);
         }
 
@@ -93,7 +106,7 @@ namespace SaveWorld.Game.WeChat
         /// </summary>
         public int LoadIntSync(string key, int defaultValue = 0)
         {
-            string fullKey = STORAGE_PREFIX + key;
+            string fullKey = _storagePrefix + key;
             return WX.StorageGetIntSync(fullKey, defaultValue);
         }
 
@@ -104,7 +117,7 @@ namespace SaveWorld.Game.WeChat
         {
             try
             {
-                string fullKey = STORAGE_PREFIX + key;
+                string fullKey = _storagePrefix + key;
                 WX.StorageDeleteKeySync(fullKey);
                 Debug.Log($"[WeChatStorage] 本地删除成功: {key}");
                 OnStorageRemoved?.Invoke(true, "删除成功");
@@ -130,7 +143,7 @@ namespace SaveWorld.Game.WeChat
         /// </summary>
         public bool HasKey(string key)
         {
-            string fullKey = STORAGE_PREFIX + key;
+            string fullKey = _storagePrefix + key;
             return WX.StorageHasKeySync(fullKey);
         }
 

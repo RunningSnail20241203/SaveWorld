@@ -1721,7 +1721,7 @@ namespace SaveWorld.Editor
             orderDescriptionText.text = "";
             orderDescriptionText.fontSize = 14;
             orderDescriptionText.color = Color.gray;
-            orderDescriptionText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            orderDescriptionText.enableWordWrapping = true;
 
             RectTransform orderDescRect = orderDescGO.GetComponent<RectTransform>();
             orderDescRect.sizeDelta = new Vector2(440, 40);

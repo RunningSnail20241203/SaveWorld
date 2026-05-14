@@ -48,6 +48,12 @@ namespace SaveWorld.Game.Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            // 创建 WXSDKManagerHandler 兜底接收器
+            // 解决 WebGL Template 中 WXWASMSDK.SendMessage('WXSDKManagerHandler') 目标不存在的问题
+            var wxHandler = new GameObject("WXSDKManagerHandler");
+            wxHandler.AddComponent<WXSDKHandler>(); // 空脚本，接收 SendMessage
+            DontDestroyOnLoad(wxHandler);
+
             // 初始化核心系统
             EventBus = new EventBus();
             CurrentState = GameState.CreateInitial();
@@ -114,7 +120,7 @@ namespace SaveWorld.Game.Core
 
         /// <summary>
         /// 离线模式/兜底启动：初始化游戏业务系统
-        /// 确保只调用一次
+        /// 确保只调用一次，使用协程异步加载避免首帧卡顿
         /// </summary>
         private void InitOfflineMode()
         {
@@ -125,69 +131,73 @@ namespace SaveWorld.Game.Core
             }
 
             _systemsInitialized = true;
-            InitializeGameSystems();
+            StartCoroutine(InitializeGameSystemsCoroutine());
         }
 
-        private void InitializeGameSystems()
+        /// <summary>
+        /// 异步初始化游戏业务系统 - 分帧加载资源
+        /// </summary>
+        private IEnumerator InitializeGameSystemsCoroutine()
         {
-            // 初始化 StorageSystem（微信环境使用WX.Storage，其他使用PlayerPrefs）
+            Debug.Log("[GameLoop] 开始异步初始化游戏系统...");
+
+            // === Phase 1: 纯逻辑系统初始化（无资源加载）===
             bool useWeChat = WeChatManager != null && WeChatManager.IsInitialized;
             var storageSystem = new SaveWorld.Game.Storage.StorageSystem(useWeChat);
             StateMutator = new StateMutator(EventBus, CurrentState, storageSystem);
-
-            // 加载存档状态（恢复玩家数据、订单、成就等）
             StateMutator.LoadSavedState();
 
-            // 初始化成就系统
             AchievementSystem = new AchievementSystem(EventBus, StateMutator);
             AchievementSystem.InitializeAchievements();
 
-            // 初始化格子系统
             GridManager = new GridManager();
             GridManager.Initialize();
 
-            // 初始化合成引擎
             CraftingEngine = new CraftingEngine();
             CraftingEngine.Initialize(GridManager);
 
-            // 初始化玩家管理器
             PlayerManager.Instance.Initialize();
-
-            // 初始化音频系统
             AudioManager = new AudioManager(EventBus);
-
-            // 初始化反馈系统
             FeedbackSystem.Initialize(EventBus);
-
-            // 初始化数据分析系统
             AnalyticsSystem = new AnalyticsSystem(EventBus);
-
-            // 初始化社交系统
             SocialSystem = new SocialSystem(EventBus, StateMutator);
 
-            // 初始化云存储系统（监听 GameStartedEvent 自动同步）
             CloudStorage = new SaveWorld.Game.Storage.CloudStorageSystem(
                 EventBus, StateMutator, storageSystem, useWeChat);
 
-            // 初始化UI管理器
             UIManager = new UIManager(EventBus, StateMutator);
 
-            // 加载并初始化所有UI面板
-            LoadUIPanels();
+            Debug.Log("[GameLoop] Phase 1 完成：纯逻辑系统初始化");
 
-            // 发布游戏启动事件（触发云同步）
+            // === Phase 2: 异步预加载物品图标 ===
+            yield return ItemIconManager.Instance.PreloadAllIconsCoroutine(
+                (loaded, total, progress) => {
+                    // 可在此处更新加载进度UI
+                    if ((loaded % 20) == 0 || loaded == total)
+                        Debug.Log($"[GameLoad] 图标加载进度: {loaded}/{total} ({progress:P0})");
+                },
+                () => Debug.Log("[GameLoop] Phase 2 完成：图标预加载完成"));
+
+            // === Phase 3: 分帧加载UI面板 ===
+            yield return LoadUIPanelsCoroutine();
+
+            // === Phase 4: 发布启动事件 ===
             EventBus.Publish(new GameStartedEvent());
 
-            Debug.Log("[GameLoop] 游戏系统初始化完成");
+            Debug.Log("[GameLoop] 游戏系统异步初始化完成");
         }
 
-        private void LoadUIPanels()
+        /// <summary>
+        /// 分帧异步加载UI面板
+        /// 每帧加载1个预制体，避免主线程阻塞
+        /// </summary>
+        private IEnumerator LoadUIPanelsCoroutine()
         {
             var canvas = FindFirstObjectByType<Canvas>();
             if (canvas == null)
             {
                 Debug.LogError("[GameLoop] 未找到Canvas，跳过UI加载");
-                return;
+                yield break;
             }
 
             // 加载 GridUI (背包网格)
@@ -200,17 +210,20 @@ namespace SaveWorld.Game.Core
                 var oldGridUI = gridUIObj.GetComponent<GridUI>();
                 var backpackUI = gridUIObj.AddComponent<BackpackUI>();
                 if (oldGridUI != null)
-                {
                     backpackUI.CellPrefab = oldGridUI.cellPrefab;
-                }
                 backpackUI.ParentCanvas = canvas;
-                backpackUI.Initialize();
+                
+                // 分帧实例化63个格子（每帧7个，共9帧）
+                yield return StartCoroutine(backpackUI.InitializeAsync());
+                
                 Debug.Log("[GameLoop] GridUI 加载完成");
             }
             else
             {
                 Debug.LogError("[GameLoop] GridUI 预制体未找到");
             }
+
+            yield return null; // 每个面板间让出一帧
 
             // 加载 PlayerInfoPanel (玩家信息面板)
             var playerInfoPrefab = Resources.Load<GameObject>("Prefabs/UI/PlayerInfoPanel");
@@ -237,6 +250,8 @@ namespace SaveWorld.Game.Core
             {
                 Debug.LogError("[GameLoop] PlayerInfoPanel 预制体未找到");
             }
+
+            yield return null; // 每个面板间让出一帧
 
             // 加载 ControlPanel (底部按钮栏)
             var controlPanelPrefab = Resources.Load<GameObject>("Prefabs/UI/ControlPanel");

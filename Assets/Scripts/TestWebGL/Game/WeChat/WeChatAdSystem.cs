@@ -37,6 +37,17 @@ namespace SaveWorld.Game.WeChat
         public event Action<bool, string> OnAdError;
 
         /// <summary>
+        /// 从 WeChatConfigManager 加载广告单元 ID
+        /// </summary>
+        public void LoadConfig()
+        {
+            _rewardedVideoAdUnitId = WeChatConfigManager.RewardedVideoAdUnitId;
+            _bannerAdUnitId = WeChatConfigManager.BannerAdUnitId;
+            _interstitialAdUnitId = WeChatConfigManager.InterstitialAdUnitId;
+            Debug.Log($"[WeChatAd] 配置加载完成: {GetAdInfo()}");
+        }
+
+        /// <summary>
         /// 设置广告单元ID（需要在微信后台获取后配置）
         /// </summary>
         public void SetAdUnitIds(string rewardedVideoId, string bannerId = null, string interstitialId = null)

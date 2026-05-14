@@ -322,7 +322,7 @@ namespace SaveWorld.Editor
                 if (fileName == "AchievementSystem.cs")
                 {
                     ExtractAchievementStrings(lines, relativePath);
-                    continue;
+                    return;
                 }
 
                 // Track block comment state
@@ -716,6 +716,8 @@ namespace SaveWorld.Editor
 
             return contexts.Count > 0 ? string.Join("|", contexts) : fileName.Replace(".cs", "");
         }
+
+        #endregion
 
         #endregion
 

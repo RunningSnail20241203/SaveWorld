@@ -27,8 +27,17 @@ namespace SaveWorld.Game.WeChat
             }
         }
 
-        private const string RANKING_KEY = "game_ranking";
+        private string _rankingKey = "game_score";
         private WXRankManager _rankManager;
+
+        /// <summary>
+        /// 从 WeChatConfigManager 加载社交配置
+        /// </summary>
+        public void LoadConfig()
+        {
+            _rankingKey = WeChatConfigManager.RankingKey;
+            Debug.Log($"[WeChatSocial] 配置加载完成: rankingKey={_rankingKey}");
+        }
 
         /// <summary>
         /// 更新自己的分数到云存储（用于排行榜）
@@ -41,7 +50,7 @@ namespace SaveWorld.Game.WeChat
             {
                 KVDataList = new KVData[]
                 {
-                    new KVData { key = RANKING_KEY, value = score.ToString() }
+                    new KVData { key = _rankingKey, value = score.ToString() }
                 },
                 success = (res) =>
                 {

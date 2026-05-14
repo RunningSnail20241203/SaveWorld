@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace SaveWorld.Game.Items
     /// <summary>
     /// 物品图标管理器
     /// 负责管理所有物品图标的加载和缓存
+    /// 支持同步预加载（兼容旧代码）和分帧异步预加载（推荐）
     /// </summary>
     public class ItemIconManager : MonoBehaviour
     {
@@ -33,6 +35,9 @@ namespace SaveWorld.Game.Items
         
         // 初始化状态
         private bool _isInitialized = false;
+
+        // 异步预加载每帧最大加载数量
+        public int IconsPerFrame = 8;
 
         /// <summary>
         /// 初始化图标管理器
@@ -138,11 +143,11 @@ namespace SaveWorld.Game.Items
         }
 
         /// <summary>
-        /// 预加载所有图标
+        /// 预加载所有图标（同步，兼容旧调用）
         /// </summary>
         public void PreloadAllIcons()
         {
-            Debug.Log("[ItemIconManager] 预加载所有物品图标...");
+            Debug.Log("[ItemIconManager] 预加载所有物品图标（同步模式）...");
 
             // 预加载L1图标
             PreloadL1Icons();
@@ -151,6 +156,66 @@ namespace SaveWorld.Game.Items
             PreloadLevelIcons();
 
             Debug.Log($"[ItemIconManager] 图标预加载完成，缓存数量：{_iconCache.Count}");
+        }
+
+        /// <summary>
+        /// 异步分帧预加载所有图标（推荐用于启动流程）
+        /// 每帧加载 IconsPerFrame 个图标，避免主线程阻塞
+        /// </summary>
+        /// <param name="onProgress">进度回调 (当前数, 总数, 进度0~1)</param>
+        /// <param name="onComplete">完成回调</param>
+        public IEnumerator PreloadAllIconsCoroutine(
+            Action<int, int, float> onProgress = null,
+            Action onComplete = null)
+        {
+            Debug.Log($"[ItemIconManager] 开始异步预加载物品图标，每帧{IconsPerFrame}个...");
+
+            var allIconNames = GetAllIconNames();
+            int total = allIconNames.Count;
+            int loaded = 0;
+
+            for (int i = 0; i < allIconNames.Count; i++)
+            {
+                string iconName = allIconNames[i];
+                if (!_iconCache.ContainsKey(iconName))
+                {
+                    Sprite icon = Resources.Load<Sprite>($"Icons/Items/{iconName}");
+                    if (icon != null)
+                        _iconCache[iconName] = icon;
+                }
+                loaded++;
+
+                float progress = (float)loaded / total;
+                onProgress?.Invoke(loaded, total, progress);
+
+                // 分帧：每 IconsPerFrame 个图标让出一帧
+                if ((i + 1) % IconsPerFrame == 0 && i < allIconNames.Count - 1)
+                    yield return null;
+            }
+
+            Debug.Log($"[ItemIconManager] 图标异步预加载完成，缓存数量：{_iconCache.Count}");
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// 获取所有需要预加载的图标名称列表
+        /// </summary>
+        private List<string> GetAllIconNames()
+        {
+            var list = new List<string>();
+            
+            string[] l1Icons = { "Water_L1", "Food_L1", "Tool_L1", "Home_L1",
+                "Medical_L1", "Energy_L1", "Knowledge_L1", "Hope_L1", "Explore_L1" };
+            foreach (var n in l1Icons) list.Add(n);
+
+            string[] itemTypes = { "Water", "Food", "Tool", "Home", "Medical", "Energy", "Knowledge", "Hope", "Explore" };
+            for (int level = 2; level <= 10; level++)
+            {
+                foreach (string itemType in itemTypes)
+                    list.Add($"{itemType}_L{level}");
+            }
+
+            return list;
         }
 
         /// <summary>

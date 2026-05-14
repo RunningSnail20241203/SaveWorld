@@ -117,18 +117,22 @@ namespace SaveWorld.Game.UI
         {
             _draggingCellId = e.CellId;
 
-            if (_cells == null || e.CellId >= _cells.Length) return;
+            // 防御性检查
+            if (_cells == null || e.CellId < 0 || e.CellId >= _cells.Length) return;
+            var uiCell = _cells[e.CellId];
+            if (uiCell == null || uiCell.IconImage == null) return;
 
             // 隐藏原格子图标
-            _cells[e.CellId].IconImage.enabled = false;
+            uiCell.IconImage.enabled = false;
 
             // 复制图标到拖拽层
-            var cellState = _stateMutator.CurrentState.Cells[e.CellId];
-            if (cellState.HasItem())
+            var cellState = _stateMutator?.CurrentState?.Cells?[e.CellId];
+            if (cellState.HasValue && cellState.Value.HasItem())
             {
-                _dragOverlayImage.sprite = ItemIconManager.Instance.GetItemIcon((ItemType)cellState.ItemId);
+                _dragOverlayImage.sprite = ItemIconManager.Instance.GetItemIcon((ItemType)cellState.Value.ItemId);
             }
-            _dragOverlayImage.enabled = true;
+            if (_dragOverlayImage != null)
+                _dragOverlayImage.enabled = true;
 
             StartCoroutine(DragUpdateCoroutine());
         }
@@ -148,16 +152,23 @@ namespace SaveWorld.Game.UI
 
         private void OnCellDragEnd(CellDragEndEvent e)
         {
+            // 防御性检查：确保拖拽是有效的
+            if (_draggingCellId < 0 || _draggingCellId >= 63) return;
+            if (_cells == null || _cells[_draggingCellId] == null) return;
+            if (_cells[_draggingCellId].IconImage == null) return;
+
             // 检测目标格子
             int targetCellId = FindCellAtPosition(Mouse.current.position.ReadValue());
 
             if (targetCellId != -1 && targetCellId != _draggingCellId)
             {
-                var cellState = _stateMutator.CurrentState.Cells[targetCellId];
+                var cellState = _stateMutator?.CurrentState?.Cells?[targetCellId];
+                if (!cellState.HasValue) return;
+                var targetCell = cellState.Value;
 
-                if (!cellState.IsLocked)
+                if (!targetCell.IsLocked)
                 {
-                    if (!cellState.HasItem())
+                    if (!targetCell.HasItem())
                     {
                         // 空格子 移动
                         _eventBus.Publish(new ItemMovedEvent(_draggingCellId, targetCellId, 0));
@@ -165,20 +176,25 @@ namespace SaveWorld.Game.UI
                     else
                     {
                         // 有物品 交换
-                        var dragCellState = _stateMutator.CurrentState.Cells[_draggingCellId];
-                        _eventBus.Publish(new ItemSwappedEvent(
-                            _draggingCellId, targetCellId,
-                            dragCellState.ItemId, cellState.ItemId
-                        ));
+                        var dragCellState = _stateMutator?.CurrentState?.Cells?[_draggingCellId];
+                        if (dragCellState.HasValue)
+                        {
+                            _eventBus.Publish(new ItemSwappedEvent(
+                                _draggingCellId, targetCellId,
+                                dragCellState.Value.ItemId, targetCell.ItemId
+                            ));
+                        }
                     }
                 }
             }
 
             // 恢复原格子图标
-            _cells[_draggingCellId].IconImage.enabled = true;
+            if (_cells[_draggingCellId]?.IconImage != null)
+                _cells[_draggingCellId].IconImage.enabled = true;
 
             // 隐藏拖拽层
-            _dragOverlayImage.enabled = false;
+            if (_dragOverlayImage != null)
+                _dragOverlayImage.enabled = false;
 
             _draggingCellId = -1;
         }
@@ -252,8 +268,11 @@ namespace SaveWorld.Game.UI
         /// </summary>
         public void RefreshCell(int cellId)
         {
+            // 防御性编程：添加完整的空引用保护
             if (_cells == null) return;
             if (cellId < 0 || cellId >= 63) return;
+            if (_cells[cellId] == null) return;
+            if (_stateMutator?.CurrentState?.Cells == null) return;
 
             var cellState = _stateMutator.CurrentState.Cells[cellId];
             _cells[cellId].UpdateCell(cellState);

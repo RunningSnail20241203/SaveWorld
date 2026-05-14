@@ -10,8 +10,9 @@ namespace SaveWorld.Game.UI
 {
     /// <summary>
     /// UI格子单元
+    /// 使用 IPointer 接口处理输入，减少 WebGL 运行时 EventTrigger 性能开销
     /// </summary>
-    public class UICell : MonoBehaviour
+    public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
         public int CellId;
         public Image IconImage;
@@ -31,28 +32,82 @@ namespace SaveWorld.Game.UI
             CellId = cellId;
             _eventBus = eventBus;
 
-            var trigger = CellButton.GetComponent<EventTrigger>();
-            if (trigger == null)
-                trigger = CellButton.gameObject.AddComponent<EventTrigger>();
+            // 防御性检查：CellButton 可能未赋值
+            if (CellButton == null)
+            {
+                Debug.LogWarning($"[UICell] CellButton is null for cell {cellId}");
+            }
+            // 不再使用 EventTrigger，直接通过 IPointer 接口处理输入
+            // 保留 Button 用于视觉样式，但输入事件通过 IPointer 接口处理
+        }
 
-            // 按下事件
-            EventTrigger.Entry pressEntry = new EventTrigger.Entry();
-            pressEntry.eventID = EventTriggerType.PointerDown;
-            pressEntry.callback.AddListener((data) => { OnPointerDown((PointerEventData)data); });
-            trigger.triggers.Add(pressEntry);
+        // IPointerDownHandler 实现
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (IconImage == null || !IconImage.enabled) return;
 
-            // 抬起事件
-            EventTrigger.Entry releaseEntry = new EventTrigger.Entry();
-            releaseEntry.eventID = EventTriggerType.PointerUp;
-            releaseEntry.callback.AddListener((data) => { OnPointerUp((PointerEventData)data); });
-            trigger.triggers.Add(releaseEntry);
+            _pressStartTime = Time.unscaledTime;
+            _longPressCoroutine = StartCoroutine(CheckLongPress());
+        }
 
-            // 点击事件
-            CellButton.onClick.AddListener(OnCellClicked);
+        // IPointerUpHandler 实现
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            if (_longPressCoroutine != null)
+            {
+                StopCoroutine(_longPressCoroutine);
+                _longPressCoroutine = null;
+            }
+
+            if (_isDragging)
+            {
+                // 拖拽结束 发出拖拽完成事件
+                _eventBus?.Publish(new CellDragEndEvent(this.CellId));
+                _isDragging = false;
+            }
+        }
+
+        // IPointerClickHandler 实现（替代 Button.onClick）
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (_isDragging) return;
+
+            float currentTime = Time.unscaledTime;
+
+            if (currentTime - _lastClickTime < DOUBLE_CLICK_THRESHOLD)
+            {
+                // 双击 → 发出合成请求事件
+                _eventBus?.Publish(new CellDoubleClickEvent(this.CellId));
+                _lastClickTime = 0;
+            }
+            else
+            {
+                // 单击 → 发出选中事件
+                _eventBus?.Publish(new CellClickEvent(this.CellId));
+                _lastClickTime = currentTime;
+            }
+        }
+
+        private IEnumerator CheckLongPress()
+        {
+            yield return new WaitForSecondsRealtime(LONG_PRESS_THRESHOLD);
+
+            // 长按时间达到 开始拖拽
+            _isDragging = true;
+
+            // 发出拖拽开始事件
+            _eventBus?.Publish(new CellDragStartEvent(this.CellId));
         }
 
         public void UpdateCell(CellState cellState)
         {
+            // 防御性检查：IconImage 和 LevelText 可能未赋值
+            if (IconImage == null || LevelText == null)
+            {
+                Debug.LogWarning($"[UICell] IconImage or LevelText is null for cell {CellId}");
+                return;
+            }
+
             if (cellState.HasItem())
             {
                 IconImage.sprite = Items.ItemIconManager.Instance.GetItemIcon((ItemType)cellState.ItemId);
@@ -71,64 +126,6 @@ namespace SaveWorld.Game.UI
         {
             // 播放升级动画
             GetComponent<Animator>()?.SetTrigger("Merge");
-        }
-
-        private void OnPointerDown(PointerEventData eventData)
-        {
-            if (!IconImage.enabled) return;
-
-            _pressStartTime = Time.unscaledTime;
-            _longPressCoroutine = StartCoroutine(CheckLongPress());
-        }
-
-        private void OnPointerUp(PointerEventData eventData)
-        {
-            if (_longPressCoroutine != null)
-            {
-                StopCoroutine(_longPressCoroutine);
-                _longPressCoroutine = null;
-            }
-
-            if (_isDragging)
-            {
-                // 拖拽结束 发出拖拽完成事件
-                _eventBus.Publish(new CellDragEndEvent(this.CellId));
-
-                _isDragging = false;
-            }
-        }
-
-        private IEnumerator CheckLongPress()
-        {
-            yield return new WaitForSecondsRealtime(LONG_PRESS_THRESHOLD);
-
-            // 长按时间达到 开始拖拽
-            _isDragging = true;
-
-            // 发出拖拽开始事件
-            _eventBus.Publish(new CellDragStartEvent(this.CellId));
-        }
-
-        private void OnCellClicked()
-        {
-            if (_isDragging) return;
-
-            float currentTime = Time.unscaledTime;
-
-            if (currentTime - _lastClickTime < DOUBLE_CLICK_THRESHOLD)
-            {
-                // 双击 → 发出合成请求事件
-                _eventBus.Publish(new CellDoubleClickEvent(this.CellId));
-
-                _lastClickTime = 0;
-            }
-            else
-            {
-                // 单击 → 发出选中事件
-                _eventBus.Publish(new CellClickEvent(this.CellId));
-
-                _lastClickTime = currentTime;
-            }
         }
     }
 }

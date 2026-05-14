@@ -86,3 +86,6 @@ AI-Asset-Generator/.env
 AI-Asset-Generator/images/
 
 资源
+.codebuddy/plans/
+.vsconfig
+.workbuddy/

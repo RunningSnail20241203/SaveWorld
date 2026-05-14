@@ -1,9 +1,69 @@
 # AGENTS.md - 文档索引
 
-**最后更新**: 2026-04-23
-**文档版本**: v2.2
+**最后更新**: 2026-05-14
+**文档版本**: v2.3
 
 > 项目详细文档均位于 `docs/` 目录。需要查什么，先来这里定位文档。
+
+---
+
+## 常用开发命令
+
+### 构建微信小游戏
+```bash
+"<Tuanjie Editor 路径>/Editor/Tuanjie.exe" \
+  -quit -batchmode \
+  -projectPath "D:\Test\SaveWorld" \
+  -executeMethod SaveWorld.Editor.WeChatBuild.Build \
+  -logFile build.log
+```
+- 或在 Unity Editor: `File → Build Settings → Platform: MiniGame → Build`
+- 输出目录: `Builds/WebGL/minigame/`
+
+### 微信开发者工具调试
+1. 打开微信开发者工具，导入 `Builds/WebGL/minigame/` 目录
+2. AppID: `wxb2624b9ca163b59f`
+3. 点击「编译」预览，「预览」扫码真机测试
+
+### 微信后台配置
+- 登录 [微信公众平台](https://mp.weixin.qq.com/) → 流量主 → 广告管理
+- 广告ID、支付offerId填入 `Assets/Resources/WeChatConfig.asset`
+
+---
+
+## 核心架构原则
+
+### 三层洋葱架构
+- **状态层 (State Layer)**: `GameState` 纯数据对象，`StateMutator` 唯一修改器
+- **事件总线 (Event Bus)**: `EventBus` 全局事件分发，跨层通信唯一通道
+- **行为层 (Behavior Layer)**: 各业务系统（合成、探索、订单等），通过发布事件交互
+
+### 架构铁律
+1. 依赖方向永远向内，外层知道内层，内层不知道外层
+2. 跨层通信只有事件一种方式，无直接调用
+3. 状态变更统一由 `StateMutator` 负责
+4. 所有状态变更可通过事件溯源完整重现
+
+### 命名空间规范
+| 层级 | 命名空间前缀 |
+|------|-------------|
+| 内核 | `SaveWorld.Game.Core` |
+| 宿主 | `SaveWorld.Game.UnityHost` |
+| 行为层 | `SaveWorld.Game.{Grid,Crafting,Exploration,Order,...}` |
+
+---
+
+## 代码位置速查
+
+| 功能 | 文件路径 |
+|------|----------|
+| 游戏入口 | `Assets/Scripts/TestWebGL/Game/Core/GameEntry.cs` |
+| 主循环 | `Assets/Scripts/TestWebGL/Game/UnityHost/GameLoop.cs` |
+| 状态管理 | `Assets/Scripts/TestWebGL/Game/Core/GameState.cs` |
+| 事件总线 | `Assets/Scripts/TestWebGL/Game/Core/EventBus.cs` |
+| 合成引擎 | `Assets/Scripts/TestWebGL/Game/Crafting/CraftingEngine.cs` |
+| 探索引擎 | `Assets/Scripts/TestWebGL/Game/Exploration/ExplorationEngine.cs` |
+| 微信SDK | `Assets/Scripts/TestWebGL/Game/WeChat/WeChatManager.cs` |
 
 ---
 

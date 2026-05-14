@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Localization-Locales
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Localization-Locales
+  m_Data:
+    m_SerializedData: []
   m_GUID: 246f726fdb95e85429d25af0371755f8
   m_SerializeEntries:
   - m_GUID: 454c05cf5d173cd409a7e12b1d464b79

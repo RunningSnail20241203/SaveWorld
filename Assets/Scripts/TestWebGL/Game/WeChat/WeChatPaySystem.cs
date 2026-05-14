@@ -39,6 +39,15 @@ namespace SaveWorld.Game.WeChat
         }
 
         /// <summary>
+        /// 从 WeChatConfigManager 加载支付配置
+        /// </summary>
+        public void LoadConfig()
+        {
+            _offerId = WeChatConfigManager.MidasOfferId;
+            Debug.Log($"[WeChatPay] 配置加载完成: offerId={(_offerId.Length > 0 ? _offerId : "未配置")}");
+        }
+
+        /// <summary>
         /// 发起米大师支付（购买道具）
         /// signData 需要通过后端签名生成，这里只做客户端调用
         /// </summary>

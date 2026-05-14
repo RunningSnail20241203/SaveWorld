@@ -26,6 +26,7 @@ namespace SaveWorld.Game.WeChat
         }
 
         private const string DEFAULT_SHARE_IMAGE = "";
+        private string _defaultShareTitle = "末世生存合成";
         private int _shareCount = 0;
         private int _successShareCount = 0;
         private bool _shareMenuSet = false;
@@ -33,10 +34,21 @@ namespace SaveWorld.Game.WeChat
         public event Action<bool, string> OnShareCompleted;
 
         /// <summary>
+        /// 从 WeChatConfigManager 加载分享默认配置
+        /// </summary>
+        public void LoadConfig()
+        {
+            _defaultShareTitle = WeChatConfigManager.ShareTitle;
+            Debug.Log($"[WeChatShare] 配置加载完成: title={_defaultShareTitle}");
+        }
+
+        /// <summary>
         /// 初始化分享系统 - 设置转发监听和分享菜单
         /// </summary>
-        public void Initialize(string title = "末世生存合成", string imageUrl = "")
+        public void Initialize(string title = null, string imageUrl = null)
         {
+            title = title ?? _defaultShareTitle;
+            imageUrl = imageUrl ?? WeChatConfigManager.ShareImageUrl;
             if (_shareMenuSet) return;
 
             var shareParam = new WXShareAppMessageParam

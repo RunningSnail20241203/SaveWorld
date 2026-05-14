@@ -169,7 +169,16 @@
       }
       var WXWASMSDK = {
         WXInitializeSDK() {
-          gameInstance.SendMessage('WXSDKManagerHandler', 'Inited', 200);
+          // 安全调用：防止 gameInstance 未就绪或目标对象不存在导致 TypeError
+          try {
+            if (typeof gameInstance !== 'undefined' && gameInstance && gameInstance.SendMessage) {
+              gameInstance.SendMessage('WXSDKManagerHandler', 'Inited', 200);
+            } else {
+              console.warn('[WXWASMSDK] WXInitializeSDK: gameInstance not ready, skipping SendMessage');
+            }
+          } catch (e) {
+            console.warn('[WXWASMSDK] WXInitializeSDK error:', e);
+          }
         },
         WXStorageSetIntSync(key, value) {
           storage[key] = value;
@@ -783,6 +792,10 @@
         WX_VideoDecoderStop() {},
         WX_VideoDecoderOff() {},
         WX_VideoDecoderOn() {},
+        // Fix: SDK v0.1.32 missing tnnt symbol
+        WX_SyncFunction_tnnt(functionName, returnType, param1, param2) {
+          return '';
+        },
       };
       var downloadedTextures = {};
       var downloadingTextures = {};
