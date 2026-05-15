@@ -15,11 +15,11 @@ MonoBehaviour:
   m_BuildTarget: 47
   m_Subtarget: 0
   m_ModuleName: WeixinMiniGame
-  m_BuildPath: D:/Test/TestMiniGame/Builds
+  m_BuildPath: D:/Test/SaveWorld/Builds
   m_PlatformSettings:
-    rid: 770626042726187013
+    rid: 770626061843824653
   m_MiniGameSettings:
-    rid: 770626042726187011
+    rid: 770626061843824651
   m_PlayerSettingsYaml:
     m_Settings:
     - line: '| m_ObjectHideFlags: 0'
@@ -34,7 +34,7 @@ MonoBehaviour:
     - line: '| useOnDemandResources: 0'
     - line: '| accelerometerFrequency: 60'
     - line: '| companyName: DefaultCompany'
-    - line: '| productName: TestMiniGame'
+    - line: '| productName: SaveWorld'
     - line: '| defaultCursor: {instanceID: 0}'
     - line: '| cursorHotspot: {x: 0, y: 0}'
     - line: '| m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902,
@@ -63,7 +63,7 @@ MonoBehaviour:
     - line: '|   height: 1'
     - line: '| m_SplashScreenLogos: []'
     - line: '| m_VirtualRealitySplashScreen: {instanceID: 0}'
-    - line: '| expectedBundleIdentifier: com.DefaultCompany.2DProject'
+    - line: '| expectedBundleIdentifier: com.DefaultCompany.TestMiniGame'
     - line: '| integrityHash: '
     - line: '| m_HolographicTrackingLossScreen: {instanceID: 0}'
     - line: '| defaultScreenWidth: 1920'
@@ -71,7 +71,7 @@ MonoBehaviour:
     - line: '| defaultScreenWidthWeb: 960'
     - line: '| defaultScreenHeightWeb: 600'
     - line: '| m_StereoRenderingPath: 0'
-    - line: '| m_ActiveColorSpace: 1'
+    - line: '| m_ActiveColorSpace: 0'
     - line: '| unsupportedMSAAFallback: 0'
     - line: '| m_SpriteBatchVertexThreshold: 300'
     - line: '| m_MTRendering: 1'
@@ -388,6 +388,9 @@ MonoBehaviour:
     - line: '| - m_BuildTarget: HMIAndroidPlayer'
     - line: '|   m_APIs: 0b00000015000000'
     - line: '|   m_Automatic: 1'
+    - line: '| - m_BuildTarget: WeixinMiniGameSupport'
+    - line: '|   m_APIs: 0b000000'
+    - line: '|   m_Automatic: 0'
     - line: '| m_BuildTargetVRSettings: []'
     - line: '| m_DefaultShaderChunkSizeInMB: 16'
     - line: '| m_DefaultShaderChunkCount: 0'
@@ -417,6 +420,8 @@ MonoBehaviour:
     - line: '| - m_BuildTarget: Android'
     - line: '|   m_Format: 3'
     - line: '| - m_BuildTarget: OpenHarmony'
+    - line: '|   m_Format: 3'
+    - line: '| - m_BuildTarget: WeixinMiniGame'
     - line: '|   m_Format: 3'
     - line: '| playModeTestRunnerEnabled: 0'
     - line: '| runPlayModeTestAsEditModeTest: 0'
@@ -681,7 +686,8 @@ MonoBehaviour:
     - line: '| platformArchitecture: {}'
     - line: '| scriptingBackend: {}'
     - line: '| il2cppCompilerConfiguration: {}'
-    - line: '| il2cppCodeGeneration: {}'
+    - line: '| il2cppCodeGeneration:'
+    - line: '|   WeixinMiniGame: 1'
     - line: '| managedStrippingLevel:'
     - line: '|   ArmLinux: 1'
     - line: '|   ArmLinuxServer: 1'
@@ -822,14 +828,16 @@ MonoBehaviour:
     - line: '| weixinMiniGameExceptionOnlyEnableForUserCodes: 0'
     - line: '| weixinMiniGameNameFilesAsHashes: 0'
     - line: '| weixinMiniGameShowDiagnostics: 0'
-    - line: '| weixinMiniGameDataCaching: 1'
-    - line: '| weixinMiniGameDebugSymbols: 0'
-    - line: '| weixinMiniGameEmscriptenArgs: '
+    - line: '| weixinMiniGameDataCaching: 0'
+    - line: '| weixinMiniGameDebugSymbols: 1'
+    - line: '| weixinMiniGameEmscriptenArgs: '' -s EXPORTED_FUNCTIONS=_main,_sbrk,_emscripten_stack_get_base,_emscripten_stack_get_end'
+    - line: '|   -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s TOTAL_MEMORY=256MB -s EXPORTED_RUNTIME_METHODS=''''["ccall","cwrap","stackTrace","addRunDependency","removeRunDependency","FS_createPath","FS_createDataFile","stackTrace","writeStackCookie","checkStackCookie","lengthBytesUTF8","stringToUTF8"]'''''
+    - line: '|   --profiling-funcs '''
     - line: '| weixinMiniGameModulesDirectory: '
-    - line: '| weixinMiniGameTemplate: APPLICATION:Default'
+    - line: '| weixinMiniGameTemplate: PATH:D:\Test\SaveWorld\Library\PackageCache\com.qq.weixin.minigame@f67e7851c3\WebGLTemplates\WXTemplate2022TJ'
     - line: '| weixinMiniGameAnalyzeBuildSize: 0'
     - line: '| weixinMiniGameUseEmbeddedResources: 0'
-    - line: '| weixinMiniGameCompressionFormat: 0'
+    - line: '| weixinMiniGameCompressionFormat: 2'
     - line: '| weixinMiniGameWasmArithmeticExceptions: 0'
     - line: '| weixinMiniGameLinkerTarget: 1'
     - line: '| weixinMiniGameThreadsSupport: 0'
@@ -872,21 +880,21 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 770626042726187011
-      type: {class: DefaultWeChatMiniGameSettings, ns: UnityEditor.ExternalMiniGame, asm: UnityEditor.CoreModule}
+    - rid: 770626061843824651
+      type: {class: WeixinMiniGameSettings, ns: WeChatWASM, asm: WxEditor}
       data:
         m_HostName: WeChat
         m_Editor:
-          rid: 770626042726187012
+          rid: 770626061843824652
         ProjectConf:
           projectName: SaveWorld
           Appid: wxb2624b9ca163b59f
-          CDN: http://10.8.43.54:8080
+          CDN: http://localhost:18765
           assetLoadType: 0
           compressDataPackage: 1
           VideoUrl: 
-          relativeDST: Builds
-          DST: D:/Test/TestMiniGame/Builds
+          relativeDST: D:/Test/SaveWorld/Builds
+          DST: D:\Test\SaveWorld\
           StreamCDN: 
           bundleHashLength: 32
           bundlePathIdentifier: StreamingAssets;
@@ -912,28 +920,30 @@ MonoBehaviour:
           UseCompressedTexture: 0
           UseMiniGameChat: 0
           PreloadWXFont: 0
+          disableMultiTouch: 0
         CompileOptions:
-          DevelopBuild: 0
+          DevelopBuild: 1
           AutoProfile: 0
           ScriptOnly: 0
           Il2CppOptimizeSize: 1
           profilingFuncs: 1
-          Webgl2: 1
-          enableiOSMetal: 0
-          enableEmscriptenGLX: 0
+          Webgl2: 0
           fbslim: 0
           DeleteStreamingAssets: 1
           ProfilingMemory: 0
           CleanBuild: 0
           CustomNodePath: 
-          autoAdaptScreen: 1
+          autoAdaptScreen: 0
           showMonitorSuggestModal: 1
           enableProfileStats: 0
           enableRenderAnalysis: 0
           enablePerfAnalysis: 0
           iOSAutoGCInterval: 10000
           enableIOSPerformancePlus: 0
+          enableiOSMetal: 0
+          enableEmscriptenGLX: 0
           brotliMT: 1
+          enableWasm2023: 0
         CompressTexture:
           halfSize: 0
           useDXT5: 0
@@ -965,15 +975,15 @@ MonoBehaviour:
           Mathematical_Operators: 1
           CustomUnicode: 
         m_AutomaticFillInstantGame: 1
-    - rid: 770626042726187012
-      type: {class: DefaultWeChatMiniGameSettingsEditor, ns: UnityEditor.ExternalMiniGame, asm: UnityEditor.CoreModule}
+    - rid: 770626061843824652
+      type: {class: WeixinMiniGameSettingsEditor, ns: WeChatWASM, asm: WxEditor}
       data:
         m_HostName: WeChat
         tex: {fileID: 2800000, guid: 86276ba96a4824b498f8dbe5254d6d30, type: 3}
-    - rid: 770626042726187013
+    - rid: 770626061843824653
       type: {class: MiniGamePlatformSettings, ns: UnityEditor.WeixinMiniGame, asm: UnityEditor.WeixinMiniGame.Extensions}
       data:
-        m_Development: 0
+        m_Development: 1
         m_ConnectProfiler: 0
         m_BuildWithDeepProfilingSupport: 0
         m_AllowDebugging: 0
@@ -986,7 +996,7 @@ MonoBehaviour:
         m_InstallInBuildFolder: 0
         m_MiniGameTextureSubtarget: 0
         m_MiniGameFrameDebuggerBuild: 0
-        m_MiniGameShowVConsole: 0
+        m_MiniGameShowVConsole: 1
         m_CodeOptimization: 4
         m_MiniGameGenerateWasmAnalysisReport: 0
         m_MiniGameWasmInlineParam: 200

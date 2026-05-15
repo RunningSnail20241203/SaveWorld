@@ -12,7 +12,6 @@ namespace SaveWorld.Editor
     /// </summary>
     public static class WeChatBuild
     {
-        private const string BuildFolder = "Builds/WebGL";
         private const string CdnScript = "start-local-cdn.js";
         private const int CdnPort = 18765;
 
@@ -38,7 +37,7 @@ namespace SaveWorld.Editor
                 return;
             }
 
-            string webglDir = Path.Combine(projectRoot, "Builds/WebGL/webgl");
+            string webglDir = Path.Combine(projectRoot, "Builds/webgl");
             if (!Directory.Exists(webglDir))
             {
                 Debug.LogWarning($"[Local CDN] 目录 {webglDir} 不存在，请先执行构建。");
@@ -187,33 +186,6 @@ namespace SaveWorld.Editor
             {
                 Debug.LogWarning($"[Local CDN] 端口清理失败: {ex.Message}");
             }
-        }
-
-        // ---- 原有菜单 ----
-
-        [MenuItem("WeChat/Check Config", false, 200)]
-        public static void CheckConfig()
-        {
-            var config = Resources.Load<SaveWorld.Game.WeChat.WeChatConfig>("WeChatConfig");
-            if (config == null)
-            {
-                Debug.LogWarning("未找到 Resources/WeChatConfig.asset！\n" +
-                               "请在 Project 窗口右键 -> Create -> WeChat -> Config 创建配置文件，" +
-                               "并放入 Assets/Resources/ 目录。\n" +
-                               "当前将使用内置默认值（广告/支付功能不可用）。");
-            }
-            else
-            {
-                Debug.Log($"WeChatConfig 状态:\n{config.GetConfigSummary()}");
-            }
-        }
-
-        [MenuItem("WeChat/Open Build Folder", false, 300)]
-        public static void OpenBuildFolder()
-        {
-            if (!Directory.Exists(BuildFolder))
-                Directory.CreateDirectory(BuildFolder);
-            EditorUtility.RevealInFinder(BuildFolder);
         }
     }
 }

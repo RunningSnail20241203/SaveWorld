@@ -16,7 +16,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const PORT = parseInt(process.argv[2] || '18765', 10);
-const SERVE_DIR = path.resolve(__dirname, 'Builds/WebGL/webgl');
+const SERVE_DIR = path.resolve(__dirname, 'Builds/webgl');
 
 const MIME_TYPES = {
     '.txt': 'text/plain',

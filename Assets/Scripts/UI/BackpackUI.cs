@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
+// using UnityEngine.InputSystem;
 using System.Collections;
 using SaveWorld.Game.Core;
 using SaveWorld.Game.Items;
@@ -144,7 +144,7 @@ namespace SaveWorld.Game.UI
                 if (_dragOverlayImage != null && _dragOverlayImage.enabled)
                 {
                     var rect = _dragOverlayImage.GetComponent<RectTransform>();
-                    rect.position = Mouse.current.position.ReadValue();
+                    // rect.position = Mouse.current.position.ReadValue();
                 }
                 yield return null;
             }
@@ -158,8 +158,8 @@ namespace SaveWorld.Game.UI
             if (_cells[_draggingCellId].IconImage == null) return;
 
             // 检测目标格子
-            int targetCellId = FindCellAtPosition(Mouse.current.position.ReadValue());
-
+            // int targetCellId = FindCellAtPosition(Mouse.current.position.ReadValue());
+            int targetCellId = -1;
             if (targetCellId != -1 && targetCellId != _draggingCellId)
             {
                 var cellState = _stateMutator?.CurrentState?.Cells?[targetCellId];
