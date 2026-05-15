@@ -1,229 +1,219 @@
 using UnityEditor;
-using UnityEditor.Build.Reporting;
 using UnityEngine;
+using System.Diagnostics;
 using System.IO;
+using Debug = UnityEngine.Debug;
 
 namespace SaveWorld.Editor
 {
     /// <summary>
-    /// 微信小游戏构建自动化脚本（团结引擎 MiniGame 平台）
-    /// 使用方法: Unity Editor 菜单 → WeChat → Build MiniGame
-    /// 命令行: -executeMethod SaveWorld.Editor.WeChatBuild.Build
+    /// 微信小游戏构建辅助工具。
+    /// 构建请使用官方菜单「微信小游戏 → 构建」，构建后 WeChatPostBuildPatch 会自动 patch 产物。
     /// </summary>
     public static class WeChatBuild
     {
         private const string BuildFolder = "Builds/WebGL";
-        private const string MinigameFolder = "Builds/WebGL/minigame";
+        private const string CdnScript = "start-local-cdn.js";
+        private const int CdnPort = 18765;
 
-        [MenuItem("WeChat/Build MiniGame", false, 100)]
-        public static void Build()
+        // ---- 本地 CDN 服务器管理 ----
+
+        private static Process s_CdnProcess;
+
+        [MenuItem("WeChat/Local CDN/Start", false, 400)]
+        public static void StartCdn()
         {
-            Debug.Log("========== 开始微信小游戏 MiniGame 构建 ==========");
-
-            // 1. 确保输出目录存在
-            EnsureDirectory(BuildFolder);
-
-            // 2. 检查 WeChatConfig
-            CheckWeChatConfig();
-
-            // 3. 获取构建场景
-            string[] scenes = GetBuildScenes();
-
-            // 4. 配置 Player Settings
-            ConfigurePlayerSettings();
-
-            // 4.1 校验 MiniGameConfig 关键配置
-            ValidateMiniGameConfig();
-
-            // 5. 执行 MiniGame 构建
-            BuildReport report = BuildPipeline.BuildPlayer(
-                scenes,
-                BuildFolder,
-                BuildTarget.WeixinMiniGame,
-                BuildOptions.None
-            );
-
-            // 6. 检查构建结果
-            if (report.summary.result == BuildResult.Succeeded)
+            if (IsCdnRunning())
             {
-                Debug.Log($"✅ 构建成功! 输出目录: {Path.GetFullPath(BuildFolder)}");
-                Debug.Log($"   总大小: {FormatSize(GetDirectorySize(BuildFolder))}");
-                Debug.Log($"   耗时: {report.summary.totalTime.TotalSeconds:F1} 秒");
+                Debug.Log($"[Local CDN] 端口 {CdnPort} 已在使用中，服务器可能已在运行。");
+                return;
+            }
 
-                // 7. 验证 minigame 目录
-                if (Directory.Exists(MinigameFolder))
+            string projectRoot = Path.GetFullPath(".");
+            string scriptPath = Path.Combine(projectRoot, CdnScript);
+
+            if (!File.Exists(scriptPath))
+            {
+                Debug.LogError($"[Local CDN] 未找到 {CdnScript}，请确认文件存在于项目根目录。");
+                return;
+            }
+
+            string webglDir = Path.Combine(projectRoot, "Builds/WebGL/webgl");
+            if (!Directory.Exists(webglDir))
+            {
+                Debug.LogWarning($"[Local CDN] 目录 {webglDir} 不存在，请先执行构建。");
+                return;
+            }
+
+            try
+            {
+                var startInfo = new ProcessStartInfo
                 {
-                    // 检查关键文件确认结构完整
-                    string[] requiredFiles = { "game.json", "game.js", "project.config.json" };
-                    bool allFilesExist = true;
-                    foreach (var file in requiredFiles)
-                    {
-                        if (!File.Exists(Path.Combine(MinigameFolder, file)))
-                        {
-                            Debug.LogWarning($"⚠️ minigame 缺少关键文件: {file}");
-                            allFilesExist = false;
-                        }
-                    }
+                    FileName = "node",
+                    Arguments = $"\"{scriptPath}\" {CdnPort}",
+                    WorkingDirectory = projectRoot,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
 
-                    if (allFilesExist)
-                    {
-                        Debug.Log("✅ minigame 目录已生成（结构完整）");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("⚠️ minigame 目录存在但文件不完整，建议重新构建");
-                    }
-                    Debug.Log("下一步: 用微信开发者工具打开 Builds/WebGL/minigame/");
-                }
-                else
+                s_CdnProcess = Process.Start(startInfo);
+
+                // 异步读取输出，避免阻塞
+                s_CdnProcess.OutputDataReceived += (sender, e) =>
                 {
-                    Debug.LogError("❌ minigame 目录未生成！可能原因:");
-                    Debug.LogError("   1. MiniGameConfig.asset 中 dstMinDir 为空 → 在 WX 菜单中设置或手动编辑 .asset 文件");
-                    Debug.LogError("   2. 微信 SDK PostProcessBuild 未执行 → 检查 Console 是否有 SDK 错误");
-                    Debug.LogError("   3. 构建目标不是 WeixinMiniGame → 确认 Build Settings 平台选择正确");
-                }
+                    if (!string.IsNullOrEmpty(e.Data))
+                        UnityEngine.Debug.Log($"[CDN] {e.Data}");
+                };
+                s_CdnProcess.ErrorDataReceived += (sender, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                        UnityEngine.Debug.LogError($"[CDN] {e.Data}");
+                };
+                s_CdnProcess.BeginOutputReadLine();
+                s_CdnProcess.BeginErrorReadLine();
 
-                EditorUtility.RevealInFinder(BuildFolder);
+                s_CdnProcess.EnableRaisingEvents = true;
+                s_CdnProcess.Exited += (sender, e) =>
+                {
+                    s_CdnProcess = null;
+                    // 菜单状态需要在主线程刷新
+                    EditorApplication.delayCall += () =>
+                    {
+                        // 不做额外操作，下次菜单点击时会重新检测
+                    };
+                };
+
+                Debug.Log($"[Local CDN] 已启动 http://localhost:{CdnPort} (PID: {s_CdnProcess.Id})");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[Local CDN] 启动失败: {ex.Message}");
+            }
+        }
+
+        [MenuItem("WeChat/Local CDN/Stop", false, 401)]
+        public static void StopCdn()
+        {
+            if (s_CdnProcess != null && !s_CdnProcess.HasExited)
+            {
+                try
+                {
+                    s_CdnProcess.Kill();
+                    s_CdnProcess.WaitForExit(3000);
+                    Debug.Log("[Local CDN] 已停止。");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[Local CDN] 停止进程失败: {ex.Message}");
+                }
+                finally
+                {
+                    s_CdnProcess = null;
+                }
             }
             else
             {
-                Debug.LogError($"❌ 构建失败! 错误数: {report.summary.totalErrors}");
-                foreach (var step in report.steps)
-                {
-                    foreach (var msg in step.messages)
-                    {
-                        if (msg.type == LogType.Error || msg.type == LogType.Exception)
-                        {
-                            Debug.LogError($"   {msg.content}");
-                        }
-                    }
-                }
+                // 进程引用丢失时，尝试通过端口查找并终止
+                KillByPort();
             }
-
-            Debug.Log("========== 构建完成 ==========");
         }
+
+        [MenuItem("WeChat/Local CDN/Restart", false, 402)]
+        public static void RestartCdn()
+        {
+            StopCdn();
+            System.Threading.Thread.Sleep(500);
+            StartCdn();
+        }
+
+        [MenuItem("WeChat/Local CDN/Start", true)]
+        [MenuItem("WeChat/Local CDN/Stop", true)]
+        [MenuItem("WeChat/Local CDN/Restart", true)]
+        public static bool ValidateCdnMenu()
+        {
+            return !EditorApplication.isPlayingOrWillChangePlaymode;
+        }
+
+        /// <summary>
+        /// 检查 CDN 端口是否已被占用（简易检测，适用于本场景）。
+        /// </summary>
+        private static bool IsCdnRunning()
+        {
+            try
+            {
+                // 通过 netstat 检查端口是否在监听
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "netstat",
+                    Arguments = "-ano | findstr :18765 | findstr LISTENING",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                };
+                using var proc = Process.Start(psi);
+                string output = proc.StandardOutput.ReadToEnd().Trim();
+                return !string.IsNullOrEmpty(output);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 通过端口查找并终止进程（当进程引用丢失时的兜底方案）。
+        /// </summary>
+        private static void KillByPort()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "cmd",
+                    Arguments = "/c for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :18765 ^| findstr LISTENING') do taskkill /F /PID %a",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
+                using var proc = Process.Start(psi);
+                proc.WaitForExit(3000);
+                if (proc.ExitCode == 0)
+                    Debug.Log("[Local CDN] 已通过端口终止进程。");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[Local CDN] 端口清理失败: {ex.Message}");
+            }
+        }
+
+        // ---- 原有菜单 ----
 
         [MenuItem("WeChat/Check Config", false, 200)]
         public static void CheckConfig()
         {
-            CheckWeChatConfig();
-        }
-
-        [MenuItem("WeChat/Open Build Folder", false, 300)]
-        public static void OpenBuildFolder()
-        {
-            EnsureDirectory(BuildFolder);
-            EditorUtility.RevealInFinder(BuildFolder);
-        }
-
-        /// <summary>
-        /// 校验 MiniGameConfig.asset 中的关键配置，防止 dstMinDir 为空导致 minigame 目录缺失
-        /// </summary>
-        private static void ValidateMiniGameConfig()
-        {
-            // 加载 SDK 的 MiniGameConfig
-            var configGuid = AssetDatabase.FindAssets("t:MiniGameConfig")[0];
-            if (string.IsNullOrEmpty(configGuid))
-            {
-                Debug.LogWarning("⚠️ 未找到 MiniGameConfig.asset，无法校验 SDK 配置");
-                return;
-            }
-
-            string configPath = AssetDatabase.GUIDToAssetPath(configGuid);
-            var configAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(configPath);
-            if (configAsset == null) return;
-
-            // 通过 SerializedObject 读取 dstMinDir 字段
-            var so = new SerializedObject(configAsset);
-            var dstMinDir = so.FindProperty("ProjectConf.dstMinDir");
-
-            if (dstMinDir != null && string.IsNullOrEmpty(dstMinDir.stringValue))
-            {
-                Debug.LogError("❌ MiniGameConfig.dstMinDir 为空！这将导致 minigame 目录无法生成。");
-                Debug.LogError("   修复方法: 在 Unity 中打开 WX → Mini Game Config，设置 DST Min Dir 为 'minigame'");
-            }
-            else if (dstMinDir != null)
-            {
-                Debug.Log($"✅ MiniGameConfig.dstMinDir = '{dstMinDir.stringValue}'");
-            }
-        }
-
-        private static void CheckWeChatConfig()
-        {
             var config = Resources.Load<SaveWorld.Game.WeChat.WeChatConfig>("WeChatConfig");
             if (config == null)
             {
-                Debug.LogWarning("⚠️ 未找到 Resources/WeChatConfig.asset！\n" +
-                               "请在 Project 窗口右键 → Create → WeChat → Config 创建配置文件，" +
+                Debug.LogWarning("未找到 Resources/WeChatConfig.asset！\n" +
+                               "请在 Project 窗口右键 -> Create -> WeChat -> Config 创建配置文件，" +
                                "并放入 Assets/Resources/ 目录。\n" +
                                "当前将使用内置默认值（广告/支付功能不可用）。");
             }
             else
             {
-                Debug.Log($"📋 WeChatConfig 状态:\n{config.GetConfigSummary()}");
+                Debug.Log($"WeChatConfig 状态:\n{config.GetConfigSummary()}");
             }
         }
 
-        private static string[] GetBuildScenes()
+        [MenuItem("WeChat/Open Build Folder", false, 300)]
+        public static void OpenBuildFolder()
         {
-            var scenes = EditorBuildSettings.scenes;
-            var scenePaths = new string[scenes.Length];
-            for (int i = 0; i < scenes.Length; i++)
-            {
-                scenePaths[i] = scenes[i].path;
-            }
-            return scenePaths.Length > 0 ? scenePaths : new[] { "Assets/Scenes/Main.unity" };
-        }
-
-        private static void ConfigurePlayerSettings()
-        {
-            // 通用设置
-            PlayerSettings.colorSpace = ColorSpace.Gamma;
-            PlayerSettings.stripEngineCode = true;
-            PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WeixinMiniGame, ManagedStrippingLevel.Medium);
-
-            // MiniGame 特定设置（团结引擎 API）
-            // 异常支持：关闭以减小包体（调试时在 Player Settings 中手动开启）
-            PlayerSettings.MiniGame.exceptionSupport = MiniGameExceptionSupport.None;
-
-            // 压缩：Brotli 减小包体
-            PlayerSettings.MiniGame.compressionFormat = MiniGameCompressionFormat.Brotli;
-
-            // 内存
-            PlayerSettings.MiniGame.memorySize = 256;
-
-            // 关闭不需要的功能
-            PlayerSettings.MiniGame.dataCaching = false;
-            PlayerSettings.MiniGame.linkerTarget = MiniGameLinkerTarget.Wasm;
-
-            Debug.Log("✅ Player Settings 配置完成 (MiniGame)");
-        }
-
-        private static void EnsureDirectory(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-                Debug.Log($"📁 创建目录: {path}");
-            }
-        }
-
-        private static long GetDirectorySize(string path)
-        {
-            if (!Directory.Exists(path)) return 0;
-            long size = 0;
-            foreach (string file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
-            {
-                size += new FileInfo(file).Length;
-            }
-            return size;
-        }
-
-        private static string FormatSize(long bytes)
-        {
-            if (bytes < 1024) return $"{bytes} B";
-            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
-            return $"{bytes / (1024.0 * 1024.0):F2} MB";
+            if (!Directory.Exists(BuildFolder))
+                Directory.CreateDirectory(BuildFolder);
+            EditorUtility.RevealInFinder(BuildFolder);
         }
     }
 }

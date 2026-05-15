@@ -10,6 +10,7 @@ using SaveWorld.Game.Player;
 using SaveWorld.Game.Social;
 using SaveWorld.Game.UI;
 using SaveWorld.Game.WeChat;
+using SaveWorld.Game.Items;
 
 namespace SaveWorld.Game.Core
 {
@@ -213,8 +214,8 @@ namespace SaveWorld.Game.Core
                     backpackUI.CellPrefab = oldGridUI.cellPrefab;
                 backpackUI.ParentCanvas = canvas;
                 
-                // 分帧实例化63个格子（每帧7个，共9帧）
-                yield return StartCoroutine(backpackUI.InitializeAsync());
+                // 分帧实例化63个格子
+                backpackUI.Initialize();
                 
                 Debug.Log("[GameLoop] GridUI 加载完成");
             }

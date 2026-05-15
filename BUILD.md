@@ -1,6 +1,6 @@
 # 微信小游戏构建与部署指南
 
-> 最后更新: 2026-05-14
+> 最后更新: 2026-05-15
 
 ---
 
@@ -99,7 +99,79 @@
 
 ---
 
-## 四、微信开发者工具调试
+## 四、首包资源部署到 CDN
+
+> **重要**：微信小游戏所有分包合计不超过 **20MB**，本项目首包资源（data + wasm）约 28MB，超出限制，**必须使用 CDN 加载**。
+
+### 4.1 构建后切换为 CDN 模式
+
+1. 打开微信开发者工具，导入 `Builds/WebGL/minigame/`
+2. 详情 → 本地设置 → 找到「首包资源加载方式」下拉框
+3. 将「小游戏包内」改为 **CDN**
+
+### 4.2 上传资源到 CDN
+
+将 `Builds/WebGL/webgl/` 目录完整上传到 CDN，保持目录结构不变：
+
+```
+CDN 根目录/
+├── 03cf87d209b02f45.webgl.wasm.code.unityweb.wasm.br
+├── be840ea7ac8fda11.webgl.data.unityweb.bin.txt
+├── Build/
+├── StreamingAssets/
+├── TemplateData/
+├── boot.config
+└── index.html
+```
+
+### 4.3 配置 DATA_CDN
+
+构建产物 `minigame/game.js` 中的 `DATA_CDN` 字段需要指向 CDN 地址：
+
+```js
+// game.js（构建后由 SDK 自动生成）
+const managerConfig = {
+    DATA_CDN: 'https://your-cdn.com/saveworld/',  // ← 改为你的 CDN 地址
+    // ...
+};
+```
+
+> **注意**：每次重新构建后，`game.js` 会被覆盖，需要重新修改 `DATA_CDN`。
+> 可通过构建后脚本自动替换，或使用下述本地 CDN 方案调试。
+
+### 4.4 本地 CDN 调试
+
+开发阶段可使用项目自带的本地 CDN 服务器：
+
+```bash
+# 项目根目录下执行
+node start-local-cdn.js 18765
+
+# 或在 Unity Editor 菜单：WeChat → Local CDN → Start
+```
+
+启动后将 `game.js` 中 `DATA_CDN` 设为 `http://localhost:18765`，即可在微信开发者工具中调试。
+
+本地 CDN 特性：
+- 自动 gzip / brotli 压缩
+- 支持 Range 断点续传
+- CORS 跨域已配置
+
+### 4.5 CDN 加载流程说明
+
+| 模式 | data 文件 (19.6MB) | wasm 代码 (8.7MB) | 首包总大小 |
+|------|---------------------|---------------------|------------|
+| 小游戏包内 | 打包进分包 | 打包进分包 | ~29MB（超限） |
+| **CDN** | **远程下载** | **远程下载** | **~2-4MB** |
+
+切换到 CDN 模式后，资源加载流程：
+1. 用户打开小游戏 → 加载 minigame/ 代码包（~2-4MB）
+2. 小游戏启动 → 通过 `DATA_CDN` 地址从 CDN 下载 data 和 wasm
+3. 下载完成 → 游戏初始化完成，进入主界面
+
+---
+
+## 五、微信开发者工具调试
 
 1. 打开微信开发者工具
 2. 导入项目 → 选择 `Builds/WebGL/minigame/` 目录
@@ -109,7 +181,7 @@
 
 ---
 
-## 五、上传与发布
+## 六、上传与发布
 
 1. 微信开发者工具 → 右上角「上传」
 2. 版本号格式: `v1.0.0`，填写更新说明
@@ -119,7 +191,7 @@
 
 ---
 
-## 六、集成测试清单
+## 七、集成测试清单
 
 ### 基础功能
 - [ ] 微信 SDK 初始化成功（控制台无报错）
@@ -162,7 +234,8 @@
 
 ### 性能
 - [ ] 首屏加载时间 < 3 秒
-- [ ] 主包大小 < 4MB
+- [ ] 主包（minigame/）大小 < 4MB
+- [ ] CDN 资源下载正常，无 404
 - [ ] 帧率稳定 60fps（微信开发者工具模拟器）
 - [ ] 内存占用稳定，无泄漏
 
@@ -173,17 +246,29 @@
 
 ---
 
-## 七、常见问题
+## 八、常见问题
 
 ### Q: 构建后微信开发者工具报 "game.json not found"
 A: 确保 Unity WebGL Build 输出到 `Builds/WebGL/`，且该目录下存在 `minigame/game.json`
 
 ### Q: 包体超过 4MB 限制
-A: 
-1. 使用分包加载
-2. 开启 Strip Engine Code
-3. 纹理压缩为 ASTC/ETC2
-4. 音频压缩
+A:
+1. 确保已切换为 CDN 模式（详见第四章）
+2. 首包资源（data、wasm）应通过 CDN 加载，不打包进小程序
+3. 使用分包加载
+4. 开启 Strip Engine Code
+5. 纹理压缩为 ASTC/ETC2
+6. 音频压缩
+
+### Q: 切换 CDN 模式后资源加载失败（404）
+A:
+1. 确认 `game.js` 中 `DATA_CDN` 地址正确（末尾需带 `/`）
+2. 确认 CDN 上已上传完整的 `webgl/` 目录内容
+3. 确认 CDN 域名已在微信公众平台「开发管理 → 开发设置 → 服务器域名」中添加为 downloadFile 合法域名
+4. 本地调试时使用 `node start-local-cdn.js` 并将 `DATA_CDN` 设为 `http://localhost:18765`
+
+### Q: 每次构建后 DATA_CDN 被重置
+A: `game.js` 由构建流程自动生成，每次构建会覆盖。可在 `WeChatBuild.cs` 中添加构建后自动替换脚本，或手动修改。
 
 ### Q: 微信登录返回 code 但需要 openId
 A: 需要在后端服务器用 code + appSecret 换取 openId。开发阶段可先使用 code 作为标识。

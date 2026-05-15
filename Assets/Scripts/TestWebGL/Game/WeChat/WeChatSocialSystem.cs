@@ -28,7 +28,6 @@ namespace SaveWorld.Game.WeChat
         }
 
         private string _rankingKey = "game_score";
-        private WXRankManager _rankManager;
 
         /// <summary>
         /// 从 WeChatConfigManager 加载社交配置
