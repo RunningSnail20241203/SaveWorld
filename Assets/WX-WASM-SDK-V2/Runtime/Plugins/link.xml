@@ -2,11 +2,4 @@
   <assembly fullname="wx-runtime" preserve="all"/>
   <assembly fullname="LitJson" preserve="all"/>
   <assembly fullname="Wx" preserve="all"/>
-  <!-- WebGL 崩溃修复：保留项目核心程序集防止过度裁剪 -->
-  <assembly fullname="SaveWorld.TestWebGL" preserve="all"/>
-  <assembly fullname="UnityEngine.UI" preserve="all"/>
-  <assembly fullname="Unity.TextMeshPro" preserve="all"/>
-  <assembly fullname="UnityEngine.EventSystems" preserve="all"/>
-  <!-- 保留游戏逻辑程序集 -->
-  <assembly fullname="SaveWorld" preserve="all"/>
 </linker>

@@ -11,16 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 1795359250, guid: 1cf430f187a0b40eda7f668318d8be23, type: 3}
   m_Name: MiniGameConfig
-  m_EditorClassIdentifier: wx-editor.dll::WeChatWASM.WXEditorScriptObject
+  m_EditorClassIdentifier: 
   ProjectConf:
-    projectName: SaveWorld
-    Appid: wxb2624b9ca163b59f
+    projectName: 
+    Appid: 
     CDN: 
     assetLoadType: 0
     compressDataPackage: 0
     VideoUrl: 
-    relativeDST: D:/Test/SaveWorld/Builds/WebGL
-    DST: D:/Test/SaveWorld/Builds/WebGL
+    relativeDST: 
+    DST: 
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: StreamingAssets;
@@ -48,7 +48,7 @@ MonoBehaviour:
     PreloadWXFont: 0
     disableMultiTouch: 0
   CompileOptions:
-    DevelopBuild: 1
+    DevelopBuild: 0
     AutoProfile: 0
     ScriptOnly: 0
     Il2CppOptimizeSize: 1
@@ -61,8 +61,8 @@ MonoBehaviour:
     CustomNodePath: 
     autoAdaptScreen: 0
     showMonitorSuggestModal: 1
-    enableProfileStats: 1
-    enableRenderAnalysis: 1
+    enableProfileStats: 0
+    enableRenderAnalysis: 0
     enablePerfAnalysis: 0
     iOSAutoGCInterval: 10000
     enableIOSPerformancePlus: 0
@@ -76,7 +76,7 @@ MonoBehaviour:
     bundleSuffix: bundle
     parallelWithBundle: 0
     bundleDir: 
-    dstMinDir: minigame
+    dstMinDir: 
     debugMode: 0
     force: 0
   PlayerPrefsKeys: []
